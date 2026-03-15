@@ -1,10 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Sparkles, Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Menu, X, Bell, ChevronDown, LogOut, User, Store } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/components/AuthProvider";
+import { signOut } from "@/lib/auth";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -12,9 +14,46 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
+const mockNotifications = [
+  { id: 1, text: "🔥 New deal: OpenAI credits 10% off!", time: "2m ago" },
+  { id: 2, text: "🎓 Student pricing now available for Claude Pro", time: "1h ago" },
+  { id: 3, text: "⚡ GPU flash sale: H100 instances at $2.49/hr", time: "3h ago" },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, profile, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setDropdownOpen(false);
+    router.push("/");
+  };
+
+  const displayName = profile?.first_name || user?.email?.split("@")[0] || "User";
+  const initials = profile
+    ? `${(profile.first_name || "")[0] || ""}${(profile.last_name || "")[0] || ""}`.toUpperCase() || "U"
+    : "U";
 
   return (
     <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-5 border-b border-gray-100">
@@ -54,21 +93,125 @@ export default function Navbar() {
             </Link>
           );
         })}
+
+        {/* Marketplace link with neon-pulse */}
+        <Link
+          href="/marketplace"
+          className={`relative px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+            pathname === "/marketplace"
+              ? "text-purple-700 bg-purple-50"
+              : "text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+          }`}
+        >
+          <Store className="w-4 h-4" />
+          Marketplace
+          <span className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 opacity-0 animate-neon-pulse -z-10" />
+        </Link>
       </motion.div>
 
-      {/* CTA */}
+      {/* Right side */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="hidden md:block"
+        className="hidden md:flex items-center gap-3"
       >
-        <Link
-          href="/register"
-          className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300"
-        >
-          Sign Up
-        </Link>
+        {!loading && user ? (
+          <>
+            {/* Notification bell */}
+            <div ref={notifRef} className="relative">
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full" />
+              </button>
+
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-slate-900">Notifications</p>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {mockNotifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className="px-4 py-3 hover:bg-slate-50 transition-colors border-b border-gray-50 last:border-0"
+                        >
+                          <p className="text-sm text-slate-700">{n.text}</p>
+                          <p className="text-xs text-slate-400 mt-1">{n.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* User dropdown */}
+            <div ref={dropdownRef} className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-gray-200 hover:border-purple-200 transition-all"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 via-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+                  {initials}
+                </div>
+                <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate">
+                  {displayName}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-slate-900">{displayName}</p>
+                      <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                    </div>
+                    <div className="p-1.5">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        ) : !loading ? (
+          <Link
+            href="/auth/signup"
+            className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300"
+          >
+            Sign Up
+          </Link>
+        ) : null}
       </motion.div>
 
       {/* Mobile hamburger */}
@@ -105,12 +248,32 @@ export default function Navbar() {
               );
             })}
             <Link
-              href="/register"
+              href="/marketplace"
               onClick={() => setMobileOpen(false)}
-              className="mt-2 px-4 py-3 rounded-lg text-sm font-semibold text-center text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
+              className="px-4 py-3 rounded-lg text-sm font-semibold text-purple-600 hover:bg-purple-50 flex items-center gap-2"
             >
-              Sign Up
+              <Store className="w-4 h-4" />
+              Marketplace
             </Link>
+            {user ? (
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setMobileOpen(false);
+                }}
+                className="mt-2 px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left"
+              >
+                Sign out
+              </button>
+            ) : (
+              <Link
+                href="/auth/signup"
+                onClick={() => setMobileOpen(false)}
+                className="mt-2 px-4 py-3 rounded-lg text-sm font-semibold text-center text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
+              >
+                Sign Up
+              </Link>
+            )}
           </div>
         </motion.div>
       )}

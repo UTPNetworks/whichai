@@ -245,7 +245,7 @@ export default function Home() {
           transition={{ duration: 0.5 }}
         >
           <Link
-            href="/register"
+            href="/auth/signup"
             className="relative group px-6 py-2.5 rounded-full font-semibold text-sm text-white transition-all duration-300 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_25px_rgba(168,85,247,0.4)]"
           >
             Join whichai.cloud

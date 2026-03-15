@@ -171,6 +171,205 @@ export function timeAgo(dateStr: string): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
+// ============================================================
+// Marketplace types & data
+// ============================================================
+
+export type MarketplaceCategory = 'api-tokens' | 'llm-subscriptions' | 'gpu-deals';
+
+export interface MarketplaceDeal {
+  id: string;
+  name: string;
+  description: string;
+  category: MarketplaceCategory;
+  original_price: number;
+  discounted_price: number;
+  provider: string;
+  badge: string | null;
+  featured: boolean;
+  claim_url: string;
+  unit: string; // e.g. "credits", "/mo", "/hr"
+}
+
+export const marketplaceCategories = [
+  { label: 'API Tokens', value: 'api-tokens' as const },
+  { label: 'LLM Subscriptions', value: 'llm-subscriptions' as const },
+  { label: 'GPU & Server Deals', value: 'gpu-deals' as const },
+] as const;
+
+export const marketplaceDeals: MarketplaceDeal[] = [
+  // API Tokens
+  {
+    id: 'deal-1',
+    name: 'OpenAI API Credits Bundle',
+    description: 'Get $100 worth of OpenAI API credits for just $90. Valid for GPT-5, DALL-E 4, and Whisper v3.',
+    category: 'api-tokens',
+    original_price: 100,
+    discounted_price: 90,
+    provider: 'OpenAI',
+    badge: 'Hot Deal',
+    featured: true,
+    claim_url: '#',
+    unit: 'credits',
+  },
+  {
+    id: 'deal-2',
+    name: 'Anthropic Claude Credits',
+    description: 'Bundle of Anthropic API credits at a discount. Works with Claude 4.6 Opus and Sonnet models.',
+    category: 'api-tokens',
+    original_price: 150,
+    discounted_price: 120,
+    provider: 'Anthropic',
+    badge: 'Popular',
+    featured: true,
+    claim_url: '#',
+    unit: 'credits',
+  },
+  {
+    id: 'deal-3',
+    name: 'Google AI Studio Credits',
+    description: 'Prepaid credits for Gemini 2.5 API, Imagen 4, and Veo. Includes priority queue access.',
+    category: 'api-tokens',
+    original_price: 200,
+    discounted_price: 160,
+    provider: 'Google',
+    badge: null,
+    featured: false,
+    claim_url: '#',
+    unit: 'credits',
+  },
+  {
+    id: 'deal-4',
+    name: 'Mistral API Starter Pack',
+    description: '50M tokens for Mistral Large 3. EU-hosted, GDPR compliant, no data retention.',
+    category: 'api-tokens',
+    original_price: 75,
+    discounted_price: 55,
+    provider: 'Mistral',
+    badge: 'New',
+    featured: false,
+    claim_url: '#',
+    unit: 'pack',
+  },
+
+  // LLM Subscriptions
+  {
+    id: 'deal-5',
+    name: 'ChatGPT Pro — Student Deal',
+    description: 'Full ChatGPT Pro access with GPT-5, code interpreter, DALL-E, and advanced voice. Verified .edu required.',
+    category: 'llm-subscriptions',
+    original_price: 200,
+    discounted_price: 100,
+    provider: 'OpenAI',
+    badge: 'Student Special',
+    featured: true,
+    claim_url: '#',
+    unit: '/mo',
+  },
+  {
+    id: 'deal-6',
+    name: 'Claude Pro — Student Plan',
+    description: 'Unlimited Claude 4.6 Opus access with 5x usage limits. Available to verified students.',
+    category: 'llm-subscriptions',
+    original_price: 20,
+    discounted_price: 12,
+    provider: 'Anthropic',
+    badge: 'Student Special',
+    featured: false,
+    claim_url: '#',
+    unit: '/mo',
+  },
+  {
+    id: 'deal-7',
+    name: 'Gemini Advanced — Annual',
+    description: 'Gemini 2.5 Ultra with 2M context, Gems, and Google ecosystem integration. Save with annual billing.',
+    category: 'llm-subscriptions',
+    original_price: 240,
+    discounted_price: 180,
+    provider: 'Google',
+    badge: 'Best Value',
+    featured: true,
+    claim_url: '#',
+    unit: '/yr',
+  },
+  {
+    id: 'deal-8',
+    name: 'Team Bulk Seats — ChatGPT',
+    description: '10-seat team bundle for ChatGPT Team with shared workspace, admin console, and priority support.',
+    category: 'llm-subscriptions',
+    original_price: 300,
+    discounted_price: 225,
+    provider: 'OpenAI',
+    badge: 'Team Deal',
+    featured: false,
+    claim_url: '#',
+    unit: '/mo',
+  },
+
+  // GPU & Server Deals
+  {
+    id: 'deal-9',
+    name: 'NVIDIA H100 80GB Instance',
+    description: 'On-demand H100 SXM5 instance with 80GB HBM3, 400Gbps InfiniBand. NVLink ready for multi-GPU.',
+    category: 'gpu-deals',
+    original_price: 3.99,
+    discounted_price: 2.49,
+    provider: 'Lambda Cloud',
+    badge: 'Hot Deal',
+    featured: true,
+    claim_url: '#',
+    unit: '/hr',
+  },
+  {
+    id: 'deal-10',
+    name: 'NVIDIA A100 40GB Rental',
+    description: 'A100 PCIe with 40GB HBM2e. Great for fine-tuning 7B-70B parameter models. Spot pricing available.',
+    category: 'gpu-deals',
+    original_price: 1.89,
+    discounted_price: 1.29,
+    provider: 'CoreWeave',
+    badge: null,
+    featured: false,
+    claim_url: '#',
+    unit: '/hr',
+  },
+  {
+    id: 'deal-11',
+    name: 'Google TPU v5e Pod Slice',
+    description: '8-chip TPU v5e pod slice optimized for training and serving. Includes JAX/PyTorch support.',
+    category: 'gpu-deals',
+    original_price: 12.00,
+    discounted_price: 8.40,
+    provider: 'Google Cloud',
+    badge: 'Limited',
+    featured: false,
+    claim_url: '#',
+    unit: '/hr',
+  },
+  {
+    id: 'deal-12',
+    name: 'RTX 4090 Cluster — 4x GPUs',
+    description: '4x RTX 4090 with NVLink, 512GB RAM, 2TB NVMe. Perfect for inference and small-scale training.',
+    category: 'gpu-deals',
+    original_price: 2.40,
+    discounted_price: 1.68,
+    provider: 'RunPod',
+    badge: 'Budget Pick',
+    featured: true,
+    claim_url: '#',
+    unit: '/hr',
+  },
+];
+
+export function getMarketplaceDeals(category?: MarketplaceCategory): MarketplaceDeal[] {
+  if (!category) return marketplaceDeals;
+  return marketplaceDeals.filter((d) => d.category === category);
+}
+
+export function getDiscountPct(original: number, discounted: number): number {
+  return Math.round(((original - discounted) / original) * 100);
+}
+
 export const categories = [
   { label: 'All', value: 'all' },
   { label: 'Chatbots', value: 'chatbot' },

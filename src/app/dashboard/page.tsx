@@ -10,9 +10,14 @@ import {
   Copy,
   Check,
   ArrowRight,
+  PiggyBank,
+  Bookmark,
+  Store,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useAuth } from "@/components/AuthProvider";
+import Navbar from "@/components/Navbar";
 
 const models = [
   {
@@ -156,7 +161,19 @@ function TokenDisplay() {
   );
 }
 
+const tierColors: Record<string, string> = {
+  Free: "text-slate-600 bg-slate-100",
+  Student: "text-purple-600 bg-purple-100",
+  Pro: "text-yellow-600 bg-yellow-100",
+};
+
 export default function DashboardPage() {
+  const { user, profile, loading } = useAuth();
+
+  const firstName = profile?.first_name || user?.email?.split("@")[0] || "there";
+  const tier = profile?.tier || "Free";
+  const savings = profile?.savings_total ?? 0;
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-gray-50">
       {/* Subtle background accents */}
@@ -166,53 +183,92 @@ export default function DashboardPage() {
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-10 flex items-center justify-between px-6 md:px-12 py-6 border-b border-gray-100 bg-white/80 backdrop-blur-sm">
-        <Link href="/" className="flex items-center gap-2">
-          <Sparkles className="w-7 h-7 text-purple-500" />
-          <span className="text-xl font-bold bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            whichai
-          </span>
-        </Link>
-
-        <div className="flex items-center gap-4">
-          <div className="bg-white rounded-full px-4 py-1.5 flex items-center gap-2 border border-gray-200 shadow-sm">
-            <Crown className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm font-medium text-slate-700">
-              Pro Member
-            </span>
-          </div>
-          <Link
-            href="/"
-            className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-          >
-            <LogOut className="w-5 h-5" />
-          </Link>
-        </div>
-      </nav>
+      <div className="relative z-10 bg-white/80 backdrop-blur-sm">
+        <Navbar />
+      </div>
 
       {/* Main Content */}
       <main className="relative z-10 px-6 md:px-12 py-8 max-w-7xl mx-auto">
-        {/* Header + API Button */}
+        {/* Personalized Header */}
         <div className="flex flex-col items-center text-center mb-12">
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl md:text-4xl font-bold text-slate-900 mb-2"
           >
-            Welcome Back 👋
+            Welcome back, {firstName}! 👋
           </motion.h1>
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-slate-500 mb-8"
+            className="flex items-center gap-3 mb-8"
           >
-            Your exclusive member dashboard
-          </motion.p>
+            <p className="text-slate-500">You are currently a</p>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${tierColors[tier]}`}
+            >
+              {tier} Member
+            </span>
+          </motion.div>
 
           <APIBrokerButton />
           <TokenDisplay />
         </div>
+
+        {/* Personalized Cards Row */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12"
+        >
+          {/* Savings Tracker */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <PiggyBank className="w-5 h-5 text-emerald-500" />
+              <h3 className="font-semibold text-slate-900">Savings Tracker</h3>
+            </div>
+            <p className="text-3xl font-bold text-emerald-600">
+              ${savings.toFixed(2)}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">Total saved with whichai member pricing</p>
+          </div>
+
+          {/* Watchlist */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Bookmark className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold text-slate-900">Saved Models</h3>
+            </div>
+            <p className="text-sm text-slate-500 mb-3">
+              Track your favorite AI models and get notified of price drops.
+            </p>
+            <Link
+              href="/compare"
+              className="text-sm text-purple-500 hover:text-purple-700 font-medium flex items-center gap-1 transition-colors"
+            >
+              Browse models <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* Marketplace Quick Link */}
+          <div className="bg-gradient-to-br from-purple-50 to-cyan-50 rounded-2xl p-6 border border-purple-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Store className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold text-slate-900">Marketplace</h3>
+            </div>
+            <p className="text-sm text-slate-500 mb-3">
+              Exclusive deals on API tokens, subscriptions, and GPU rentals.
+            </p>
+            <Link
+              href="/marketplace"
+              className="text-sm text-purple-500 hover:text-purple-700 font-medium flex items-center gap-1 transition-colors"
+            >
+              View deals <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </motion.div>
 
         {/* Exclusive Member Rates */}
         <motion.div
@@ -299,7 +355,10 @@ export default function DashboardPage() {
             { label: "Tokens Used", value: "4.2M", change: "+12%" },
             { label: "Money Saved", value: "$1,284", change: "This month" },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-2xl p-5 text-center border border-gray-200 shadow-sm">
+            <div
+              key={stat.label}
+              className="bg-white rounded-2xl p-5 text-center border border-gray-200 shadow-sm"
+            >
               <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
               <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
               <p className="text-xs text-emerald-500 mt-1">{stat.change}</p>
