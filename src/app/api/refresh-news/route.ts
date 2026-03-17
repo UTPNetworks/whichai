@@ -113,15 +113,15 @@ export async function POST(request: Request) {
       }));
 
       // Upsert on url — skip duplicates
-      const { error, count } = await supabase
+      const { error, data } = await supabase
         .from('ai_news')
         .upsert(rows, { onConflict: 'url', ignoreDuplicates: true })
-        .select('*', { count: 'exact', head: true });
+        .select('id');
 
       if (error) {
         errors.push(`${feed.source}: ${error.message}`);
       } else {
-        totalInserted += count ?? 0;
+        totalInserted += data?.length ?? 0;
       }
     } catch (err) {
       errors.push(`${feed.source}: ${err instanceof Error ? err.message : String(err)}`);
