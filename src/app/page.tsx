@@ -1,13 +1,14 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, ArrowRight, Newspaper, Loader2 } from "lucide-react";
+import { Search, Sparkles, ArrowRight, Newspaper, Loader2, ShoppingBag, TrendingUp, Tag, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { getAllProducts, getAllNews, type AIProduct, type AINewsArticle } from "@/lib/data";
+import { getAllProducts, getAllNews, marketplaceDeals, getDiscountPct, type AIProduct, type AINewsArticle, type MarketplaceDeal } from "@/lib/data";
 import NewsCard from "@/components/NewsCard";
+import { useAuth } from "@/components/AuthProvider";
 
 // ============================================================
 // Visitor Counter
@@ -147,9 +148,75 @@ function SmartSearch({ products }: { products: AIProduct[] }) {
 }
 
 // ============================================================
+// Latest Listings Strip
+// ============================================================
+function LatestListings({ deals }: { deals: MarketplaceDeal[] }) {
+  const latest = deals.slice(0, 6);
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2, duration: 0.6 }}
+      className="relative z-10 px-4 md:px-12 pb-12"
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-purple-500" />
+            <h2 className="text-lg font-bold text-slate-900">Latest Listings</h2>
+          </div>
+          <Link
+            href="/marketplace"
+            className="flex items-center gap-1 text-sm font-medium text-purple-500 hover:text-purple-700 transition-colors"
+          >
+            View all <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {latest.map((deal, i) => {
+            const discount = getDiscountPct(deal.original_price, deal.discounted_price);
+            return (
+              <motion.div
+                key={deal.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.06 }}
+                className="bg-white rounded-2xl p-4 border border-gray-200 hover:border-purple-200 hover:shadow-md transition-all duration-300 flex items-center gap-4"
+              >
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center text-slate-800 font-bold text-lg shrink-0">
+                  {deal.provider[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{deal.name}</p>
+                  <p className="text-xs text-slate-400">{deal.provider}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm font-bold text-slate-900">${deal.discounted_price.toFixed(2)}</span>
+                    <span className="text-xs text-slate-400 line-through">${deal.original_price.toFixed(2)}</span>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">-{discount}%</span>
+                  </div>
+                </div>
+                <a
+                  href={deal.claim_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-purple-500 hover:bg-purple-50 transition-all"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+// ============================================================
 // Main Page
 // ============================================================
 export default function Home() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<AIProduct[]>([]);
   const [news, setNews] = useState<AINewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -297,36 +364,63 @@ export default function Home() {
             <SmartSearch products={products} />
           </motion.div>
 
-          {/* Marketplace CTA — directly below search */}
+          {/* CTA — changes based on auth state */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            {/* Join Marketplace button */}
-            <div className="mb-4">
-              <Link
-                href="/auth/signup"
-                className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_30px_rgba(168,85,247,0.45)] transition-all duration-300"
-              >
-                <Sparkles className="w-4 h-4" />
-                Join Marketplace
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <p className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
-              Join Whichai for the best AI Marketplace in the world
-            </p>
-            <p className="text-sm md:text-base bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
-              AI Marketplace: From Prompt to Power, All in One Place.
-            </p>
+            {user ? (
+              /* Logged-in: Buy/Sell action buttons */
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/marketplace"
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-emerald-500 to-cyan-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.45)] transition-all duration-300"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Buy
+                  </Link>
+                  <Link
+                    href="/marketplace"
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-pink-500 to-purple-600 hover:shadow-[0_0_30px_rgba(236,72,153,0.45)] transition-all duration-300"
+                  >
+                    <Tag className="w-4 h-4" />
+                    Sell
+                  </Link>
+                </div>
+                <p className="text-sm text-slate-500">
+                  Welcome back! Explore the AI marketplace below ↓
+                </p>
+              </div>
+            ) : (
+              /* Logged-out: Join CTA */
+              <>
+                <div className="mb-4">
+                  <Link
+                    href="/auth/signup"
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_30px_rgba(168,85,247,0.45)] transition-all duration-300"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Join Marketplace
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                <p className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+                  Join Whichai for the best AI Marketplace in the world
+                </p>
+                <p className="text-sm md:text-base bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
+                  AI Marketplace: From Prompt to Power, All in One Place.
+                </p>
+              </>
+            )}
           </motion.div>
         </motion.div>
         </main>
       </div>{/* end flex layout */}
 
       {/* Mobile news feed — shown below center content on small screens */}
-      <section className="lg:hidden px-4 pb-12">
+      <section className="lg:hidden px-4 pb-6">
         <div className="flex items-center gap-2 mb-3">
           <Newspaper className="w-4 h-4 text-purple-500" />
           <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
@@ -342,6 +436,9 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Latest Listings — shown to logged-in users */}
+      {user && <LatestListings deals={marketplaceDeals} />}
 
       <VisitorCounter />
     </div>
