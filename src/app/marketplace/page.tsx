@@ -19,15 +19,15 @@ import {
 } from "@/lib/data";
 import { useAuth } from "@/components/AuthProvider";
 
-// ââ Types âââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Types ─────────────────────────────────────────────────────
 type BigTab = "all" | BigCategory;
 
-// ââ Constants âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Constants ─────────────────────────────────────────────────
 const BIG_TABS = [
   { value: "all" as BigTab, label: "All Listings", icon: Sparkles },
-  { value: "digital-assets" as BigTab, label: "Digital Assets", icon: Brain, emoji: "ð§ " },
-  { value: "compute-hub" as BigTab, label: "Compute Hub", icon: Zap, emoji: "â¡" },
-  { value: "hardware-corner" as BigTab, label: "Hardware Corner", icon: Monitor, emoji: "ð¥ï¸" },
+  { value: "digital-assets" as BigTab, label: "Digital Assets", icon: Brain },
+  { value: "compute-hub" as BigTab, label: "Compute Hub", icon: Cpu },
+  { value: "hardware-corner" as BigTab, label: "Hardware Corner", icon: Monitor },
 ];
 
 const catBadgeStyle: Record<string, string> = {
@@ -73,7 +73,7 @@ const providerInitials: Record<string, { letter: string; bg: string }> = {
   Google: { letter: "G", bg: "from-blue-400 to-indigo-500" },
   "Google Cloud": { letter: "G", bg: "from-blue-400 to-cyan-500" },
   Mistral: { letter: "M", bg: "from-purple-400 to-violet-500" },
-  "Lambda Cloud": { letter: "Î»", bg: "from-pink-400 to-rose-500" },
+  "Lambda Cloud": { letter: "λ", bg: "from-pink-400 to-rose-500" },
   CoreWeave: { letter: "C", bg: "from-cyan-400 to-teal-500" },
   RunPod: { letter: "R", bg: "from-indigo-400 to-blue-500" },
 };
@@ -87,7 +87,7 @@ const TOOL_CATEGORIES = [
   { value: "multimodal", label: "Multimodal", Icon: Zap },
 ];
 
-// ââ Listing Card (new v2) ââââââââââââââââââââââââââââââââââââââ
+// ── Listing Card (new v2) ──────────────────────────────────────
 function ListingCard({ listing, index }: { listing: MarketplaceListing; index: number }) {
   const discountPct = listing.originalPrice
     ? Math.round(((listing.originalPrice - listing.price) / listing.originalPrice) * 100)
@@ -119,7 +119,11 @@ function ListingCard({ listing, index }: { listing: MarketplaceListing; index: n
       </div>
 
       <div className="flex items-start gap-3 mb-2">
-        <span className="text-3xl shrink-0">{listing.emoji}</span>
+        <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${catBadgeStyle[listing.bigCategory]}`}>
+          {listing.bigCategory === "digital-assets" && <Brain className="w-5 h-5" />}
+          {listing.bigCategory === "compute-hub" && <Cpu className="w-5 h-5" />}
+          {listing.bigCategory === "hardware-corner" && <Monitor className="w-5 h-5" />}
+        </div>
         <h3 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2 group-hover:text-purple-600 transition-colors">
           {listing.name}
         </h3>
@@ -166,7 +170,7 @@ function ListingCard({ listing, index }: { listing: MarketplaceListing; index: n
   );
 }
 
-// ââ Deal Card (existing) ââââââââââââââââââââââââââââââââââââââ
+// ── Deal Card (existing) ──────────────────────────────────────
 function DealCard({ deal, index }: { deal: MarketplaceDeal; index: number }) {
   const discountPct = getDiscountPct(deal.original_price, deal.discounted_price);
   const provider = providerInitials[deal.provider] || { letter: deal.provider[0], bg: "from-slate-400 to-slate-500" };
@@ -222,7 +226,7 @@ function DealCard({ deal, index }: { deal: MarketplaceDeal; index: number }) {
   );
 }
 
-// ââ Tool Card âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Tool Card ─────────────────────────────────────────────────
 function ToolCard({ product, index }: { product: AIProduct; index: number }) {
   const featureKeys = ["vision", "voice", "image_gen", "code_interpreter", "web_browsing", "api_available"];
   const activeFeatures = featureKeys.filter((k) => product.features[k] === true);
@@ -269,11 +273,11 @@ function ToolCard({ product, index }: { product: AIProduct; index: number }) {
   );
 }
 
-// ââ Sell Modal ââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Sell Modal ────────────────────────────────────────────────
 const SELL_CATEGORIES = [
-  { value: "digital-assets", label: "Digital Assets", emoji: "ð§ ", desc: "Prompts, agents, fine-tuned models, LoRAs" },
-  { value: "compute-hub", label: "Compute Hub", emoji: "â¡", desc: "GPU rentals, API credits, subscriptions" },
-  { value: "hardware-corner", label: "Hardware Corner", emoji: "ð¥ï¸", desc: "Used GPUs, AI kits, laptops" },
+  { value: "digital-assets", label: "Digital Assets", icon: Brain, desc: "Prompts, agents, fine-tuned models, LoRAs" },
+  { value: "compute-hub", label: "Compute Hub", icon: Cpu, desc: "GPU rentals, API credits, subscriptions" },
+  { value: "hardware-corner", label: "Hardware Corner", icon: Monitor, desc: "Used GPUs, AI kits, laptops" },
 ];
 
 function SellModal({ onClose }: { onClose: () => void }) {
@@ -291,7 +295,9 @@ function SellModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-gray-100">
             <X className="w-5 h-5 text-slate-400" />
           </button>
-          <div className="text-5xl mb-4">ð</div>
+          <div className="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-4">
+            <Store className="w-7 h-7 text-purple-600" />
+          </div>
           <h2 className="text-xl font-bold text-slate-900 mb-2">Sign in to sell</h2>
           <p className="text-slate-500 text-sm mb-6">You need an account to list items on whichai.</p>
           <Link href="/auth/signup" onClick={onClose}
@@ -336,12 +342,14 @@ function SellModal({ onClose }: { onClose: () => void }) {
                 <Upload className="w-5 h-5 text-purple-500" />
                 <h2 className="text-xl font-bold text-slate-900">List Your Item</h2>
               </div>
-              <p className="text-slate-400 text-sm mb-6">Step 1 of 3 â Choose a category</p>
+              <p className="text-slate-400 text-sm mb-6">Step 1 of 3 — Choose a category</p>
               <div className="space-y-3">
                 {SELL_CATEGORIES.map((cat) => (
                   <button key={cat.value} onClick={() => setSelectedCat(cat.value)}
                     className={`w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${selectedCat === cat.value ? "border-purple-400 bg-purple-50" : "border-gray-200 hover:border-purple-200"}`}>
-                    <span className="text-3xl">{cat.emoji}</span>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${catBadgeStyle[cat.value] || "bg-slate-100 text-slate-600"}`}>
+                      <cat.icon className="w-5 h-5" />
+                    </div>
                     <div>
                       <div className="font-bold text-slate-900 text-sm">{cat.label}</div>
                       <div className="text-xs text-slate-400">{cat.desc}</div>
@@ -361,7 +369,7 @@ function SellModal({ onClose }: { onClose: () => void }) {
                 <FileText className="w-5 h-5 text-purple-500" />
                 <h2 className="text-xl font-bold text-slate-900">Item Details</h2>
               </div>
-              <p className="text-slate-400 text-sm mb-6">Step 2 of 3 â Describe what you&apos;re selling</p>
+              <p className="text-slate-400 text-sm mb-6">Step 2 of 3 — Describe what you&apos;re selling</p>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Item Name</label>
@@ -417,7 +425,7 @@ function SellModal({ onClose }: { onClose: () => void }) {
                 <CheckCircle2 className="w-5 h-5 text-purple-500" />
                 <h2 className="text-xl font-bold text-slate-900">Review & Submit</h2>
               </div>
-              <p className="text-slate-400 text-sm mb-6">Step 3 of 3 â Confirm your listing</p>
+              <p className="text-slate-400 text-sm mb-6">Step 3 of 3 — Confirm your listing</p>
               <div className="bg-gray-50 rounded-2xl p-5 space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Category</span>
@@ -425,7 +433,7 @@ function SellModal({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Name</span>
-                  <span className="font-semibold text-slate-900 text-right max-word-[200px] truncate">{formData.name}</span>
+                  <span className="font-semibold text-slate-900 text-right max-w-[200px] truncate">{formData.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Price</span>
@@ -447,7 +455,7 @@ function SellModal({ onClose }: { onClose: () => void }) {
                 </button>
                 <button onClick={() => setSubmitted(true)}
                   className="flex-1 py-3 rounded-full font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                  Submit Listing ð
+                  Submit Listing
                 </button>
               </div>
             </>
@@ -458,7 +466,7 @@ function SellModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ââ Main Page âââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Main Page ─────────────────────────────────────────────────
 export default function MarketplacePage() {
   const { user } = useAuth();
   const [bigTab, setBigTab] = useState<BigTab>("all");
@@ -514,7 +522,7 @@ export default function MarketplacePage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-0">
 
-        {/* ââ Hero header âââââââââââââââââââââââââââââââââââââââ */}
+        {/* ── Hero header ─────────────────────────────────────── */}
         <div className="relative overflow-hidden rounded-2xl mt-6 mb-8 bg-gradient-to-br from-[#05050f] via-[#0d0520] to-[#050515] p-px">
           <div className="rounded-2xl px-8 py-10 md:py-14">
             {/* Dot grid overlay */}
@@ -532,7 +540,7 @@ export default function MarketplacePage() {
                   </span>
                 </h1>
                 <p className="text-slate-400 text-sm max-w-lg">
-                  Buy prompts, rent GPUs, sell agents, and discover hardware â all in one place.
+                  Buy prompts, rent GPUs, sell agents, and discover hardware — all in one place.
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -550,23 +558,23 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        {/* ââ Search bar ââââââââââââââââââââââââââââââââââââââââ */}
+        {/* ── Search bar ──────────────────────────────────────── */}
         <div className="relative mb-6">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search listings â prompts, GPUs, agents, hardware..."
+            placeholder="Search listings — prompts, GPUs, agents, hardware..."
             className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none text-sm shadow-sm transition-all"
           />
         </div>
 
-        {/* ââ Big category tabs ââââââââââââââââââââââââââââââââââ */}
+        {/* ── Big category tabs ────────────────────────────────── */}
         <div className="flex items-center gap-2 flex-wrap mb-8">
-          {BIG_TABS.map(({ value, label, icon: Icon, emoji }) => (
+          {BIG_TABS.map(({ value, label, icon: Icon }) => (
             <button key={value} onClick={() => setBigTab(value)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${bigTab === value ? "bg-slate-900 text-white shadow-md" : "bg-white text-slate-500 border border-gray-200 hover:border-purple-200 hover:text-slate-900"}`}>
-              {emoji ? <span>{emoji}</span> : <Icon className="w-4 h-4" />}
+              <Icon className="w-4 h-4" />
               {label}
             </button>
           ))}
@@ -576,7 +584,7 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        {/* ââ v2 Listings Grid ââââââââââââââââââââââââââââââââââ */}
+        {/* ── v2 Listings Grid ────────────────────────────────── */}
         <motion.section className="mb-14">
           <AnimatePresence mode="wait">
             <motion.div key={bigTab + searchQuery} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -590,14 +598,16 @@ export default function MarketplacePage() {
 
           {displayedListings.length === 0 && (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
-              <div className="text-5xl mb-3">ð</div>
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                <Search className="w-7 h-7 text-slate-400" />
+              </div>
               <p className="text-slate-500 font-medium">No listings found.</p>
               <p className="text-slate-400 text-sm mt-1">Try a different search or category.</p>
             </div>
           )}
         </motion.section>
 
-        {/* ââ AI Tools Section ââââââââââââââââââââââââââââââââââ */}
+        {/* ── AI Tools Section ────────────────────────────────── */}
         {(bigTab === "all" || bigTab === "digital-assets") && (
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-14">
             <div className="flex items-center gap-2 mb-5">
@@ -629,14 +639,14 @@ export default function MarketplacePage() {
           </motion.section>
         )}
 
-        {/* ââ Exclusive Deals Section ââââââââââââââââââââââââââââ */}
+        {/* ── Exclusive Deals Section ──────────────────────────── */}
         {(bigTab === "all" || bigTab === "compute-hub") && (
           <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-14">
             <div className="flex items-center gap-2 mb-4">
               <Tag className="w-5 h-5 text-emerald-500" />
               <h2 className="text-xl font-bold text-slate-900">Exclusive Deals</h2>
             </div>
-            <p className="text-slate-500 text-sm mb-5">Discounted API tokens, subscriptions, and GPU rentals â curated for developers, researchers, and teams.</p>
+            <p className="text-slate-500 text-sm mb-5">Discounted API tokens, subscriptions, and GPU rentals — curated for developers, researchers, and teams.</p>
 
             <div className="flex flex-wrap gap-2 mb-6">
               <button onClick={() => setActiveCategory(null)}
@@ -665,7 +675,7 @@ export default function MarketplacePage() {
           </motion.section>
         )}
 
-        {/* ââ Bottom CTA ââââââââââââââââââââââââââââââââââââââââ */}
+        {/* ── Bottom CTA ──────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.2 }} className="mt-8 mb-12 text-center">
           <div className="inline-block p-[2px] rounded-2xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500">
