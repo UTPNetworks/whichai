@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, Bell, ChevronDown, LogOut, User, Store } from "lucide-react";
+import { Menu, X, Bell, ChevronDown, LogOut, User, Store } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -63,7 +64,7 @@ export default function Navbar() {
         transition={{ duration: 0.5 }}
       >
         <Link href="/" className="flex items-center gap-2">
-          <Sparkles className="w-7 h-7 text-purple-500" />
+          <Image src="/whichai_icon_nav.svg" alt="whichai logo" width={32} height={29} priority />
           <span className="text-xl font-bold bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
             whichai
           </span>
