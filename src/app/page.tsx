@@ -225,80 +225,108 @@ export default function Home() {
         </motion.div>
       </nav>
 
-      {/* Header + Search + Tagline */}
-      <section className="relative z-10 px-6 md:px-12 pt-8 pb-6 max-w-[1400px] mx-auto">
+      {/* Fixed left sidebar — news corner */}
+      <aside className="hidden lg:flex fixed left-0 top-[73px] w-[270px] h-[calc(100vh-73px)] z-10 flex-col bg-white/80 backdrop-blur-sm border-r border-gray-100">
         <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="flex flex-col h-full p-4"
         >
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight tracking-tight mb-1">
-            <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent">
-              Compare. Connect. Conquer.
-            </span>
-          </h1>
-          <p className="text-base md:text-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
-            The World&apos;s AI at Your Fingertips.
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5 }}
-        >
-          <SmartSearch products={products} />
-        </motion.div>
-
-        {/* Marketplace CTA — directly below search bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="text-center mt-5"
-        >
-          <p className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
-            Join Whichai for the best AI Marketplace in the world
-          </p>
-          <p className="text-sm md:text-base bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
-            AI Marketplace: From Prompt to Power, All in One Place.
-          </p>
-        </motion.div>
-      </section>
-
-      {/* News sidebar — flush left */}
-      <main className="relative z-10 pb-20">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          <div className="flex items-center gap-2 mb-3">
+            <Newspaper className="w-4 h-4 text-purple-500" />
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
+              AI News Corner
+            </h2>
           </div>
-        ) : (
-          <div className="pl-4 lg:pl-6 pr-4 lg:pr-8 lg:max-w-[320px]">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <Newspaper className="w-4 h-4 text-purple-500" />
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
-                  AI News Corner
-                </h2>
-              </div>
 
-              <div className="flex flex-col gap-2.5 lg:max-h-[calc(100vh-340px)] lg:overflow-y-auto lg:pr-1">
+          <div className="flex flex-col gap-2.5 overflow-y-auto flex-1 pr-1">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+              </div>
+            ) : (
+              <>
                 {sortedNews.map((article, i) => (
                   <NewsCard key={article.id} article={article} index={i} />
                 ))}
                 {sortedNews.length === 0 && (
                   <p className="text-xs text-slate-400 py-4 text-center">No news yet</p>
                 )}
-              </div>
-            </motion.div>
+              </>
+            )}
           </div>
-        )}
+        </motion.div>
+      </aside>
+
+      {/* Center content — full viewport width, centered */}
+      <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-73px)] px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center w-full max-w-2xl"
+        >
+          {/* Hero text */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight mb-2">
+              <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-500 bg-clip-text text-transparent">
+                Compare. Connect. Conquer.
+              </span>
+            </h1>
+            <p className="text-base md:text-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
+              The World&apos;s AI at Your Fingertips.
+            </p>
+          </motion.div>
+
+          {/* Search bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="mb-5"
+          >
+            <SmartSearch products={products} />
+          </motion.div>
+
+          {/* Marketplace CTA — directly below search */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <p className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+              Join Whichai for the best AI Marketplace in the world
+            </p>
+            <p className="text-sm md:text-base bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
+              AI Marketplace: From Prompt to Power, All in One Place.
+            </p>
+          </motion.div>
+        </motion.div>
       </main>
+
+      {/* Mobile news feed — shown below center content on small screens */}
+      <section className="lg:hidden px-4 pb-12">
+        <div className="flex items-center gap-2 mb-3">
+          <Newspaper className="w-4 h-4 text-purple-500" />
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
+            AI News Corner
+          </h2>
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {sortedNews.map((article, i) => (
+            <NewsCard key={article.id} article={article} index={i} />
+          ))}
+          {sortedNews.length === 0 && (
+            <p className="text-xs text-slate-400 py-4 text-center">No news yet</p>
+          )}
+        </div>
+      </section>
 
       <VisitorCounter />
     </div>

@@ -9,6 +9,9 @@ export interface Profile {
   phone: string | null;
   tier: 'Free' | 'Student' | 'Pro';
   savings_total: number;
+  bio: string | null;
+  avatar_url: string | null;
+  preferred_categories: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,7 +85,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Pick<Profile, 'first_name' | 'last_name' | 'phone' | 'tier'>>
+  updates: Partial<Pick<Profile, 'first_name' | 'last_name' | 'phone' | 'tier' | 'bio' | 'avatar_url' | 'preferred_categories'>>
 ) {
   const { data, error } = await supabase
     .from('profiles')
