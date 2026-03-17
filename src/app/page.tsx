@@ -5,6 +5,7 @@ import {
   Sparkles, ArrowRight, Newspaper, Loader2, ShoppingBag, Tag,
   Star, Shield, Zap, Users, DollarSign, Package, GraduationCap,
   ChevronRight, BadgeCheck, Upload, HandCoins, CheckCircle2,
+  Brain, Cpu, Monitor, Rocket,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -17,7 +18,7 @@ import NewsCard from "@/components/NewsCard";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 
-// ââ Visitor Counter ââââââââââââââââââââââââââââââââââââââââââââ
+// ── Visitor Counter ────────────────────────────────────────────
 function VisitorCounter() {
   const [count, setCount] = useState<number | null>(null);
 
@@ -59,7 +60,7 @@ function VisitorCounter() {
   );
 }
 
-// ââ Star Rating ââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Star Rating ────────────────────────────────────────────────
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -78,7 +79,7 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-// ââ Category badge colors âââââââââââââââââââââââââââââââââââââââ
+// ── Category badge colors ───────────────────────────────────────
 const catBadgeStyle: Record<string, string> = {
   "digital-assets": "bg-purple-100 text-purple-700",
   "compute-hub": "bg-cyan-100 text-cyan-700",
@@ -102,7 +103,7 @@ const listingBadgeGradients: Record<string, string> = {
   New: "from-cyan-400 to-blue-500",
 };
 
-// ââ Featured Listing Card ââââââââââââââââââââââââââââââââââââââ
+// ── Featured Listing Card ──────────────────────────────────────
 function ListingCard({ listing, index }: { listing: MarketplaceListing; index: number }) {
   const discountPct = listing.originalPrice
     ? Math.round(((listing.originalPrice - listing.price) / listing.originalPrice) * 100)
@@ -135,9 +136,13 @@ function ListingCard({ listing, index }: { listing: MarketplaceListing; index: n
         )}
       </div>
 
-      {/* Emoji + title */}
+      {/* Category icon + title */}
       <div className="flex items-start gap-3 mb-2">
-        <span className="text-3xl shrink-0">{listing.emoji}</span>
+        <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${catBadgeStyle[listing.bigCategory]}`}>
+          {listing.bigCategory === "digital-assets" && <Brain className="w-5 h-5" />}
+          {listing.bigCategory === "compute-hub" && <Cpu className="w-5 h-5" />}
+          {listing.bigCategory === "hardware-corner" && <Monitor className="w-5 h-5" />}
+        </div>
         <h3 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2">{listing.name}</h3>
       </div>
 
@@ -183,7 +188,7 @@ function ListingCard({ listing, index }: { listing: MarketplaceListing; index: n
   );
 }
 
-// ââ Main Page ââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Main Page ──────────────────────────────────────────────────
 export default function Home() {
   const { user } = useAuth();
   const [news, setNews] = useState<AINewsArticle[]>([]);
@@ -206,7 +211,8 @@ export default function Home() {
 
   const pillars = [
     {
-      emoji: "ð§ ",
+      icon: Brain,
+      iconBg: "bg-purple-100 text-purple-600",
       title: "Digital Assets",
       description: "Prompt bundles, custom AI agents, fine-tuned models & LoRAs for every use case.",
       tags: ["Prompts", "Agents", "Fine-tuned Models", "LoRAs"],
@@ -218,7 +224,8 @@ export default function Home() {
       count: "8,200+ listings",
     },
     {
-      emoji: "â¡",
+      icon: Cpu,
+      iconBg: "bg-cyan-100 text-cyan-600",
       title: "Compute Hub",
       description: "P2P GPU rentals, discounted API tokens, and group-buy AI subscriptions.",
       tags: ["GPU Rentals", "API Credits", "Subscriptions", "Cloud Compute"],
@@ -230,7 +237,8 @@ export default function Home() {
       count: "4,100+ listings",
     },
     {
-      emoji: "ð¥ï¸",
+      icon: Monitor,
+      iconBg: "bg-emerald-100 text-emerald-600",
       title: "Hardware Corner",
       description: "Verified used GPUs, AI edge kits, and pre-configured AI laptops & servers.",
       tags: ["Used GPUs", "AI Kits", "Laptops", "Servers"],
@@ -281,7 +289,7 @@ export default function Home() {
         <Navbar />
       </div>
 
-      {/* ââ HERO âââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
       <section className="relative bg-[#05050f] overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -307,7 +315,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-sm font-medium mb-8"
           >
             <Sparkles className="w-4 h-4" />
-            World&apos;s First AI Marketplace â Est. 2025
+            World&apos;s First AI Marketplace — Est. 2025
           </motion.div>
 
           {/* Headline */}
@@ -334,7 +342,7 @@ export default function Home() {
             className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
           >
             The global marketplace for AI prompts, custom agents, fine-tuned models, GPU
-            power, and AI hardware â made for builders, students &amp; startups.
+            power, and AI hardware — made for builders, students &amp; startups.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -384,7 +392,7 @@ export default function Home() {
         <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
       </section>
 
-      {/* ââ CATEGORY PILLARS ââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── CATEGORY PILLARS ──────────────────────────────────────────── */}
       <section className="bg-white py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -413,7 +421,9 @@ export default function Home() {
                 whileHover={{ y: -5 }}
                 className={`group relative overflow-hidden rounded-3xl p-8 border-2 ${pillar.border} bg-gradient-to-br ${pillar.gradient} transition-all duration-300 hover:shadow-xl`}
               >
-                <div className="text-5xl mb-5">{pillar.emoji}</div>
+                <div className={`w-14 h-14 rounded-2xl ${pillar.iconBg} flex items-center justify-center mb-5`}>
+                  <pillar.icon className="w-7 h-7" />
+                </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{pillar.title}</h3>
                 <p className="text-slate-600 text-sm leading-relaxed mb-5">{pillar.description}</p>
                 <div className="flex flex-wrap gap-2 mb-6">
@@ -439,7 +449,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ââ FEATURED LISTINGS âââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── FEATURED LISTINGS ─────────────────────────────────────────── */}
       <section className="bg-gray-50 py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -468,7 +478,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ââ STUDENT SWAP ââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── STUDENT SWAP ──────────────────────────────────────────────── */}
       <section className="relative overflow-hidden py-20 px-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
@@ -481,11 +491,13 @@ export default function Home() {
           viewport={{ once: true }}
           className="relative z-10 max-w-3xl mx-auto text-center"
         >
-          <div className="text-6xl mb-6">ð</div>
+          <div className="w-20 h-20 rounded-3xl bg-white/20 flex items-center justify-center mx-auto mb-6">
+            <GraduationCap className="w-10 h-10 text-white" />
+          </div>
           <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">The Student Swap</h2>
           <p className="text-purple-200 text-lg mb-8 leading-relaxed">
             A dedicated space for university students to trade AI credits, borrow GPU power for final
-            projects, and unlock verified student discounts â using your{" "}
+            projects, and unlock verified student discounts — using your{" "}
             <code className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">.edu</code> email.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
@@ -505,12 +517,12 @@ export default function Home() {
           >
             <GraduationCap className="w-5 h-5" />
             {user ? "Go to Student Swap" : "Join with .edu Email"}
-            <ArrowRight className="w-4 h-4" />
+               <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
       </section>
 
-      {/* ââ HOW IT WORKS ââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── HOW IT WORKS ──────────────────────────────────────────────── */}
       <section className="bg-white py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -547,7 +559,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ââ AI NEWS âââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── AI NEWS ───────────────────────────────────────────────────── */}
       <section className="bg-gray-50 py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -574,7 +586,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ââ BOTTOM CTA ââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── BOTTOM CTA ────────────────────────────────────────────────── */}
       <section className="bg-white py-16 px-6 border-t border-gray-100">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -582,12 +594,14 @@ export default function Home() {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto text-center"
         >
-          <div className="text-5xl mb-4">ð</div>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center mx-auto mb-4">
+            <Rocket className="w-8 h-8 text-purple-600" />
+          </div>
           <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">
             Ready to join the AI economy?
           </h2>
           <p className="text-slate-500 mb-8 text-lg">
-            Whether you&apos;re buying your first prompt or crenting out an H100, whichai is built for you.
+            Whether you&apos;re buying your first prompt or renting out an H100, whichai is built for you.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link
