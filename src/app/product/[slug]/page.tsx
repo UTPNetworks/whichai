@@ -16,14 +16,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import NewsCard from "@/components/NewsCard";
 import {
   getProductBySlug,
   getProductTiers,
   getAllProducts,
+  getAllNews,
   formatPrice,
   formatContextWindow,
   type AIProduct,
   type PricingTier,
+  type AINewsArticle,
 } from "@/lib/data";
 
 function FeatureBadge({
@@ -148,14 +151,16 @@ export default function ProductPage() {
   const [product, setProduct] = useState<AIProduct | null>(null);
   const [tiers, setTiers] = useState<PricingTier[]>([]);
   const [otherProducts, setOtherProducts] = useState<AIProduct[]>([]);
+  const [relatedNews, setRelatedNews] = useState<AINewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      const [prod, allProds] = await Promise.all([
+      const [prod, allProds, allNews] = await Promise.all([
         getProductBySlug(slug),
         getAllProducts(),
+        getAllNews(),
       ]);
       if (!prod) {
         setNotFound(true);
@@ -166,6 +171,12 @@ export default function ProductPage() {
       setOtherProducts(allProds.filter((p) => p.id !== prod.id).slice(0, 3));
       const tierData = await getProductTiers(prod.id);
       setTiers(tierData);
+      // Filter news mentioning the product name or provider
+      const keywords = [prod.name.toLowerCase(), prod.provider.toLowerCase()];
+      const filtered = allNews
+        .filter((a) => keywords.some((kw) => a.title.toLowerCase().includes(kw)))
+        .slice(0, 5);
+      setRelatedNews(filtered);
       setLoading(false);
     }
     loadData();
@@ -403,6 +414,7 @@ export default function ProductPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
+          className="mb-8"
         >
           <h2 className="text-xl font-bold text-slate-900 mb-4">
             Compare With Other Tools
@@ -429,6 +441,52 @@ export default function ProductPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </motion.section>
+
+        {/* Recent News */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mb-8"
+        >
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Recent News</h2>
+          {relatedNews.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {relatedNews.map((article, i) => (
+                <NewsCard key={article.id} article={article} index={i} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+              <p className="text-sm text-slate-400 text-center">No recent news found for {product.name}.</p>
+            </div>
+          )}
+        </motion.section>
+
+        {/* CTA */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+        >
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 p-px">
+            <div className="bg-white rounded-2xl px-8 py-10 text-center">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
+                Join Whichai — Explore the World&apos;s Biggest AI Marketplace
+              </h2>
+              <p className="text-slate-500 mb-6 text-sm md:text-base">
+                Compare, discover, and unlock the best AI tools — all in one place.
+              </p>
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] transition-all duration-300"
+              >
+                Join whichai.cloud
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </motion.section>
       </main>

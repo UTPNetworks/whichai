@@ -1,39 +1,13 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, ArrowRight, Clock, Newspaper, Loader2 } from "lucide-react";
+import { Search, Sparkles, ArrowRight, Newspaper, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { getAllProducts, getAllNews, type AIProduct, type AINewsArticle } from "@/lib/data";
 import NewsCard from "@/components/NewsCard";
-
-// ============================================================
-// 8-hour countdown timer
-// ============================================================
-function useCountdown() {
-  const EIGHT_HOURS = 8 * 60 * 60 * 1000;
-
-  function getTimeLeft() {
-    const now = Date.now();
-    const elapsed = now % EIGHT_HOURS;
-    return EIGHT_HOURS - elapsed;
-  }
-
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft());
-
-  useEffect(() => {
-    const interval = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
 
 // ============================================================
 // Visitor Counter
@@ -179,7 +153,6 @@ export default function Home() {
   const [products, setProducts] = useState<AIProduct[]>([]);
   const [news, setNews] = useState<AINewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
-  const countdown = useCountdown();
 
   useEffect(() => {
     async function load() {
@@ -252,7 +225,7 @@ export default function Home() {
         </motion.div>
       </nav>
 
-      {/* Header + Search */}
+      {/* Header + Search + Tagline */}
       <section className="relative z-10 px-6 md:px-12 pt-8 pb-6 max-w-[1400px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -277,66 +250,52 @@ export default function Home() {
         >
           <SmartSearch products={products} />
         </motion.div>
+
+        {/* Marketplace CTA — directly below search bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="text-center mt-5"
+        >
+          <p className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+            Join Whichai for the best AI Marketplace in the world
+          </p>
+          <p className="text-sm md:text-base bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
+            AI Marketplace: From Prompt to Power, All in One Place.
+          </p>
+        </motion.div>
       </section>
 
-      {/* 20/80 Split */}
-      <main className="relative z-10 px-6 md:px-12 pb-20 max-w-[1400px] mx-auto">
+      {/* News sidebar — flush left */}
+      <main className="relative z-10 pb-20">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
           </div>
         ) : (
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Left Sidebar — 20% — News */}
-            <aside className="lg:w-1/5 lg:min-w-[240px]">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              >
-                {/* Update timer */}
-                <div className="mb-4 flex items-center gap-2 bg-slate-900 text-white rounded-xl px-4 py-2.5">
-                  <Clock className="w-4 h-4 text-cyan-400" />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 leading-none mb-0.5">Next update in</p>
-                    <p className="text-sm font-mono font-bold text-cyan-400 tracking-wide">{countdown}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 mb-3">
-                  <Newspaper className="w-4 h-4 text-purple-500" />
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
-                    AI News Corner
-                  </h2>
-                </div>
-
-                <div className="flex flex-col gap-2.5 lg:max-h-[calc(100vh-280px)] lg:overflow-y-auto lg:pr-1">
-                  {sortedNews.map((article, i) => (
-                    <NewsCard key={article.id} article={article} index={i} />
-                  ))}
-                  {sortedNews.length === 0 && (
-                    <p className="text-xs text-slate-400 py-4 text-center">No news yet</p>
-                  )}
-                </div>
-              </motion.div>
-            </aside>
-
-            {/* Right Main Content — 80% */}
-            <div className="flex-1 lg:w-4/5 flex items-center justify-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.6 }}
-                className="text-center px-4 py-12 max-w-2xl"
-              >
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight tracking-tight mb-4 text-slate-900">
-                  Join Whichai for the best AI Marketplace in the world
+          <div className="pl-4 lg:pl-6 pr-4 lg:pr-8 lg:max-w-[320px]">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Newspaper className="w-4 h-4 text-purple-500" />
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
+                  AI News Corner
                 </h2>
-                <p className="text-base md:text-lg bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold bg-gradient-animate">
-                  AI Marketplace: From Prompt to Power, All in One Place.
-                </p>
-              </motion.div>
-            </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5 lg:max-h-[calc(100vh-340px)] lg:overflow-y-auto lg:pr-1">
+                {sortedNews.map((article, i) => (
+                  <NewsCard key={article.id} article={article} index={i} />
+                ))}
+                {sortedNews.length === 0 && (
+                  <p className="text-xs text-slate-400 py-4 text-center">No news yet</p>
+                )}
+              </div>
+            </motion.div>
           </div>
         )}
       </main>
