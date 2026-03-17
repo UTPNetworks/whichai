@@ -225,42 +225,45 @@ export default function Home() {
         </motion.div>
       </nav>
 
-      {/* Fixed left sidebar — news corner */}
-      <aside className="hidden lg:flex fixed left-0 top-[73px] w-[270px] h-[calc(100vh-73px)] z-10 flex-col bg-white/80 backdrop-blur-sm border-r border-gray-100">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="flex flex-col h-full p-4"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Newspaper className="w-4 h-4 text-purple-500" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
-              AI News Corner
-            </h2>
-          </div>
+      {/* Main layout: 35% news sidebar + 65% hero content */}
+      <div className="relative z-10 flex h-[calc(100vh-73px)]">
 
-          <div className="flex flex-col gap-2.5 overflow-y-auto flex-1 pr-1">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
-              </div>
-            ) : (
-              <>
-                {sortedNews.map((article, i) => (
-                  <NewsCard key={article.id} article={article} index={i} />
-                ))}
-                {sortedNews.length === 0 && (
-                  <p className="text-xs text-slate-400 py-4 text-center">No news yet</p>
-                )}
-              </>
-            )}
-          </div>
-        </motion.div>
-      </aside>
+        {/* Left sidebar — news corner (35% of page width) */}
+        <aside className="hidden lg:flex flex-col w-[35%] h-full bg-white/80 backdrop-blur-sm border-r border-gray-100 shrink-0">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex flex-col h-full p-4"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Newspaper className="w-4 h-4 text-purple-500" />
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
+                AI News Corner
+              </h2>
+            </div>
 
-      {/* Center content — full viewport width, centered */}
-      <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-73px)] px-4">
+            <div className="flex flex-col gap-2.5 overflow-y-auto flex-1 pr-1">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+                </div>
+              ) : (
+                <>
+                  {sortedNews.map((article, i) => (
+                    <NewsCard key={article.id} article={article} index={i} />
+                  ))}
+                  {sortedNews.length === 0 && (
+                    <p className="text-xs text-slate-400 py-4 text-center">No news yet</p>
+                  )}
+                </>
+              )}
+            </div>
+          </motion.div>
+        </aside>
+
+        {/* Right content — hero (65% of page width) */}
+        <main className="flex-1 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -300,6 +303,17 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
+            {/* Join Marketplace button */}
+            <div className="mb-4">
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_30px_rgba(168,85,247,0.45)] transition-all duration-300"
+              >
+                <Sparkles className="w-4 h-4" />
+                Join Marketplace
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
             <p className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
               Join Whichai for the best AI Marketplace in the world
             </p>
@@ -308,7 +322,8 @@ export default function Home() {
             </p>
           </motion.div>
         </motion.div>
-      </main>
+        </main>
+      </div>{/* end flex layout */}
 
       {/* Mobile news feed — shown below center content on small screens */}
       <section className="lg:hidden px-4 pb-12">
