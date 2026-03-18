@@ -49,7 +49,7 @@ export default function ProfileSetupPage() {
 
       // If profile already fully set up, skip to marketplace
       if (profile?.preferred_categories && profile.preferred_categories.length > 0) {
-        router.replace("/marketplace");
+        router.replace("/hub");
         return;
       }
 
@@ -126,7 +126,7 @@ export default function ProfileSetupPage() {
       return;
     }
 
-    router.push("/marketplace");
+    router.push("/hub");
   }
 
   if (checking) {
