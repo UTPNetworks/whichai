@@ -232,7 +232,7 @@ export default function DashboardPage() {
             <p className="text-3xl font-bold text-emerald-600">
               ${savings.toFixed(2)}
             </p>
-            <p className="text-xs text-slate-400 mt-1">Total saved with whichAi member pricing</p>
+            <p className="text-xs text-slate-400 mt-1">Total saved with WhichAi member pricing</p>
           </div>
 
           {/* Watchlist */}

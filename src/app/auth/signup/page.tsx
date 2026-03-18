@@ -145,7 +145,7 @@ export default function SignUpPage() {
                   <Sparkles className="w-7 h-7 text-purple-500" />
                 </motion.div>
                 <h1 className="text-2xl font-bold text-slate-900">
-                  Join whichAi.cloud
+                  Join WhichAi.cloud
                 </h1>
                 <p className="text-sm text-slate-400 mt-2">
                   Get exclusive access to 50+ AI models at member rates

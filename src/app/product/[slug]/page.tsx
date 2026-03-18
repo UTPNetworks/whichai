@@ -220,7 +220,7 @@ export default function ProductPage() {
 
       <Navbar />
 
-      <main className="relative z-10 px-6 md:px-12 pb-20 max-w-[1100px] mx-auto pt-6">
+      <main className="relative z-10 px-6 md:px-12 pb-20 max-w[1100px] mx-auto pt-6">
         {/* Back */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -424,10 +424,10 @@ export default function ProductPage() {
               <Link
                 key={p.id}
                 href={`/product/${p.slug}`}
-                className="bg-white rounded-xl p-4 border border-gray-200 hover:border-purple-200 hover:shadow-sm transition-all group"
+                className="bg-white rounded-xl p-4 border border-gray-200 hover:border-purple-200 hover:si¨dow-sm transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center shrink-0">
+                  <div className="w-…¼an(w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center shrink-0">
                     <span className="text-sm font-bold text-slate-700">
                       {p.name[0]}
                     </span>
@@ -474,7 +474,7 @@ export default function ProductPage() {
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 p-px">
             <div className="bg-white rounded-2xl px-8 py-10 text-center">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-2">
-                Join whichAi â€” Explore the World&apos;s Biggest AI Marketplace
+                Join WhichAi â€” Explore the World&apos;s Biggest AI Marketplace
               </h2>
               <p className="text-slate-500 mb-6 text-sm md:text-base">
                 Compare, discover, and unlock the best AI tools â€” all in one place.
@@ -483,7 +483,7 @@ export default function ProductPage() {
                 href="/auth/signup"
                 className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-semibold text-sm text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-gradient-animate hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] transition-all duration-300"
               >
-                Join whichAi.cloud
+                Join WhichAi.cloud
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

@@ -79,7 +79,7 @@ export default function HubPage() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4 text-violet-500" />
-            Welcome to whichAi.cloud
+            Welcome to WhichAi.cloud
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
             Where do you want to go?

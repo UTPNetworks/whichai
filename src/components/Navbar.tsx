@@ -31,10 +31,15 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false);
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -47,46 +52,100 @@ export default function Navbar() {
   };
 
   const displayName = profile?.first_name || user?.email?.split("@")[0] || "User";
-  const initials = profile ? `${(profile.first_name || "")[0] || ""}${(profile.last_name || "")[0] || ""}`.toUpperCase() || "U" : "U";
+  const initials = profile
+    ? `${(profile.first_name || "")[0] || ""}${(profile.last_name || "")[0] || ""}`.toUpperCase() || "U"
+    : "U";
 
   return (
     <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-5 border-b border-gray-100">
-      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/whichai_icon_nav.svg" alt="whichAi logo" width={32} height={29} priority />
-          <span className="text-xl font-bold bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">whichAi</span>
+          <Image src="/whichai_icon_nav.svg" alt="whichai logo" width={32} height={29} priority />
+          <span className="text-xl font-bold bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            WhichAi
+          </span>
         </Link>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="hidden md:flex items-center gap-1">
+      {/* Desktop links */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="hidden md:flex items-center gap-1"
+      >
         {navLinks.map((link) => {
           const isActive = pathname === link.href;
           return (
-            <Link key={link.href} href={link.href} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${ isActive ? "text-slate-900 bg-slate-100" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50" }`}>{link.label}</Link>
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isActive
+                  ? "text-slate-900 bg-slate-100"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              {link.label}
+            </Link>
           );
         })}
-        <Link href="/marketplace" className={`relative px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${ pathname === "/marketplace" ? "text-purple-700 bg-purple-50" : "text-purple-600 hover:text-purple-800 hover:bg-purple-50" }`}>
+
+        {/* Marketplace link with neon-pulse */}
+        <Link
+          href="/marketplace"
+          className={`relative px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+            pathname === "/marketplace"
+              ? "text-purple-700 bg-purple-50"
+              : "text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+          }`}
+        >
           <Store className="w-4 h-4" />
           Marketplace
           <span className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 opacity-0 animate-neon-pulse -z-10" />
         </Link>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="hidden md:flex items-center gap-3">
+      {/* Right side */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="hidden md:flex items-center gap-3"
+      >
         {!loading && user ? (
           <>
+            {/* Notification bell */}
             <div ref={notifRef} className="relative">
-              <button onClick={() => setNotifOpen(!notifOpen)} className="relative p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all">
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-all"
+              >
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full" />
               </button>
+
               <AnimatePresence>
                 {notifOpen && (
-                  <motion.div initial={{ opacity: 0, y: -5, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -5, scale: 0.95 }} className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100"><p className="text-sm font-semibold text-slate-900">Notifications</p></div>
+                  <motion.div
+                    initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                  >
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-slate-900">Notifications</p>
+                    </div>
                     <div className="max-h-64 overflow-y-auto">
                       {mockNotifications.map((n) => (
-                        <div key={n.id} className="px-4 py-3 hover:bg-slate-50 transition-colors border-b border-gray-50 last:border-0">
+                        <div
+                          key={n.id}
+                          className="px-4 py-3 hover:bg-slate-50 transition-colors border-b border-gray-50 last:border-0"
+                        >
                           <p className="text-sm text-slate-700">{n.text}</p>
                           <p className="text-xs text-slate-400 mt-1">{n.time}</p>
                         </div>
@@ -96,25 +155,49 @@ export default function Navbar() {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* User dropdown */}
             <div ref={dropdownRef} className="relative">
-              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-gray-200 hover:border-purple-200 transition-all">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 via-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">{initials}</div>
-                <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate">{displayName}</span>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-gray-200 hover:border-purple-200 transition-all"
+              >
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 via-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+                  {initials}
+                </div>
+                <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate">
+                  {displayName}
+                </span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
+
               <AnimatePresence>
                 {dropdownOpen && (
-                  <motion.div initial={{ opacity: 0, y: -5, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -5, scale: 0.95 }} className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                  <motion.div
+                    initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                  >
                     <div className="px-4 py-3 border-b border-gray-100">
                       <p className="text-sm font-semibold text-slate-900">{displayName}</p>
                       <p className="text-xs text-slate-400 truncate">{user.email}</p>
                     </div>
                     <div className="p-1.5">
-                      <Link href="/dashboard" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-                        <User className="w-4 h-4" />Dashboard
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        Dashboard
                       </Link>
-                      <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors">
-                        <LogOut className="w-4 h-4" />Sign out
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
                       </button>
                     </div>
                   </motion.div>
@@ -124,34 +207,89 @@ export default function Navbar() {
           </>
         ) : !loading ? (
           <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="px-5 py-2 rounded-full text-sm font-semibold text-slate-700 border border-gray-200 hover:border-purple-300 hover:text-purple-600 transition-all duration-200">Sign In</Link>
-            <Link href="/auth/signup" className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300">Sign Up</Link>
+            <Link
+              href="/auth/login"
+              className="px-5 py-2 rounded-full text-sm font-semibold text-slate-700 border border-gray-200 hover:border-purple-300 hover:text-purple-600 transition-all duration-200"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/auth/signup"
+              className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all duration-300"
+            >
+              Sign Up
+            </Link>
           </div>
         ) : null}
       </motion.div>
 
-      <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-slate-500 hover:text-slate-900 transition-colors">
+      {/* Mobile hamburger */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="md:hidden p-2 text-slate-500 hover:text-slate-900 transition-colors"
+      >
         {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
+      {/* Mobile menu */}
       {mobileOpen && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg md:hidden">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg md:hidden"
+        >
           <div className="flex flex-col p-4 gap-1">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
-                <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${ isActive ? "text-slate-900 bg-slate-100" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50" }`}>{link.label}</Link>
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    isActive
+                      ? "text-slate-900 bg-slate-100"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  {link.label}
+                </Link>
               );
             })}
-            <Link href="/marketplace" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-lg text-sm font-semibold text-purple-600 hover:bg-purple-50 flex items-center gap-2">
-              <Store className="w-4 h-4" />Marketplace
+            <Link
+              href="/marketplace"
+              onClick={() => setMobileOpen(false)}
+              className="px-4 py-3 rounded-lg text-sm font-semibold text-purple-600 hover:bg-purple-50 flex items-center gap-2"
+            >
+              <Store className="w-4 h-4" />
+              Marketplace
             </Link>
             {user ? (
-              <button onClick={() => { handleSignOut(); setMobileOpen(false); }} className="mt-2 px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left">Sign out</button>
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setMobileOpen(false);
+                }}
+                className="mt-2 px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left"
+              >
+                Sign out
+              </button>
             ) : (
               <div className="mt-2 flex flex-col gap-2">
-                <Link href="/auth/login" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-lg text-sm font-semibold text-center text-slate-700 border border-gray-200">Sign In</Link>
-                <Link href="/auth/signup" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-lg text-sm font-semibold text-center text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500">Sign Up</Link>
+                <Link
+                  href="/auth/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-lg text-sm font-semibold text-center text-slate-700 border border-gray-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-lg text-sm font-semibold text-center text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
+                >
+                  Sign Up
+                </Link>
               </div>
             )}
           </div>

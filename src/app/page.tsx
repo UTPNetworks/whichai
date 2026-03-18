@@ -401,7 +401,7 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3">
               What can you trade on{" "}
               <span className="bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent">
-                whichAi?
+                WhichAi?
               </span>
             </h2>
             <p className="text-slate-500 text-lg">Three categories. Infinite possibilities.</p>
@@ -457,7 +457,7 @@ export default function Home() {
           >
             <div>
               <h2 className="text-3xl font-extrabold text-slate-900">Featured Listings</h2>
-              <p className="text-slate-500 mt-1 text-sm">Handpicked by the whichAi team</p>
+              <p className="text-slate-500 mt-1 text-sm">Handpicked by the WhichAi team</p>
             </div>
             <Link
               href="/marketplace"
@@ -519,7 +519,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────────────────────────── */}
+      {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
       <section className="bg-white py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -598,7 +598,7 @@ export default function Home() {
             Ready to join the AI economy?
           </h2>
           <p className="text-slate-500 mb-8 text-lg">
-            Whether you&apos;re buying your first prompt or renting out an H100, whichAi is built for you.
+            Whether you&apos;re buying your first prompt or renting out an H100, WhichAi is built for you.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <Link

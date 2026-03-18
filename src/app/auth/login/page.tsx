@@ -80,7 +80,7 @@ export default function LoginPage() {
               <Sparkles className="w-7 h-7 text-purple-500" />
             </motion.div>
             <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
-            <p className="text-sm text-slate-400 mt-2">Sign in to your whichAi account</p>
+            <p className="text-sm text-slate-400 mt-2">Sign in to your WhichAi account</p>
           </div>
 
           {serverError && (

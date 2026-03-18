@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "whichAi.cloud — The World's AI at Your Fingertips",
+  title: "WhichAi.cloud — The World's AI at Your Fingertips",
   description:
     "Compare, connect, and conquer with the best AI models. Exclusive member rates on Claude 4.6, GPT-5, and more.",
 };
