@@ -220,7 +220,7 @@ export default function ProductPage() {
 
       <Navbar />
 
-      <main className="relative z-10 px-6 md:px-12 pb-20 max-w[1100px] mx-auto pt-6">
+      <main className="relative z-10 px-6 md:px-12 pb-20 max-w-[1100px] mx-auto pt-6">
         {/* Back */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -424,10 +424,10 @@ export default function ProductPage() {
               <Link
                 key={p.id}
                 href={`/product/${p.slug}`}
-                className="bg-white rounded-xl p-4 border border-gray-200 hover:border-purple-200 hover:si¨dow-sm transition-all group"
+                className="bg-white rounded-xl p-4 border border-gray-200 hover:border-purple-200 hover:shadow-sm transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-…¼an(w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center shrink-0">
                     <span className="text-sm font-bold text-slate-700">
                       {p.name[0]}
                     </span>
