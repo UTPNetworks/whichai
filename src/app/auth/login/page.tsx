@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
@@ -7,7 +8,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, FormEvent } from "react";
 import { signIn, signInWithGoogle } from "@/lib/auth";
 
-export default function LoginPage() {
+// Inner component that uses useSearchParams — must be inside <Suspense>
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -49,6 +51,7 @@ export default function LoginPage() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-32 w-80 h-80 bg-cyan-100/50 rounded-full blur-[100px]" />
         <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-purple-100/50 rounded-full blur-[100px]" />
+        <div className="absolute top-0 right-1/3 w-64 h-64 bg-pink-100/40 rounded-full blur-[100px]" />
       </div>
 
       <motion.div
@@ -56,7 +59,10 @@ export default function LoginPage() {
         animate={{ opacity: 1 }}
         className="absolute top-6 left-6 z-20"
       >
-        <Link href="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 transition-colors">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-700 transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
           Back
         </Link>
@@ -70,7 +76,6 @@ export default function LoginPage() {
       >
         <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-40 blur-sm bg-gradient-animate" />
         <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 opacity-20 bg-gradient-animate" />
-
         <div className="relative bg-white rounded-3xl p-8 md:p-10 border border-gray-200 shadow-lg">
           <div className="text-center mb-8">
             <motion.div
@@ -182,5 +187,20 @@ export default function LoginPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+// Outer page wraps LoginForm in Suspense — required by Next.js 14+ for useSearchParams
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="w-8 h-8 border-4 border-purple-300 border-t-purple-600 rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
