@@ -13,17 +13,17 @@ const hubs = [
     label: "Marketplace",
     tagline: "The Hub",
     description:
-      "Buy and sell AI prompts, agents, fine-tuned models, GPU compute, and hardware — all in one place.",
+      "Buy and sell AI prompts, agents, fine-tuned models, GPU compute, and hardware â all in one place.",
     bannerFrom: "#7c3aed",
     bannerTo: "#a78bfa",
-    bannerEmojis: ["🤖", "💡", "✨", "🧠", "⚡", "💎", "🛒", "🔮"],
+    bannerEmojis: ["ð¤", "ð¡", "â¨", "ð§ ", "â¡", "ð", "ð", "ð®"],
     iconBg: "bg-violet-600 text-white",
     border: "border-violet-200 hover:border-violet-400",
     pill: "bg-violet-100 text-violet-700",
     cta: "Enter Marketplace",
     ctaStyle: "bg-violet-600 hover:bg-violet-700 text-white",
     tags: ["Digital Assets", "Compute Hub", "Hardware Corner"],
-    stats: [{ val: "15K+", label: "listings" }, { val: "4.8★", label: "avg rating" }, { val: "99%", label: "satisfaction" }],
+    stats: [{ val: "15K+", label: "listings" }, { val: "4.8â", label: "avg rating" }, { val: "99%", label: "satisfaction" }],
   },
   {
     id: "know-your-ai",
@@ -35,7 +35,7 @@ const hubs = [
       "Explore, benchmark, and compare AI models across categories. Find the perfect model for your use case.",
     bannerFrom: "#0369a1",
     bannerTo: "#22d3ee",
-    bannerEmojis: ["🔬", "📊", "🧪", "💡", "🎯", "🔮", "📈", "🏆"],
+    bannerEmojis: ["ð¬", "ð", "ð§ª", "ð¡", "ð¯", "ð®", "ð", "ð"],
     iconBg: "bg-cyan-600 text-white",
     border: "border-cyan-200 hover:border-cyan-400",
     pill: "bg-cyan-100 text-cyan-700",
@@ -54,7 +54,7 @@ const hubs = [
       "Courses, guides, and hands-on labs to master prompt engineering, AI development, and ML fundamentals.",
     bannerFrom: "#047857",
     bannerTo: "#34d399",
-    bannerEmojis: ["🎓", "📚", "🚀", "💻", "🏆", "🌟", "🎯", "📝"],
+    bannerEmojis: ["ð", "ð", "ð", "ð»", "ð", "ð", "ð¯", "ð"],
     iconBg: "bg-emerald-600 text-white",
     border: "border-emerald-200 hover:border-emerald-400",
     pill: "bg-emerald-100 text-emerald-700",
@@ -70,10 +70,10 @@ const hubs = [
     label: "AI Task Board",
     tagline: "Get It Built",
     description:
-      "Post any AI task — custom LLMs, fine-tuned models, AI agents, chatbots — and get it done by vetted AI developers. Pay only on delivery.",
+      "Post any AI task â custom LLMs, fine-tuned models, AI agents, chatbots â and get it done by vetted AI developers. Pay only on delivery.",
     bannerFrom: "#b45309",
     bannerTo: "#fbbf24",
-    bannerEmojis: ["🛠️", "🤝", "💼", "🔧", "⚙️", "🎯", "💰", "🚀"],
+    bannerEmojis: ["ð ï¸", "ð¤", "ð¼", "ð§", "âï¸", "ð¯", "ð°", "ð"],
     iconBg: "bg-amber-500 text-white",
     border: "border-amber-200 hover:border-amber-400",
     pill: "bg-amber-100 text-amber-700",
@@ -86,8 +86,8 @@ const hubs = [
 
 export default function HubPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#f4f0eb]">
+      <div className="bg-[#f4f0eb] border-b border-gray-100 sticky top-0 z-40">
         <Navbar />
       </div>
 
@@ -111,7 +111,7 @@ export default function HubPage() {
           </p>
         </motion.div>
 
-        {/* 4 Hub Cards — 2×2 grid */}
+        {/* 4 Hub Cards â 2Ã2 grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {hubs.map((hub, i) => {
             const Icon = hub.icon;
