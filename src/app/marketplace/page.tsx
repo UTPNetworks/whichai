@@ -140,8 +140,8 @@ export default function MarketplacePage() {
   const handleCompare = (id: string) => { setCompareIds((prev) => { if (prev.includes(id)) { return prev.filter((cid) => cid !== id); } return prev.length < 3 ? [...prev, id] : prev; }); };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="relative z-10 bg-white/80 backdrop-blur-sm border-b border-gray-200"><Navbar /></div>
+    <div className="min-h-screen bg-[#f4f0eb]">
+      <div className="relative z-10 bg-[#f4f0eb]/80 backdrop-blur-sm border-b border-gray-200"><Navbar /></div>
       <section className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-12">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-50 via-white to-cyan-50 border border-purple-100">
           <div className="rounded-2xl px-6 md:px-8 py-10 md:py-14">
@@ -152,7 +152,7 @@ export default function MarketplacePage() {
                   <Store className="w-3.5 h-3.5" /> World&apos;s First AI Marketplace
                 </div>
                 <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">The AI{' '}<span className="bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Marketplace</span></h1>
-                <p className="text-slate-500 text-sm max-w-lg">Buy prompts, rent GPUs, sell agents, and discover hardware — all in one place.</p>
+                <p className="text-slate-500 text-sm max-w-lg">Buy prompts, rent GPUs, sell agents, and discover hardware â all in one place.</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <button onClick={() => setShowSellModal(true)} className="flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all duration-300 animate-pulse-slow">
@@ -171,7 +171,7 @@ export default function MarketplacePage() {
           <LocationSearch onLocationChange={(coords) => { if (coords) { setUserLocation({ lat: coords.lat, lng: coords.lng }); } else { setUserLocation(null); } }} onRadiusChange={setSearchRadius} radius={searchRadius} />
           <div className="mb-6 flex gap-3">
             <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowMap(!showMap)} className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${ showMap ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`}>
-              📍 {showMap ? 'Hide' : 'Show'} Map
+              ð {showMap ? 'Hide' : 'Show'} Map
             </motion.button>
           </div>
           {showMap && userLocation && (<MapView listings={filteredListings} userLocation={userLocation} radiusMiles={searchRadius} />)}
@@ -196,7 +196,7 @@ export default function MarketplacePage() {
             <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-12">
               <div className="flex items-center gap-2 mb-5"><Sparkles className="w-5 h-5 text-purple-500" /><h2 className="text-2xl font-bold text-slate-900">AI Tools Directory</h2></div>
               <div className="flex flex-wrap gap-2 mb-6">
-                {[{value:'all',label:'✨ All Tools'},{value:'code',label:'💻 Code'},{value:'vision',label:'👁️ Vision'},{value:'voice',label:'🎤 Voice'},{value:'image',label:'🖼️ Image Gen'},{value:'chatbot',label:'💬 Chat'},{value:'multimodal',label:'⚡ Multimodal'}].map(({ value, label }) => (
+                {[{value:'all',label:'â¨ All Tools'},{value:'code',label:'ð» Code'},{value:'vision',label:'ðï¸ Vision'},{value:'voice',label:'ð¤ Voice'},{value:'image',label:'ð¼ï¸ Image Gen'},{value:'chatbot',label:'ð¬ Chat'},{value:'multimodal',label:'â¡ Multimodal'}].map(({ value, label }) => (
                   <motion.button key={value} onClick={() => setToolFilter(value)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${ toolFilter === value ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`} whileHover={{ scale: 1.05 }}>{label}</motion.button>
                 ))}
               </div>
@@ -208,7 +208,7 @@ export default function MarketplacePage() {
           {(bigTab === 'all' || bigTab === 'compute-hub') && (
             <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-12">
               <div className="flex items-center gap-2 mb-4"><Tag className="w-5 h-5 text-cyan-500" /><h2 className="text-2xl font-bold text-slate-900">Exclusive Deals</h2></div>
-              <p className="text-slate-500 text-sm mb-5">Discounted API tokens, subscriptions, and GPU rentals — curated for developers, researchers, and teams.</p>
+              <p className="text-slate-500 text-sm mb-5">Discounted API tokens, subscriptions, and GPU rentals â curated for developers, researchers, and teams.</p>
               <div className="flex flex-wrap gap-2 mb-6">
                 <motion.button onClick={() => setActiveCategory(null)} className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${ activeCategory === null ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`} whileHover={{ scale: 1.05 }}>All Deals</motion.button>
                 {marketplaceCategories.map((cat) => (<motion.button key={cat.value} onClick={() => setActiveCategory(cat.value)} className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${ activeCategory === cat.value ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`} whileHover={{ scale: 1.05 }}>{cat.label}</motion.button>))}
