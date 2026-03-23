@@ -46,8 +46,8 @@ const tracks = [
 
 export default function LearningHubPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#f4f0eb]">
+      <div className="bg-[#f4f0eb] border-b border-gray-100 sticky top-0 z-40">
         <Navbar />
       </div>
 
@@ -88,7 +88,7 @@ export default function LearningHubPage() {
             Learning Hub
           </h1>
           <p className="text-slate-500 text-lg max-w-2xl leading-relaxed">
-            Structured courses, practical labs, and hands-on guides to help you master AI —
+            Structured courses, practical labs, and hands-on guides to help you master AI â
             whether you&apos;re a complete beginner or an experienced developer.
           </p>
         </motion.div>
@@ -128,7 +128,7 @@ export default function LearningHubPage() {
           transition={{ delay: 0.5 }}
           className="rounded-3xl border-2 border-dashed border-emerald-200 bg-emerald-50 p-10 text-center"
         >
-          <div className="text-4xl mb-4">📚</div>
+          <div className="text-4xl mb-4">ð</div>
           <h2 className="text-xl font-black text-slate-900 mb-2">Courses Coming Soon</h2>
           <p className="text-slate-500 text-sm max-w-sm mx-auto leading-relaxed">
             We&apos;re building the full course library. Join the waitlist to get early access!
