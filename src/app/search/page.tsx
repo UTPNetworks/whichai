@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import { allListingsV3, type MarketListingV3 } from "@/lib/data";
 
-// ── Region classification ───────────────────────────────────
+// ââ Region classification âââââââââââââââââââââââââââââââââââ
 const CITY_REGION: Record<string, string> = {
   "San Francisco": "North America",
   "New York": "North America",
@@ -79,7 +79,7 @@ function matchesQuery(listing: MarketListingV3, q: string): boolean {
   );
 }
 
-// ── Listing card for search results ────────────────────────────
+// ââ Listing card for search results ââââââââââââââââââââââââââââ
 function SearchResultCard({ listing, index }: { listing: MarketListingV3; index: number }) {
   const Icon = CAT_ICON[listing.bigCategory] || Package;
   const discountPct = listing.originalPrice
@@ -156,7 +156,7 @@ function SearchResultCard({ listing, index }: { listing: MarketListingV3; index:
   );
 }
 
-// ── Region group header ───────────────────────────────────────
+// ââ Region group header âââââââââââââââââââââââââââââââââââââââ
 function RegionGroup({ region, listings, defaultOpen = true }: { region: string; listings: MarketListingV3[]; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   const style = REGION_COLORS[region] || REGION_COLORS["Global"];
@@ -199,7 +199,7 @@ function RegionGroup({ region, listings, defaultOpen = true }: { region: string;
   );
 }
 
-// ── Search inner component (uses useSearchParams) ─────────────
+// ââ Search inner component (uses useSearchParams) âââââââââââââ
 function SearchInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -267,12 +267,12 @@ function SearchInner() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+      <div className="bg-[#f4f0eb] border-b border-gray-100 sticky top-0 z-40">
         <Navbar />
       </div>
 
       {/* Search header */}
-      <div className="bg-white border-b border-gray-100 py-8 px-6">
+      <div className="bg-[#f4f0eb] border-b border-gray-100 py-8 px-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition-colors mb-5">
             <ArrowLeft className="w-4 h-4" />
@@ -332,7 +332,7 @@ function SearchInner() {
               )}
             </h1>
             <p className="text-slate-500 text-sm mt-0.5">
-              Sorted by region · {Object.keys(displayByRegion).length} region{Object.keys(displayByRegion).length !== 1 ? "s" : ""}
+              Sorted by region Â· {Object.keys(displayByRegion).length} region{Object.keys(displayByRegion).length !== 1 ? "s" : ""}
             </p>
           </div>
 
@@ -412,7 +412,7 @@ function SearchInner() {
   );
 }
 
-// ── Page wrapper with Suspense (required for useSearchParams) ─
+// ââ Page wrapper with Suspense (required for useSearchParams) â
 export default function SearchPage() {
   return (
     <Suspense
