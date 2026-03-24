@@ -1,10 +1,10 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Bell, ChevronDown, LogOut, User } from "lucide-react";
+import { Menu, X, Bell, ChevronDown, LogOut, User, LayoutDashboard } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { signOut } from "@/lib/auth";
@@ -17,8 +17,10 @@ const mockNotifications = [
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, profile, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isHomepage = pathname === "/";
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -38,9 +40,16 @@ export default function Navbar() {
   }, []);
 
   const handleSignOut = async () => {
-    await signOut();
-    setDropdownOpen(false);
-    router.push("/");
+    try {
+      setDropdownOpen(false);
+      setMobileOpen(false);
+      await signOut();
+    } catch {
+      // Ignore errors — still redirect
+    } finally {
+      // Force a full page reload so all client state (auth, cache) is cleared
+      window.location.href = "/";
+    }
   };
 
   const displayName = profile?.first_name || user?.email?.split("@")[0] || "User";
@@ -49,7 +58,7 @@ export default function Navbar() {
     : "U";
 
   return (
-    <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-4 border-b border-gray-100">
+    <nav className="relative z-50 flex items-center justify-between px-6 md:px-12 py-4 border-b border-gray-200 bg-white/90 backdrop-blur-sm">
       {/* Logo */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -71,6 +80,21 @@ export default function Navbar() {
         transition={{ duration: 0.5 }}
         className="hidden md:flex items-center gap-3"
       >
+        {/* Dashboard button — shown on all pages except homepage */}
+        {!isHomepage && (
+          <Link
+            href="/hub"
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+              pathname === "/hub"
+                ? "bg-violet-600 text-white shadow-md shadow-violet-200"
+                : "bg-violet-50 border border-violet-200 text-violet-700 hover:bg-violet-100 hover:border-violet-300"
+            }`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            Dashboard
+          </Link>
+        )}
+
         {!loading && user ? (
           <>
             {/* Notification bell */}
@@ -138,7 +162,7 @@ export default function Navbar() {
                         onClick={() => setDropdownOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
                       >
-                        <User className="v-4 h-4" />
+                        <User className="w-4 h-4" />
                         Dashboard
                       </Link>
                       <button
@@ -158,7 +182,7 @@ export default function Navbar() {
           <div className="flex items-center gap-2">
             <Link
               href="/auth/login"
-              className="px-5 py-2 rounded-full text-sm font-semibold text-slate-700 border border-gray-200 hover:border-purple-300 hover:text-purple-600 transition-all duration-200"
+              className="px-5 py-2 rounded-full text-sm font-semibold text-slate-700 border border-slate-300 bg-white hover:border-purple-300 hover:text-purple-600 transition-all duration-200 shadow-sm"
             >
               Sign In
             </Link>
@@ -177,7 +201,7 @@ export default function Navbar() {
         onClick={() => setMobileOpen(!mobileOpen)}
         className="md:hidden p-2 text-slate-500 hover:text-slate-900 transition-colors"
       >
-        {mobileOpen ? <X className="v-6 h-6" /> : <Menu className="w-6 h-6" />}
+        {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
       {/* Mobile menu */}
@@ -188,11 +212,23 @@ export default function Navbar() {
           className="absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg md:hidden"
         >
           <div className="flex flex-col p-4 gap-2">
+            {/* Dashboard link — visible on mobile on all non-homepage pages */}
+            {!isHomepage && (
+              <Link
+                href="/hub"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold text-violet-700 bg-violet-50 border border-violet-200"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard — All Sections
+              </Link>
+            )}
             {user ? (
               <button
-                onClick={() => { handleSignOut(); setMobileOpen(false); }}
-                className="px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left"
+                onClick={handleSignOut}
+                className="px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left flex items-center gap-2"
               >
+                <LogOut className="w-4 h-4" />
                 Sign out
               </button>
             ) : (
@@ -207,7 +243,7 @@ export default function Navbar() {
                 <Link
                   href="/auth/signup"
                   onClick={() => setMobileOpen(false)}
-                  className="px-4 py-3 rounded-lg text-sm font-semibold text-center text-white bg-gradient-to-r  from-cyan-500 via-purple-500 to-pink-500"
+                  className="px-4 py-3 rounded-lg text-sm font-semibold text-center text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500"
                 >
                   Sign Up
                 </Link>
