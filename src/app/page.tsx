@@ -14,7 +14,6 @@ import { supabase } from "@/lib/supabase";
 import { getFeaturedListings, type MarketplaceListing } from "@/lib/data";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
-import AINewsSidebar from "@/components/AINewsSidebar";
 
 // ── Visitor Counter ────────────────────────────────────────────
 function VisitorCounter() {
@@ -462,16 +461,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── MAIN LAYOUT: sidebar (25%) + content (75%) ─────────────── */}
-      <div className="flex relative">
-
-        {/* ── LEFT SIDEBAR — NeuralPulse AI News ───────────────────── */}
-        <aside className="hidden lg:flex flex-col w-[260px] xl:w-[300px] shrink-0 sticky top-[65px] h-[calc(100vh-65px)] overflow-hidden border-r border-gray-100">
-          <AINewsSidebar />
-        </aside>
-
-        {/* ── RIGHT MAIN CONTENT (75%) ─────────────────────────────── */}
-        <div className="flex-1 min-w-0">
+      {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
+      <div>
 
           {/* ── CATEGORY PILLARS ─────────────────────────────────────── */}
           <section className="bg-white py-16 px-6">
@@ -529,7 +520,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* ── FEATURED LISTINGS ──────────────────────────────────────── */}
+          {/* ── FEATURED LISTINGS ─────────────────────────────────────── */}
           <section className="bg-gray-50 py-16 px-6">
             <div className="max-w-5xl mx-auto">
               <motion.div
@@ -653,7 +644,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-7">
                 <Link
                   href="/marketplace"
-                  className="flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all"
+                  className="flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-[0_0_30px_rgba(168,85,85,247,0.4)] transition-all"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   Browse Marketplace
@@ -674,8 +665,7 @@ export default function Home() {
             </motion.div>
           </section>
 
-        </div>{/* end main content */}
-      </div>{/* end sidebar+content flex */}
+      </div>{/* end main content */}
 
       <VisitorCounter />
     </div>
