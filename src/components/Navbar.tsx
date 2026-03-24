@@ -80,7 +80,7 @@ export default function Navbar() {
         transition={{ duration: 0.5 }}
         className="hidden md:flex items-center gap-3"
       >
-        {!loading && user ? (
+        {user ? (
           <>
             {/* Notification bell */}
             <div ref={notifRef} className="relative">
@@ -163,7 +163,7 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
           </>
-        ) : !loading ? (
+        ) : (
           <div className="flex items-center gap-2">
             <Link
               href="/auth/login"
@@ -178,7 +178,7 @@ export default function Navbar() {
               Sign Up
             </Link>
           </div>
-        ) : null}
+        )}
       </motion.div>
 
       {/* Mobile hamburger */}
