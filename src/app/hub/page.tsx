@@ -46,7 +46,7 @@ function NeuralPulseBanner() {
     try {
       const res = await fetch("/api/ai-news", { cache: "no-store" });
       const data = await res.json();
-      setNews(data);
+      setNews(Array.isArray(data) ? data : (data.articles || []));
       setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
     } catch (e) {
       console.error("News fetch failed", e);
