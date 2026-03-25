@@ -26,13 +26,19 @@ export default function LoginPage() {
     if (Object.keys(newErrors).length > 0) return;
 
     setSubmitting(true);
-    const { error } = await signIn(form.email, form.password);
-    if (error) {
-      setServerError(error.message);
+    try {
+      const { error } = await signIn(form.email, form.password);
+      if (error) {
+        setServerError(error.message);
+        setSubmitting(false);
+        return;
+      }
+      // Hard redirect so all auth state is picked up fresh
+      window.location.replace("/hub");
+    } catch {
+      setServerError("Something went wrong. Please try again.");
       setSubmitting(false);
-      return;
     }
-    router.push("/hub");
   };
 
   const inputClass =
