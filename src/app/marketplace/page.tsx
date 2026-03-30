@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Store, Upload, Code2, Eye, Mic, Image, Globe, Zap, BadgeCheck, ChevronRight,
@@ -23,6 +23,7 @@ import {
   type MarketListingV3, calculateDistance,
 } from '@/lib/data';
 import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/lib/supabase';
 
 type BigTab = 'all' | 'digital-assets' | 'compute-hub' | 'hardware-corner';
 
@@ -83,9 +84,10 @@ const PRICING_TYPES = [
 const LICENSE_TYPES = ['MIT', 'Apache 2.0', 'Commercial', 'Personal Use Only', 'Creative Commons', 'Custom'];
 
 const SellModal = ({ onClose }: { onClose: () => void }) => {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const totalSteps = 3;
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
@@ -99,10 +101,45 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
   const [frameworks, setFrameworks] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('instant');
   const [location, setLocation] = useState('');
+  const [publishing, setPublishing] = useState(false);
+  const [published, setPublished] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCat = LISTING_CATEGORIES.find((c) => c.id === category);
-  const handlePhotoAdd = () => { if (photos.length < 10) setPhotos([...photos, `photo-${Date.now()}`]); };
-  const handlePhotoRemove = (idx: number) => { setPhotos(photos.filter((_, i) => i !== idx)); };
+  const handlePhotoAdd = () => { if (photos.length < 10) fileInputRef.current?.click(); };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 10 - photos.length;
+    const toAdd = files.slice(0, remaining);
+    const newPhotos = toAdd.map((file) => ({ file, preview: URL.createObjectURL(file) }));
+    setPhotos((prev) => [...prev, ...newPhotos]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+  const handlePhotoRemove = (idx: number) => {
+    URL.revokeObjectURL(photos[idx].preview);
+    setPhotos(photos.filter((_, i) => i !== idx));
+  };
+  const handlePublish = async () => {
+    if (!user) { alert('Please sign in to publish a listing.'); return; }
+    setPublishing(true);
+    try {
+      const { error } = await supabase.from('user_listings').insert({
+        user_id: user.id,
+        title,
+        description,
+        category: `${category}${subcategory ? ` > ${subcategory}` : ''}`,
+        price: pricingType === 'free' ? 0 : parseFloat(price) || 0,
+        status: 'active',
+      });
+      if (error) throw error;
+      setPublished(true);
+      setTimeout(() => onClose(), 2000);
+    } catch (err: any) {
+      alert(`Failed to publish: ${err.message}`);
+    } finally {
+      setPublishing(false);
+    }
+  };
   const canGoNext = () => { if (step === 1) return title.trim().length > 0 && category !== ''; if (step === 2) return description.trim().length > 0; return true; };
 
   const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:bg-white outline-none text-sm text-slate-800 placeholder:text-slate-400 transition-all";
@@ -129,10 +166,11 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
                 {/* Photos */}
                 <div>
                   <label className={labelClass}>Photos / Screenshots (up to 10)</label>
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
                   <div className="grid grid-cols-5 gap-2">
                     {photos.map((p, i) => (
-                      <div key={p} className="relative aspect-square rounded-xl bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden group">
-                        <Image className="w-5 h-5 text-slate-400" />
+                      <div key={i} className="relative aspect-square rounded-xl bg-gray-100 border-2 border-gray-200 flex items-center justify-center overflow-hidden group">
+                        <img src={p.preview} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                         <button onClick={() => handlePhotoRemove(i)} className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                       </div>
                     ))}
@@ -280,7 +318,9 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
           {step < totalSteps ? (
             <button onClick={() => canGoNext() && setStep(step + 1)} disabled={!canGoNext()} className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all ${canGoNext() ? 'bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50' : 'bg-gray-300 cursor-not-allowed'}`}>Next</button>
           ) : (
-            <button className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50 transition-all flex items-center gap-2"><Sparkles className="w-4 h-4" />Publish Listing</button>
+            <button onClick={handlePublish} disabled={publishing || published} className={`px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all flex items-center gap-2 ${published ? 'bg-emerald-500' : publishing ? 'bg-gray-400 cursor-wait' : 'bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50'}`}>
+              {published ? (<><BadgeCheck className="w-4 h-4" />Listed!</>) : publishing ? (<><Loader2 className="w-4 h-4 animate-spin" />Publishing...</>) : (<><Sparkles className="w-4 h-4" />Publish Listing</>)}
+            </button>
           )}
         </div>
       </motion.div>
