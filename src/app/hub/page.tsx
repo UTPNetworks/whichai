@@ -166,7 +166,7 @@ function NeuralPulseBanner() {
       {/* Footer */}
       <div className="px-5 py-2 border-t border-gray-100 bg-gray-50/50">
         <p className="text-[9px] text-slate-400 text-center">
-          RSS + Supabase Â· auto-refreshes daily at 6am CST
+          RSS + Supabase · auto-refreshes every 6 hours
         </p>
       </div>
     </motion.div>
@@ -305,7 +305,7 @@ export default function HubPage() {
         </motion.div>
 
         {/* ââ 4 Hub Cards âââââââââââââââââââââââââââââââââââââ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
           {hubs.map((hub, i) => {
             const Icon = hub.icon;
             return (
@@ -315,12 +315,12 @@ export default function HubPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.08 + i * 0.1, duration: 0.5, ease: "easeOut" }}
                 whileHover={{ y: -8, scale: 1.02 }}
+                className="h-full"
                 style={{ transition: "box-shadow 0.3s" }}
               >
                 <Link href={hub.href} className="block h-full group">
                   <div
-                    className="relative rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-2xl transition-shadow duration-500"
-                    style={{ minHeight: 360 }}
+                    className="relative rounded-3xl overflow-hidden cursor-pointer shadow-md hover:shadow-2xl transition-shadow duration-500 h-full"
                   >
                     {/* Full gradient background */}
                     <div
@@ -361,7 +361,7 @@ export default function HubPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="relative z-10 p-5 flex flex-col" style={{ minHeight: 360 }}>
+                    <div className="relative z-10 p-5 flex flex-col h-full">
 
                       {/* Top row: icon + tagline pill */}
                       <div className="flex items-start justify-between mb-5">
@@ -388,11 +388,11 @@ export default function HubPage() {
                       </div>
 
                       {/* Frosted glass panel at bottom */}
-                      <div className="mt-auto bg-black/25 backdrop-blur-md rounded-2xl p-4 border border-white/15 group-hover:bg-black/30 transition-colors duration-300">
+                      <div className="mt-auto bg-black/25 backdrop-blur-md rounded-2xl p-4 border border-white/15 group-hover:bg-black/30 transition-colors duration-300 flex flex-col">
                         <h2 className="text-[15px] font-black text-white mb-1.5 tracking-tight">
                           {hub.label}
                         </h2>
-                        <p className="text-white/65 text-[11px] leading-relaxed mb-3">
+                        <p className="text-white/65 text-[11px] leading-relaxed mb-3 line-clamp-3">
                           {hub.description}
                         </p>
 
@@ -409,7 +409,7 @@ export default function HubPage() {
                         </div>
 
                         {/* CTA row */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between mt-auto">
                           <span className="text-[13px] font-bold text-white">{hub.cta}</span>
                           <div className="w-7 h-7 rounded-full bg-white/20 border border-white/20 flex items-center justify-center group-hover:bg-white/35 group-hover:scale-110 group-hover:border-white/40 transition-all duration-200">
                             <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-0.5 transition-transform" />
