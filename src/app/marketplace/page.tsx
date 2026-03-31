@@ -123,7 +123,15 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
     if (!user) { alert('Please sign in to publish a listing.'); return; }
     setPublishing(true);
     try {
-      const { error } = await supabase.from('user_listings').insert({
+      // Refresh the session to ensure a valid auth token is sent
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        // Try refreshing the session
+        await supabase.auth.refreshSession();
+      }
+
+      // Build the insert payload
+      const payload = {
         user_id: user.id,
         title,
         description,
@@ -139,12 +147,21 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
         delivery_method: deliveryMethod,
         location: location || null,
         status: 'active',
-      });
+      };
+
+      // Insert with a timeout to prevent infinite hang
+      const insertPromise = supabase.from('user_listings').insert(payload);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 15000)
+      );
+
+      const { error } = await Promise.race([insertPromise, timeoutPromise]) as any;
       if (error) throw error;
       setPublished(true);
       setTimeout(() => onClose(), 2000);
     } catch (err: any) {
-      alert(`Failed to publish: ${err.message}`);
+      console.error('Publish error:', err);
+      alert(`Failed to publish: ${err?.message || 'Unknown error. Please try again.'}`);
     } finally {
       setPublishing(false);
     }
