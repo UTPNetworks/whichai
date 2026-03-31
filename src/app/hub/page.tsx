@@ -408,14 +408,9 @@ export default function HubPage() {
                   <div
                     className="relative rounded-3xl overflow-hidden cursor-pointer h-full transition-all duration-500 bg-white/10 backdrop-blur-md border border-white/20 hover:shadow-[0_0_20px_5px_var(--hub-glow-color)]"
                     style={{
-<<<<<<< Updated upstream
-                      boxShadow: `0 4px 20px -2px ${hub.glow}, 0 2px 8px -2px rgba(0,0,0,0.1)`, '--hub-glow-color': `${hub.glow}60`,
-                    }}
-=======
                       boxShadow: `0 4px 20px -2px ${hub.glow}, 0 2px 8px -2px rgba(0,0,0,0.1)`,
                       '--hub-glow-color': `${hub.glow}60`,
                     } as React.CSSProperties}
->>>>>>> Stashed changes
                   >
                     {/* Animated gradient background */}
                     <div
