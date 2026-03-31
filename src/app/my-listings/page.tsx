@@ -514,42 +514,73 @@ export default function MyListingsPage() {
 
   // ── Actions ──
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('user_listings').delete().eq('id', id);
-    if (!error) { setListings((prev) => prev.filter((l) => l.id !== id)); showAction('Listing deleted'); }
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      const deletePromise = supabase.from('user_listings').delete().eq('id', id);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Delete timed out.')), 15000));
+      const { error } = await Promise.race([deletePromise, timeoutPromise]) as any;
+      if (error) throw error;
+      setListings((prev) => prev.filter((l) => l.id !== id)); showAction('Listing deleted');
+    } catch (err: any) { console.error('Delete error:', err); alert(`Failed to delete: ${err?.message || 'Unknown error'}`); }
   };
 
   const handleEdit = async (id: string, data: Partial<Listing>) => {
-    const { error } = await supabase.from('user_listings').update({
-      title: data.title,
-      description: data.description,
-      price: data.price,
-      pricing_type: (data as any).pricing_type,
-      tags: (data as any).tags,
-      photo_urls: (data as any).photo_urls,
-      category: (data as any).category,
-      delivery_method: (data as any).delivery_method,
-      location: (data as any).location,
-      updated_at: new Date().toISOString(),
-    }).eq('id', id);
-    if (!error) {
+    try {
+      // Refresh auth session first to prevent hanging requests
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+
+      const updatePromise = supabase.from('user_listings').update({
+        title: data.title,
+        description: data.description,
+        price: data.price,
+        pricing_type: (data as any).pricing_type,
+        tags: (data as any).tags,
+        photo_urls: (data as any).photo_urls,
+        category: (data as any).category,
+        delivery_method: (data as any).delivery_method,
+        location: (data as any).location,
+        updated_at: new Date().toISOString(),
+      }).eq('id', id);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Save timed out. Please try again.')), 15000));
+      const { error } = await Promise.race([updatePromise, timeoutPromise]) as any;
+
+      if (error) throw error;
       setListings((prev) => prev.map((l) => l.id === id ? { ...l, ...data, updated_at: new Date().toISOString() } : l));
-      // Update the selected listing too so the detail view stays in sync
       setSelectedListing((prev) => prev && prev.id === id ? { ...prev, ...data, updated_at: new Date().toISOString() } : prev);
       showAction('Listing updated');
+    } catch (err: any) {
+      console.error('Edit error:', err);
+      alert(`Failed to save: ${err?.message || 'Unknown error. Please try again.'}`);
     }
   };
 
   const handleToggleStatus = async (listing: Listing) => {
-    const newStatus = listing.status === 'active' ? 'paused' : 'active';
-    const { error } = await supabase.from('user_listings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', listing.id);
-    if (!error) { setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, status: newStatus } : l)); showAction(`Listing ${newStatus === 'active' ? 'activated' : 'paused'}`); }
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      const newStatus = listing.status === 'active' ? 'paused' : 'active';
+      const togglePromise = supabase.from('user_listings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', listing.id);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Toggle timed out.')), 15000));
+      const { error } = await Promise.race([togglePromise, timeoutPromise]) as any;
+      if (error) throw error;
+      setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, status: newStatus } : l)); showAction(`Listing ${newStatus === 'active' ? 'activated' : 'paused'}`);
+    } catch (err: any) { console.error('Toggle error:', err); alert(`Failed: ${err?.message || 'Unknown error'}`); }
   };
 
   const handleBoost = async (id: string, tier: string) => {
-    const durations: Record<string, number> = { basic: 3, premium: 7, mega: 14 };
-    const expires = new Date(Date.now() + (durations[tier] || 3) * 86400000).toISOString();
-    const { error } = await supabase.from('user_listings').update({ is_boosted: true, boost_tier: tier, boost_expires_at: expires, updated_at: new Date().toISOString() }).eq('id', id);
-    if (!error) { setListings((prev) => prev.map((l) => l.id === id ? { ...l, is_boosted: true, boost_tier: tier, boost_expires_at: expires } : l)); showAction(`Listing boosted with ${tier} tier!`); }
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      const durations: Record<string, number> = { basic: 3, premium: 7, mega: 14 };
+      const expires = new Date(Date.now() + (durations[tier] || 3) * 86400000).toISOString();
+      const boostPromise = supabase.from('user_listings').update({ is_boosted: true, boost_tier: tier, boost_expires_at: expires, updated_at: new Date().toISOString() }).eq('id', id);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Boost timed out.')), 15000));
+      const { error } = await Promise.race([boostPromise, timeoutPromise]) as any;
+      if (error) throw error;
+      setListings((prev) => prev.map((l) => l.id === id ? { ...l, is_boosted: true, boost_tier: tier, boost_expires_at: expires } : l)); showAction(`Listing boosted with ${tier} tier!`);
+    } catch (err: any) { console.error('Boost error:', err); alert(`Failed: ${err?.message || 'Unknown error'}`); }
     setBoostingListing(null);
   };
 

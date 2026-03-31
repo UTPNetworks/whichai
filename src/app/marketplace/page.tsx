@@ -453,7 +453,7 @@ export default function MarketplacePage() {
       }
     };
     fetchUserListings();
-  }, [showSellModal]); // Re-fetch when sell modal closes (new listing may have been added)
+  }, [showSellModal]); // Re-fetch on mount and when sell modal closes
 
   const getFilteredListings = () => {
     // Merge static demo listings with real user listings from Supabase
@@ -462,9 +462,12 @@ export default function MarketplacePage() {
       if (searchQuery) { const q = searchQuery.toLowerCase().replace(/^#/, ''); return listing.name.toLowerCase().includes(q) || listing.description.toLowerCase().includes(q) || listing.tags.some((t) => t.toLowerCase().replace(/^#/, '').includes(q)) || (listing.subcategory || '').toLowerCase().includes(q); }
       return true;
     });
-    if (activeCategory2) { filtered = filtered.filter((l) => l.bigCategory === activeCategory2); } else if (bigTab !== 'all') { filtered = filtered.filter((l) => l.bigCategory === bigTab); }
+    // When user is actively searching, skip category filters (like eBay/Amazon behavior)
+    if (!searchQuery) {
+      if (activeCategory2) { filtered = filtered.filter((l) => l.bigCategory === activeCategory2); } else if (bigTab !== 'all') { filtered = filtered.filter((l) => l.bigCategory === bigTab); }
+    }
     if (userLocation) { filtered = filtered.filter((listing) => { if (!listing.location) return true; const dist = calculateDistance(userLocation.lat, userLocation.lng, listing.location.lat, listing.location.lng); return dist <= searchRadius; }); }
-    filtered = filtered.filter((l) => l.price >= filters.priceRange[0] && l.price <= filters.priceRange[1]);
+    if (!searchQuery) { filtered = filtered.filter((l) => l.price >= filters.priceRange[0] && l.price <= filters.priceRange[1]); }
     if (filters.vramMin > 0) { filtered = filtered.filter((l) => { if (!l.techSpecs?.vram) return false; return l.techSpecs.vram >= filters.vramMin; }); }
     if (filters.frameworks.length > 0) { filtered = filtered.filter((l) => { if (!l.techSpecs?.framework) return false; return filters.frameworks.some((fw) => l.techSpecs?.framework?.includes(fw)); }); }
     filtered = filtered.filter((l) => l.seller.rating >= filters.minRating);
