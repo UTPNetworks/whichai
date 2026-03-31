@@ -35,6 +35,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, [user]);
 
   useEffect(() => {
+    // Safety timeout: never let loading stay true for more than 5 seconds
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -42,9 +47,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         getProfile(session.user.id).then(setProfile);
       }
       setLoading(false);
+      clearTimeout(timeout);
     }).catch(() => {
       // If getSession fails for any reason, stop loading so the navbar renders
       setLoading(false);
+      clearTimeout(timeout);
     });
 
     // Listen for changes
@@ -61,7 +68,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   return (

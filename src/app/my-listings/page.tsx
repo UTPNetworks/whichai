@@ -354,14 +354,9 @@ export default function MyListingsPage() {
     { id: 'sold', label: 'Sold', count: listings.filter((l) => l.status === 'sold').length },
   ];
 
-  if (authLoading) return (
-    <div className="min-h-screen bg-[#f4f0eb]">
-      <Navbar />
-      <div className="flex items-center justify-center pt-40"><div className="w-8 h-8 border-3 border-purple-400 border-t-transparent rounded-full animate-spin" /></div>
-    </div>
-  );
-
-  if (!user) return (
+  // Only show sign-in prompt if auth has finished loading AND there's no user
+  // Don't block on authLoading alone — if user is already available, proceed
+  if (!user && !authLoading) return (
     <div className="min-h-screen bg-[#f4f0eb]">
       <Navbar />
       <div className="max-w-md mx-auto mt-32 text-center px-4">
@@ -370,6 +365,13 @@ export default function MyListingsPage() {
         <p className="text-sm text-slate-500 mb-6">Create an account or sign in to start selling on WhichAI Marketplace.</p>
         <Link href="/auth/login" className="inline-flex px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg transition-all">Sign In</Link>
       </div>
+    </div>
+  );
+
+  if (!user && authLoading) return (
+    <div className="min-h-screen bg-[#f4f0eb]">
+      <Navbar />
+      <div className="flex items-center justify-center pt-40"><div className="w-8 h-8 border-3 border-purple-400 border-t-transparent rounded-full animate-spin" /></div>
     </div>
   );
 
