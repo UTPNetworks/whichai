@@ -437,22 +437,32 @@ export default function MarketplacePage() {
   useEffect(() => {
     const fetchUserListings = async () => {
       try {
-        // 1. Fetch all active listings
-        const { data: listings, error } = await supabase
+        // Refresh session to prevent stale auth hangs
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session) {
+          await supabase.auth.refreshSession();
+        }
+
+        // 1. Fetch all active listings (with timeout)
+        const listingsPromise = supabase
           .from('user_listings')
           .select('*')
           .eq('status', 'active')
           .order('created_at', { ascending: false });
+        const timeout1 = new Promise((_, reject) => setTimeout(() => reject(new Error('Listings fetch timed out')), 10000));
+        const { data: listings, error } = await Promise.race([listingsPromise, timeout1]) as any;
 
         if (error) { console.error('Error fetching user listings:', error); return; }
         if (!listings || listings.length === 0) { setUserListings([]); return; }
 
-        // 2. Fetch seller profiles for those user IDs
+        // 2. Fetch seller profiles for those user IDs (with timeout)
         const userIds = [...new Set(listings.map((l: any) => l.user_id))];
-        const { data: profiles } = await supabase
+        const profilesPromise = supabase
           .from('profiles')
           .select('id, first_name, last_name, email')
           .in('id', userIds);
+        const timeout2 = new Promise((resolve) => setTimeout(() => resolve({ data: null }), 5000));
+        const { data: profiles } = await Promise.race([profilesPromise, timeout2]) as any;
 
         const profileMap = new Map<string, any>();
         (profiles || []).forEach((p: any) => profileMap.set(p.id, p));

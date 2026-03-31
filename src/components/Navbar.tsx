@@ -43,7 +43,10 @@ export default function Navbar() {
     setDropdownOpen(false);
     setMobileOpen(false);
     try {
-      await signOut();
+      // Use timeout to prevent sign-out from hanging on stale session
+      const signOutPromise = signOut();
+      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
+      await Promise.race([signOutPromise, timeoutPromise]);
     } catch {
       // Ignore errors — still redirect
     }
@@ -232,9 +235,25 @@ export default function Navbar() {
                   <LayoutGrid className="w-4 h-4" />
                   Hub
                 </Link>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 text-left flex items-center gap-2 border border-gray-200"
+                >
+                  <User className="w-4 h-4" />
+                  Profile
+                </Link>
+                <Link
+                  href="/my-listings"
+                  onClick={() => setMobileOpen(false)}
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 text-left flex items-center gap-2 border border-gray-200"
+                >
+                  <Package className="w-4 h-4" />
+                  My Listings
+                </Link>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left flex items-center gap-2"
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 text-left flex items-center gap-2 border border-red-100"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign out

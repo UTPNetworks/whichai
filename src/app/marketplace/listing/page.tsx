@@ -218,20 +218,16 @@ function ListingDetailContent() {
     if (listingId.startsWith('user-')) {
       const dbId = listingId.replace('user-', '');
       try {
-        const { data: row, error } = await supabase
-          .from('user_listings')
-          .select('*')
-          .eq('id', dbId)
-          .single();
+        // Use timeout to prevent infinite hang
+        const fetchPromise = supabase.from('user_listings').select('*').eq('id', dbId).single();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timed out')), 10000));
+        const { data: row, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
         if (!error && row) {
           setSupabaseData(row);
-          // Fetch seller profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, first_name, last_name, email')
-            .eq('id', row.user_id)
-            .single();
+          // Fetch seller profile (with timeout)
+          const profilePromise = supabase.from('profiles').select('id, first_name, last_name, email').eq('id', row.user_id).single();
+          const { data: profile } = await Promise.race([profilePromise, new Promise((resolve) => setTimeout(() => resolve({ data: null }), 5000))]) as any;
 
           const sellerName = profile
             ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email?.split('@')[0] || 'WhichAI Seller'
@@ -239,8 +235,8 @@ function ListingDetailContent() {
 
           setListing(supabaseRowToListing(row, sellerName));
 
-          // Increment views
-          await supabase.from('user_listings').update({ views: (row.views || 0) + 1 }).eq('id', dbId);
+          // Increment views (fire and forget, don't block)
+          supabase.from('user_listings').update({ views: (row.views || 0) + 1 }).eq('id', dbId).then(() => {});
         }
       } catch (err) {
         console.error('Failed to fetch listing:', err);
