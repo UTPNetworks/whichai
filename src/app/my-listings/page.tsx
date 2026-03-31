@@ -157,7 +157,7 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
     try {
       // Refresh auth session before uploading
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
 
       const newUrls: string[] = [];
       const errors: string[] = [];
@@ -518,12 +518,22 @@ export default function MyListingsPage() {
   const fetchListings = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('user_listings')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (!error && data) setListings(data as Listing[]);
+    try {
+      // Try refreshing session silently — don't let it crash the fetch
+      try { await supabase.auth.refreshSession(); } catch {}
+
+      const fetchPromise = supabase
+        .from('user_listings')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timed out')), 10000));
+      const { data, error } = await Promise.race([fetchPromise, timeout]) as any;
+      if (!error && data) setListings(data as Listing[]);
+      else if (error) console.error('Fetch listings error:', error);
+    } catch (err) {
+      console.error('Failed to fetch listings:', err);
+    }
     setLoading(false);
   }, [user]);
 
@@ -533,7 +543,7 @@ export default function MyListingsPage() {
   const handleDelete = async (id: string) => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
       const deletePromise = supabase.from('user_listings').delete().eq('id', id);
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Delete timed out.')), 15000));
       const { error } = await Promise.race([deletePromise, timeoutPromise]) as any;
@@ -546,7 +556,7 @@ export default function MyListingsPage() {
     try {
       // Refresh auth session first to prevent hanging requests
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
 
       const updatePromise = supabase.from('user_listings').update({
         title: data.title,
@@ -576,7 +586,7 @@ export default function MyListingsPage() {
   const handleToggleStatus = async (listing: Listing) => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
       const newStatus = listing.status === 'active' ? 'paused' : 'active';
       const togglePromise = supabase.from('user_listings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', listing.id);
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Toggle timed out.')), 15000));
@@ -589,7 +599,7 @@ export default function MyListingsPage() {
   const handleBoost = async (id: string, tier: string) => {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { await supabase.auth.refreshSession(); }
+      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
       const durations: Record<string, number> = { basic: 3, premium: 7, mega: 14 };
       const expires = new Date(Date.now() + (durations[tier] || 3) * 86400000).toISOString();
       const boostPromise = supabase.from('user_listings').update({ is_boosted: true, boost_tier: tier, boost_expires_at: expires, updated_at: new Date().toISOString() }).eq('id', id);

@@ -126,8 +126,7 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
       // Refresh the session to ensure a valid auth token is sent
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) {
-        // Try refreshing the session
-        await supabase.auth.refreshSession();
+        try { await supabase.auth.refreshSession(); } catch {}
       }
 
       // Upload photos to Supabase Storage first
@@ -437,11 +436,8 @@ export default function MarketplacePage() {
   useEffect(() => {
     const fetchUserListings = async () => {
       try {
-        // Refresh session to prevent stale auth hangs
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData?.session) {
-          await supabase.auth.refreshSession();
-        }
+        // No auth needed — anyone_read_active_listings RLS policy allows public reads
+        // DO NOT call refreshSession() here — it throws when no session exists and kills the fetch
 
         // 1. Fetch all active listings (with timeout)
         const listingsPromise = supabase
@@ -455,7 +451,7 @@ export default function MarketplacePage() {
         if (error) { console.error('Error fetching user listings:', error); return; }
         if (!listings || listings.length === 0) { setUserListings([]); return; }
 
-        // 2. Fetch seller profiles for those user IDs (with timeout)
+        // 2. Fetch seller profiles (public read — no auth needed)
         const userIds = [...new Set(listings.map((l: any) => l.user_id))];
         const profilesPromise = supabase
           .from('profiles')
