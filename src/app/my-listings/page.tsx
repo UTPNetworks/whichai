@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+import { supabase, safeRefreshSession } from '@/lib/supabase';
 
 interface Listing {
   id: string;
@@ -156,8 +156,7 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
     setUploading(true);
     try {
       // Refresh auth session before uploading
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
+      await safeRefreshSession();
 
       const newUrls: string[] = [];
       const errors: string[] = [];
@@ -519,9 +518,6 @@ export default function MyListingsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Try refreshing session silently — don't let it crash the fetch
-      try { await supabase.auth.refreshSession(); } catch {}
-
       const fetchPromise = supabase
         .from('user_listings')
         .select('*')
@@ -542,8 +538,7 @@ export default function MyListingsPage() {
   // ── Actions ──
   const handleDelete = async (id: string) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
+      await safeRefreshSession();
       const deletePromise = supabase.from('user_listings').delete().eq('id', id);
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Delete timed out.')), 15000));
       const { error } = await Promise.race([deletePromise, timeoutPromise]) as any;
@@ -555,8 +550,7 @@ export default function MyListingsPage() {
   const handleEdit = async (id: string, data: Partial<Listing>) => {
     try {
       // Refresh auth session first to prevent hanging requests
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
+      await safeRefreshSession();
 
       const updatePromise = supabase.from('user_listings').update({
         title: data.title,
@@ -585,8 +579,7 @@ export default function MyListingsPage() {
 
   const handleToggleStatus = async (listing: Listing) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
+      await safeRefreshSession();
       const newStatus = listing.status === 'active' ? 'paused' : 'active';
       const togglePromise = supabase.from('user_listings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', listing.id);
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Toggle timed out.')), 15000));
@@ -598,8 +591,7 @@ export default function MyListingsPage() {
 
   const handleBoost = async (id: string, tier: string) => {
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) { try { await supabase.auth.refreshSession(); } catch {} }
+      await safeRefreshSession();
       const durations: Record<string, number> = { basic: 3, premium: 7, mega: 14 };
       const expires = new Date(Date.now() + (durations[tier] || 3) * 86400000).toISOString();
       const boostPromise = supabase.from('user_listings').update({ is_boosted: true, boost_tier: tier, boost_expires_at: expires, updated_at: new Date().toISOString() }).eq('id', id);

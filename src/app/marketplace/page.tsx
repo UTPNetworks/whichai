@@ -23,7 +23,7 @@ import {
   type MarketListingV3, calculateDistance,
 } from '@/lib/data';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+import { supabase, safeRefreshSession } from '@/lib/supabase';
 
 type BigTab = 'all' | 'digital-assets' | 'compute-hub' | 'hardware-corner';
 
@@ -123,11 +123,8 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
     if (!user) { alert('Please sign in to publish a listing.'); return; }
     setPublishing(true);
     try {
-      // Refresh the session to ensure a valid auth token is sent
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
-        try { await supabase.auth.refreshSession(); } catch {}
-      }
+      // Refresh session before write (with 3s hard timeout — never hangs)
+      await safeRefreshSession();
 
       // Upload photos to Supabase Storage first
       const photoUrls: string[] = [];
