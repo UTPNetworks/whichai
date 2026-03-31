@@ -38,6 +38,7 @@ function NeuralPulseTicker() {
   const [loading, setLoading] = useState(true);
   const [paused, setPaused] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [activeTab, setActiveTab] = useState("All");
 
   async function fetchNews() {
     try {
@@ -58,8 +59,9 @@ function NeuralPulseTicker() {
     return () => clearInterval(interval);
   }, []);
 
-  // Duplicate items for seamless infinite scroll
-  const tickerItems = news.length > 0 ? [...news, ...news, ...news] : [];
+  // Filter by active tab, then duplicate for seamless infinite scroll
+  const filteredNews = activeTab === "All" ? news : news.filter((item) => item.category === activeTab);
+  const tickerItems = filteredNews.length > 0 ? [...filteredNews, ...filteredNews, ...filteredNews] : [];
 
   return (
     <div
@@ -84,9 +86,17 @@ function NeuralPulseTicker() {
         </div>
         <div className="flex items-center gap-1.5">
           {FIXED_TABS.map((tab) => (
-            <span key={tab} className="hidden md:inline-block text-[9px] font-semibold text-white/30 px-2 py-0.5 rounded-full border border-white/10">
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`hidden md:inline-block text-[9px] font-semibold px-2 py-0.5 rounded-full border transition-all duration-200 cursor-pointer ${
+                activeTab === tab
+                  ? "text-white bg-white/15 border-white/30 shadow-sm shadow-violet-500/20"
+                  : "text-white/30 border-white/10 hover:text-white/60 hover:border-white/20 hover:bg-white/5"
+              }`}
+            >
               {tab}
-            </span>
+            </button>
           ))}
         </div>
       </div>
@@ -110,7 +120,7 @@ function NeuralPulseTicker() {
           <div
             className="flex items-center h-full gap-8 whitespace-nowrap"
             style={{
-              animation: `marquee ${Math.max(news.length * 5, 30)}s linear infinite`,
+              animation: `marquee ${Math.max(filteredNews.length * 5, 30)}s linear infinite`,
               animationPlayState: paused ? "paused" : "running",
             }}
           >
