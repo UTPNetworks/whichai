@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Zap, MapPin, Check } from 'lucide-react';
+import Link from 'next/link';
 import { MarketListingV3 } from '@/lib/data';
 import MicroGallery from './MicroGallery';
 import MetadataBadges from './MetadataBadges';
@@ -50,10 +51,11 @@ export default function ListingCardV3({
       onMouseLeave={() => setIsHovering(false)}
       className="h-full"
     >
+      <Link href={`/marketplace/listing?id=${listing.id}`} className="block h-full">
       <motion.div
         animate={{ scale: isHovering ? 1.02 : 1 }}
         transition={{ duration: 0.2 }}
-        className="h-full bg-white border border-gray-200 hover:border-purple-400 rounded-lg overflow-hidden transition-all shadow-sm hover:shadow-md"
+        className="h-full bg-white border border-gray-200 hover:border-purple-400 rounded-lg overflow-hidden transition-all shadow-sm hover:shadow-md cursor-pointer"
       >
         {/* Image Section */}
         <MicroGallery
@@ -142,11 +144,12 @@ export default function ListingCardV3({
             >
               {/* Compare checkbox */}
               {onCompare && (
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer" onClick={(e) => e.preventDefault()}>
                   <input
                     type="checkbox"
                     checked={isComparing}
                     onChange={(e) => {
+                      e.stopPropagation();
                       setIsComparing(e.target.checked);
                       onCompare(listing.id);
                     }}
@@ -191,6 +194,7 @@ export default function ListingCardV3({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={(e) => e.preventDefault()}
               className="px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all"
             >
               <Zap size={14} className="inline mr-1" />
@@ -199,6 +203,7 @@ export default function ListingCardV3({
           </div>
         </div>
       </motion.div>
+      </Link>
     </motion.div>
   );
 }
