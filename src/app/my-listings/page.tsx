@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package, Plus, Eye, Heart, MessageSquare, Trash2, Pencil, Zap, ToggleLeft, ToggleRight,
   TrendingUp, Clock, DollarSign, BarChart3, ArrowUpRight, Search, Filter, ChevronDown,
   MoreHorizontal, X, BadgeCheck, AlertTriangle, Rocket, Star, Copy, ExternalLink,
-  Archive, RefreshCw, Tag, Sparkles, Crown, Shield, CheckCircle2,
+  Archive, RefreshCw, Tag, Sparkles, Crown, Shield, CheckCircle2, ArrowLeft, ImagePlus,
+  Camera, Upload, Save, ChevronRight, Store, XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -66,7 +67,7 @@ const BoostModal = ({ listing, onClose, onBoost }: { listing: Listing; onClose: 
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Boost Your Listing</h2>
-            <p className="text-xs text-slate-400 mt-0.5">"{listing.title}"</p>
+            <p className="text-xs text-slate-400 mt-0.5">&ldquo;{listing.title}&rdquo;</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X size={20} className="text-slate-400" /></button>
         </div>
@@ -105,48 +106,6 @@ const BoostModal = ({ listing, onClose, onBoost }: { listing: Listing; onClose: 
   );
 };
 
-// ── Edit Modal ──
-const EditModal = ({ listing, onClose, onSave }: { listing: Listing; onClose: () => void; onSave: (id: string, data: Partial<Listing>) => void }) => {
-  const [title, setTitle] = useState(listing.title);
-  const [description, setDescription] = useState(listing.description || '');
-  const [price, setPrice] = useState(String(listing.price));
-  const [saving, setSaving] = useState(false);
-  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:bg-white outline-none text-sm text-slate-800 placeholder:text-slate-400 transition-all";
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">Edit Listing</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X size={20} className="text-slate-400" /></button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Title</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} maxLength={120} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={`${inputClass} resize-none`} maxLength={2000} />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Price (USD)</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">$</span>
-              <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className={`${inputClass} pl-7`} />
-            </div>
-          </div>
-        </div>
-        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-2">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-gray-200 hover:bg-gray-100 transition-all">Cancel</button>
-          <button disabled={saving} onClick={async () => { setSaving(true); await onSave(listing.id, { title, description, price: parseFloat(price) || 0 } as any); setSaving(false); onClose(); }} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg transition-all">
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
 // ── Delete Confirmation ──
 const DeleteConfirm = ({ listing, onClose, onDelete }: { listing: Listing; onClose: () => void; onDelete: (id: string) => void }) => {
   const [deleting, setDeleting] = useState(false);
@@ -155,7 +114,7 @@ const DeleteConfirm = ({ listing, onClose, onDelete }: { listing: Listing; onClo
       <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
         <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4"><Trash2 className="w-6 h-6 text-red-500" /></div>
         <h3 className="text-lg font-bold text-slate-900 mb-1">Delete Listing?</h3>
-        <p className="text-sm text-slate-500 mb-5">"{listing.title}" will be permanently removed. This action cannot be undone.</p>
+        <p className="text-sm text-slate-500 mb-5">&ldquo;{listing.title}&rdquo; will be permanently removed. This action cannot be undone.</p>
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-gray-100 hover:bg-gray-200 transition-all">Keep It</button>
           <button disabled={deleting} onClick={async () => { setDeleting(true); await onDelete(listing.id); setDeleting(false); onClose(); }} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-all">
@@ -167,9 +126,268 @@ const DeleteConfirm = ({ listing, onClose, onDelete }: { listing: Listing; onClo
   );
 };
 
-// ── Listing Row Card ──
-const ListingCard = ({ listing, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate }: {
-  listing: Listing; onEdit: () => void; onDelete: () => void; onBoost: () => void;
+// ── Full Listing Detail/Edit View ──
+const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
+  listing: Listing;
+  onBack: () => void;
+  onSave: (id: string, data: Partial<Listing>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) => {
+  const [title, setTitle] = useState(listing.title);
+  const [description, setDescription] = useState(listing.description || '');
+  const [price, setPrice] = useState(String(listing.price));
+  const [pricingType, setPricingType] = useState(listing.pricing_type || 'one-time');
+  const [tagsStr, setTagsStr] = useState((listing.tags || []).join(', '));
+  const [photos, setPhotos] = useState<string[]>(listing.photo_urls || []);
+  const [category, setCategory] = useState(listing.category || '');
+  const [deliveryMethod, setDeliveryMethod] = useState(listing.delivery_method || 'digital');
+  const [location, setLocation] = useState(listing.location || '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    // Upload each file to Supabase storage (or just create object URLs for preview)
+    const newUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const ext = file.name.split('.').pop();
+      const path = `listings/${listing.id}/${Date.now()}-${i}.${ext}`;
+      const { data, error } = await supabase.storage.from('listing-photos').upload(path, file, { upsert: true });
+      if (!error && data) {
+        const { data: urlData } = supabase.storage.from('listing-photos').getPublicUrl(data.path);
+        if (urlData?.publicUrl) newUrls.push(urlData.publicUrl);
+      }
+    }
+    if (newUrls.length > 0) setPhotos((prev) => [...prev, ...newUrls]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== idx));
+    if (activePhotoIdx >= photos.length - 1) setActivePhotoIdx(Math.max(0, photos.length - 2));
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave(listing.id, {
+        title,
+        description,
+        price: pricingType === 'free' ? 0 : (parseFloat(price) || 0),
+        pricing_type: pricingType,
+        tags: tagsStr.split(',').map((t) => t.trim()).filter(Boolean),
+        photo_urls: photos,
+        category,
+        delivery_method: deliveryMethod,
+        location: location || null,
+      } as any);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error('Save error:', err);
+    }
+    setSaving(false);
+  };
+
+  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:bg-white outline-none text-sm text-slate-800 placeholder:text-slate-400 transition-all";
+
+  return (
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-slate-500 mb-4">
+        <button onClick={onBack} className="flex items-center gap-1 hover:text-purple-600 transition-colors font-medium">
+          <ArrowLeft className="w-4 h-4" />My Listings
+        </button>
+        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+        <span className="text-slate-800 font-semibold truncate max-w-xs">{listing.title}</span>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Photos */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            {/* Main Photo */}
+            <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-50 relative group">
+              {photos.length > 0 ? (
+                <img src={photos[activePhotoIdx] || photos[0]} alt={title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                  <Camera className="w-12 h-12 mb-2" />
+                  <p className="text-sm font-medium">No photos yet</p>
+                </div>
+              )}
+              {/* Overlay upload button */}
+              <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-3 right-3 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm text-xs font-semibold text-slate-700 shadow-lg hover:bg-white transition-all flex items-center gap-1.5 opacity-0 group-hover:opacity-100">
+                <Upload className="w-3.5 h-3.5" />Add Photo
+              </button>
+            </div>
+            {/* Photo strip */}
+            {photos.length > 0 && (
+              <div className="p-3 flex gap-2 overflow-x-auto">
+                {photos.map((url, i) => (
+                  <div key={i} className="relative shrink-0 group/thumb">
+                    <button onClick={() => setActivePhotoIdx(i)} className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${i === activePhotoIdx ? 'border-purple-500 shadow-md' : 'border-transparent hover:border-gray-300'}`}>
+                      <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                    <button onClick={() => removePhoto(i)} className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity shadow-sm hover:bg-red-600">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                <button onClick={() => fileInputRef.current?.click()} className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 hover:border-purple-400 flex items-center justify-center text-gray-400 hover:text-purple-500 transition-all shrink-0">
+                  <ImagePlus className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+            {photos.length === 0 && (
+              <div className="p-4">
+                <button onClick={() => fileInputRef.current?.click()} className="w-full py-3 rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-400 text-sm font-medium text-gray-500 hover:text-purple-600 transition-all flex items-center justify-center gap-2">
+                  <ImagePlus className="w-4 h-4" />Upload Photos
+                </button>
+              </div>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
+          </div>
+        </div>
+
+        {/* Right: Editable Fields */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Title + Status */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Pencil className="w-4 h-4 text-purple-500" />Listing Details
+              </h2>
+              <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                listing.status === 'active' ? 'bg-emerald-50 text-emerald-700' :
+                listing.status === 'paused' ? 'bg-amber-50 text-amber-700' :
+                listing.status === 'sold' ? 'bg-blue-50 text-blue-700' :
+                'bg-gray-100 text-gray-600'
+              }`}>{listing.status.toUpperCase()}</span>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Title</label>
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} maxLength={120} placeholder="What are you selling?" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Description</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={5} className={`${inputClass} resize-none`} maxLength={2000} placeholder="Describe your item in detail..." />
+                <p className="text-[10px] text-slate-400 mt-1 text-right">{description.length}/2000</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <DollarSign className="w-4 h-4 text-emerald-500" />Pricing
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Pricing Type</label>
+                <select value={pricingType} onChange={(e) => setPricingType(e.target.value)} className={inputClass}>
+                  <option value="one-time">One-time Purchase</option>
+                  <option value="subscription">Subscription</option>
+                  <option value="negotiable">Negotiable</option>
+                  <option value="free">Free</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Price (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">$</span>
+                  <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className={`${inputClass} pl-7`} disabled={pricingType === 'free'} placeholder="0.00" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tags & Category */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <Tag className="w-4 h-4 text-cyan-500" />Tags & Category
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Tags <span className="text-slate-400 normal-case font-normal">(comma separated)</span></label>
+                <input type="text" value={tagsStr} onChange={(e) => setTagsStr(e.target.value)} className={inputClass} placeholder="ai, machine-learning, saas, tool" />
+                {tagsStr && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {tagsStr.split(',').map((t) => t.trim()).filter(Boolean).map((tag, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[11px] font-medium">#{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Category</label>
+                  <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass} placeholder="digital-assets" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Delivery</label>
+                  <select value={deliveryMethod} onChange={(e) => setDeliveryMethod(e.target.value)} className={inputClass}>
+                    <option value="digital">Digital Download</option>
+                    <option value="api">API Access</option>
+                    <option value="physical">Physical Shipping</option>
+                    <option value="license">License Key</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Location <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder="San Francisco, CA" />
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center justify-between pt-2">
+            <button onClick={() => setShowDeleteConfirm(true)} className="px-4 py-2.5 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 transition-all flex items-center gap-2">
+              <Trash2 className="w-4 h-4" />Delete Listing
+            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={onBack} className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-white border border-gray-200 hover:bg-gray-50 transition-all">
+                Cancel
+              </button>
+              <motion.button
+                onClick={handleSave}
+                disabled={saving}
+                whileTap={{ scale: 0.97 }}
+                className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50 transition-all flex items-center gap-2 disabled:opacity-60"
+              >
+                {saving ? (
+                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Saving...</>
+                ) : saved ? (
+                  <><CheckCircle2 className="w-4 h-4" />Saved!</>
+                ) : (
+                  <><Save className="w-4 h-4" />Save Changes</>
+                )}
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete confirmation inline */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <DeleteConfirm listing={listing} onClose={() => setShowDeleteConfirm(false)} onDelete={async (id) => { await onDelete(id); onBack(); }} />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+// ── Listing Row Card (Clickable) ──
+const ListingCard = ({ listing, onClick, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate }: {
+  listing: Listing; onClick: () => void; onEdit: () => void; onDelete: () => void; onBoost: () => void;
   onToggleStatus: () => void; onDuplicate: () => void;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -185,11 +403,16 @@ const ListingCard = ({ listing, onEdit, onDelete, onBoost, onToggleStatus, onDup
   const boostActive = listing.is_boosted && listing.boost_expires_at && new Date(listing.boost_expires_at) > new Date();
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl border border-gray-200 hover:border-purple-200 hover:shadow-md transition-all group">
-      <div className="p-4">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(147,51,234,0.08)' }}
+      className="bg-white rounded-xl border border-gray-200 hover:border-purple-300 transition-all group cursor-pointer"
+    >
+      <div className="p-4" onClick={onClick}>
         <div className="flex gap-4">
           {/* Thumbnail */}
-          <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-purple-200 transition-colors">
             {listing.photo_urls?.length > 0 ? (
               <img src={listing.photo_urls[0]} alt={listing.title} className="w-full h-full object-cover" />
             ) : (
@@ -201,10 +424,11 @@ const ListingCard = ({ listing, onEdit, onDelete, onBoost, onToggleStatus, onDup
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-bold text-slate-900 text-sm truncate">{listing.title}</h3>
+                  <h3 className="font-bold text-slate-900 text-sm truncate group-hover:text-purple-700 transition-colors">{listing.title}</h3>
                   {boostActive && (
                     <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-[9px] font-bold flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" />BOOSTED</span>
                   )}
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-400 transition-colors shrink-0 opacity-0 group-hover:opacity-100" />
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1 ${sc.bg} ${sc.text}`}>
@@ -223,34 +447,34 @@ const ListingCard = ({ listing, onEdit, onDelete, onBoost, onToggleStatus, onDup
             </div>
           </div>
         </div>
-        {/* Stats bar */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1 text-xs text-slate-500"><Eye className="w-3.5 h-3.5" />{listing.views}</span>
-            <span className="flex items-center gap-1 text-xs text-slate-500"><Heart className="w-3.5 h-3.5" />{listing.saves}</span>
-            <span className="flex items-center gap-1 text-xs text-slate-500"><MessageSquare className="w-3.5 h-3.5" />{listing.inquiries}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button onClick={onEdit} className="p-2 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-all" title="Edit"><Pencil className="w-4 h-4" /></button>
-            <button onClick={onBoost} className="p-2 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-all" title="Boost"><Rocket className="w-4 h-4" /></button>
-            <button onClick={onToggleStatus} className="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all" title={listing.status === 'active' ? 'Pause' : 'Activate'}>
-              {listing.status === 'active' ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-            </button>
-            {/* More menu */}
-            <div className="relative">
-              <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-gray-100 transition-all"><MoreHorizontal className="w-4 h-4" /></button>
-              <AnimatePresence>
-                {menuOpen && (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute right-0 bottom-full mb-1 w-44 bg-white rounded-xl border border-gray-200 shadow-xl z-20 overflow-hidden">
-                    <button onClick={() => { onDuplicate(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><Copy className="w-3.5 h-3.5" />Duplicate Listing</button>
-                    <button onClick={() => { setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" />View in Marketplace</button>
-                    <button onClick={() => { onToggleStatus(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><Archive className="w-3.5 h-3.5" />Mark as Sold</button>
-                    <div className="border-t border-gray-100" />
-                    <button onClick={() => { onDelete(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" />Delete Listing</button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+      </div>
+      {/* Stats bar — click on these doesn't navigate */}
+      <div className="flex items-center justify-between px-4 pb-3 pt-0 border-t border-gray-100 mx-4 mt-0 pt-3" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1 text-xs text-slate-500"><Eye className="w-3.5 h-3.5" />{listing.views}</span>
+          <span className="flex items-center gap-1 text-xs text-slate-500"><Heart className="w-3.5 h-3.5" />{listing.saves}</span>
+          <span className="flex items-center gap-1 text-xs text-slate-500"><MessageSquare className="w-3.5 h-3.5" />{listing.inquiries}</span>
+        </div>
+        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onEdit} className="p-2 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-all" title="Edit"><Pencil className="w-4 h-4" /></button>
+          <button onClick={onBoost} className="p-2 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-all" title="Boost"><Rocket className="w-4 h-4" /></button>
+          <button onClick={onToggleStatus} className="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all" title={listing.status === 'active' ? 'Pause' : 'Activate'}>
+            {listing.status === 'active' ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+          </button>
+          {/* More menu */}
+          <div className="relative">
+            <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-gray-100 transition-all"><MoreHorizontal className="w-4 h-4" /></button>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute right-0 bottom-full mb-1 w-44 bg-white rounded-xl border border-gray-200 shadow-xl z-20 overflow-hidden">
+                  <button onClick={() => { onDuplicate(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><Copy className="w-3.5 h-3.5" />Duplicate Listing</button>
+                  <button onClick={() => { setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" />View in Marketplace</button>
+                  <button onClick={() => { onToggleStatus(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><Archive className="w-3.5 h-3.5" />Mark as Sold</button>
+                  <div className="border-t border-gray-100" />
+                  <button onClick={() => { onDelete(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" />Delete Listing</button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -267,7 +491,7 @@ export default function MyListingsPage() {
   const [tab, setTab] = useState<Tab>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const [search, setSearch] = useState('');
-  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [deletingListing, setDeletingListing] = useState<Listing | null>(null);
   const [boostingListing, setBoostingListing] = useState<Listing | null>(null);
   const [actionMsg, setActionMsg] = useState('');
@@ -295,8 +519,24 @@ export default function MyListingsPage() {
   };
 
   const handleEdit = async (id: string, data: Partial<Listing>) => {
-    const { error } = await supabase.from('user_listings').update({ title: data.title, description: data.description, price: data.price, updated_at: new Date().toISOString() }).eq('id', id);
-    if (!error) { setListings((prev) => prev.map((l) => l.id === id ? { ...l, ...data, updated_at: new Date().toISOString() } : l)); showAction('Listing updated'); }
+    const { error } = await supabase.from('user_listings').update({
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      pricing_type: (data as any).pricing_type,
+      tags: (data as any).tags,
+      photo_urls: (data as any).photo_urls,
+      category: (data as any).category,
+      delivery_method: (data as any).delivery_method,
+      location: (data as any).location,
+      updated_at: new Date().toISOString(),
+    }).eq('id', id);
+    if (!error) {
+      setListings((prev) => prev.map((l) => l.id === id ? { ...l, ...data, updated_at: new Date().toISOString() } : l));
+      // Update the selected listing too so the detail view stays in sync
+      setSelectedListing((prev) => prev && prev.id === id ? { ...prev, ...data, updated_at: new Date().toISOString() } : prev);
+      showAction('Listing updated');
+    }
   };
 
   const handleToggleStatus = async (listing: Listing) => {
@@ -327,7 +567,7 @@ export default function MyListingsPage() {
   // ── Filtering & Sorting ──
   const filtered = listings
     .filter((l) => tab === 'all' || l.status === tab)
-    .filter((l) => !search || l.title.toLowerCase().includes(search.toLowerCase()))
+    .filter((l) => !search || l.title.toLowerCase().includes(search.toLowerCase()) || (l.tags || []).some((t) => t.toLowerCase().includes(search.toLowerCase())))
     .sort((a, b) => {
       if (sortBy === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       if (sortBy === 'oldest') return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -354,8 +594,6 @@ export default function MyListingsPage() {
     { id: 'sold', label: 'Sold', count: listings.filter((l) => l.status === 'sold').length },
   ];
 
-  // Only show sign-in prompt if auth has finished loading AND there's no user
-  // Don't block on authLoading alone — if user is already available, proceed
   if (!user && !authLoading) return (
     <div className="min-h-screen bg-[#f4f0eb]">
       <Navbar />
@@ -388,105 +626,125 @@ export default function MyListingsPage() {
           )}
         </AnimatePresence>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">My Listings</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Manage, boost, and track all your marketplace items</p>
-          </div>
-          <Link href="/marketplace" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50 transition-all">
-            <Plus className="w-4 h-4" />New Listing
-          </Link>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <StatCard icon={Package} label="Total Listings" value={stats.total} color="bg-purple-500" />
-          <StatCard icon={Eye} label="Total Views" value={stats.totalViews} trend="+12%" color="bg-cyan-500" />
-          <StatCard icon={Heart} label="Total Saves" value={stats.totalSaves} trend="+8%" color="bg-pink-500" />
-          <StatCard icon={DollarSign} label="Revenue" value={`$${stats.totalRevenue.toFixed(2)}`} color="bg-emerald-500" />
-        </div>
-
-        {/* Tabs + Search + Sort */}
-        <div className="bg-white rounded-xl border border-gray-200 mb-4">
-          <div className="flex items-center justify-between px-4 pt-3 pb-0 border-b border-gray-100">
-            <div className="flex gap-0.5">
-              {tabs.map((t) => (
-                <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all relative ${tab === t.id ? 'text-purple-700 bg-purple-50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50'}`}>
-                  {t.label}
-                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-500'}`}>{t.count}</span>
-                  {tab === t.id && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 rounded-full" />}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search your listings..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none text-sm" />
-            </div>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm text-slate-600 outline-none focus:border-purple-400">
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="most-views">Most Views</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Listing Cards */}
-        {loading ? (
-          <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-3 border-purple-400 border-t-transparent rounded-full animate-spin" /></div>
-        ) : filtered.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-            <div className="w-20 h-20 mx-auto rounded-2xl bg-gray-100 flex items-center justify-center mb-4"><Package className="w-10 h-10 text-gray-300" /></div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">{search ? 'No matching listings' : tab !== 'all' ? `No ${tab} listings yet` : 'No listings yet'}</h3>
-            <p className="text-sm text-slate-500 mb-6">{search ? 'Try a different search term' : 'Create your first listing and start selling on WhichAI Marketplace'}</p>
-            {!search && (
-              <Link href="/marketplace" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg transition-all">
-                <Plus className="w-4 h-4" />Create Listing
-              </Link>
-            )}
-          </motion.div>
-        ) : (
-          <div className="space-y-3">
-            {filtered.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                onEdit={() => setEditingListing(listing)}
-                onDelete={() => setDeletingListing(listing)}
-                onBoost={() => setBoostingListing(listing)}
-                onToggleStatus={() => handleToggleStatus(listing)}
-                onDuplicate={() => handleDuplicate(listing)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Seller tips */}
-        {listings.length > 0 && listings.length < 5 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 p-5 rounded-xl bg-gradient-to-br from-purple-50 to-cyan-50 border border-purple-200">
-            <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-slate-800 mb-1">Seller Tips</h4>
-                <ul className="space-y-1">
-                  <li className="text-xs text-slate-600">Add high-quality photos to get 3x more views</li>
-                  <li className="text-xs text-slate-600">Listings with detailed descriptions sell 2x faster</li>
-                  <li className="text-xs text-slate-600">Boost your listing to appear at the top of search results</li>
-                  <li className="text-xs text-slate-600">Respond to inquiries quickly to improve your seller rating</li>
-                </ul>
+        {/* If a listing is selected, show detail view */}
+        <AnimatePresence mode="wait">
+          {selectedListing ? (
+            <ListingDetailView
+              key={`detail-${selectedListing.id}`}
+              listing={selectedListing}
+              onBack={() => { setSelectedListing(null); fetchListings(); }}
+              onSave={handleEdit}
+              onDelete={handleDelete}
+            />
+          ) : (
+            <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900">My Listings</h1>
+                  <p className="text-sm text-slate-500 mt-0.5">Manage, boost, and track all your marketplace items</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Link href="/marketplace" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all">
+                    <Store className="w-4 h-4" />Back to Marketplace
+                  </Link>
+                  <Link href="/marketplace" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50 transition-all">
+                    <Plus className="w-4 h-4" />New Listing
+                  </Link>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <StatCard icon={Package} label="Total Listings" value={stats.total} color="bg-purple-500" />
+                <StatCard icon={Eye} label="Total Views" value={stats.totalViews} trend="+12%" color="bg-cyan-500" />
+                <StatCard icon={Heart} label="Total Saves" value={stats.totalSaves} trend="+8%" color="bg-pink-500" />
+                <StatCard icon={DollarSign} label="Revenue" value={`$${stats.totalRevenue.toFixed(2)}`} color="bg-emerald-500" />
+              </div>
+
+              {/* Tabs + Search + Sort */}
+              <div className="bg-white rounded-xl border border-gray-200 mb-4">
+                <div className="flex items-center justify-between px-4 pt-3 pb-0 border-b border-gray-100">
+                  <div className="flex gap-0.5">
+                    {tabs.map((t) => (
+                      <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all relative ${tab === t.id ? 'text-purple-700 bg-purple-50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50'}`}>
+                        {t.label}
+                        <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-500'}`}>{t.count}</span>
+                        {tab === t.id && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 rounded-full" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title or #tag..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none text-sm" />
+                  </div>
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm text-slate-600 outline-none focus:border-purple-400">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="most-views">Most Views</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Listing Cards */}
+              {loading ? (
+                <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-3 border-purple-400 border-t-transparent rounded-full animate-spin" /></div>
+              ) : filtered.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+                  <div className="w-20 h-20 mx-auto rounded-2xl bg-gray-100 flex items-center justify-center mb-4"><Package className="w-10 h-10 text-gray-300" /></div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">{search ? 'No matching listings' : tab !== 'all' ? `No ${tab} listings yet` : 'No listings yet'}</h3>
+                  <p className="text-sm text-slate-500 mb-6">{search ? 'Try a different search term' : 'Create your first listing and start selling on WhichAI Marketplace'}</p>
+                  {!search && (
+                    <Link href="/marketplace" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg transition-all">
+                      <Plus className="w-4 h-4" />Create Listing
+                    </Link>
+                  )}
+                </motion.div>
+              ) : (
+                <div className="space-y-3">
+                  {filtered.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onClick={() => setSelectedListing(listing)}
+                      onEdit={() => setSelectedListing(listing)}
+                      onDelete={() => setDeletingListing(listing)}
+                      onBoost={() => setBoostingListing(listing)}
+                      onToggleStatus={() => handleToggleStatus(listing)}
+                      onDuplicate={() => handleDuplicate(listing)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Seller tips */}
+              {listings.length > 0 && listings.length < 5 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 p-5 rounded-xl bg-gradient-to-br from-purple-50 to-cyan-50 border border-purple-200">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 mb-1">Seller Tips</h4>
+                      <ul className="space-y-1">
+                        <li className="text-xs text-slate-600">Click any listing to open the full editor with photo management</li>
+                        <li className="text-xs text-slate-600">Add high-quality photos to get 3x more views</li>
+                        <li className="text-xs text-slate-600">Listings with detailed descriptions sell 2x faster</li>
+                        <li className="text-xs text-slate-600">Boost your listing to appear at the top of search results</li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Modals */}
       <AnimatePresence>
-        {editingListing && <EditModal listing={editingListing} onClose={() => setEditingListing(null)} onSave={handleEdit} />}
         {deletingListing && <DeleteConfirm listing={deletingListing} onClose={() => setDeletingListing(null)} onDelete={handleDelete} />}
         {boostingListing && <BoostModal listing={boostingListing} onClose={() => setBoostingListing(null)} onBoost={handleBoost} />}
       </AnimatePresence>

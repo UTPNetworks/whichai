@@ -459,7 +459,7 @@ export default function MarketplacePage() {
     // Merge static demo listings with real user listings from Supabase
     const allCombinedListings = [...userListings, ...allListingsV3];
     let filtered = allCombinedListings.filter((listing) => {
-      if (searchQuery) { const q = searchQuery.toLowerCase(); return listing.name.toLowerCase().includes(q) || listing.description.toLowerCase().includes(q) || listing.tags.some((t) => t.toLowerCase().includes(q)); }
+      if (searchQuery) { const q = searchQuery.toLowerCase().replace(/^#/, ''); return listing.name.toLowerCase().includes(q) || listing.description.toLowerCase().includes(q) || listing.tags.some((t) => t.toLowerCase().replace(/^#/, '').includes(q)) || (listing.subcategory || '').toLowerCase().includes(q); }
       return true;
     });
     if (activeCategory2) { filtered = filtered.filter((l) => l.bigCategory === activeCategory2); } else if (bigTab !== 'all') { filtered = filtered.filter((l) => l.bigCategory === bigTab); }
