@@ -337,6 +337,38 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
+// Helper: convert a Supabase user_listings row into a MarketplaceListing
+function supabaseRowToListing(row: any): MarketListingV3 {
+  // Map the stored category string to a BigCategory value
+  const catStr = (row.category || '').toLowerCase();
+  let bigCategory: 'digital-assets' | 'compute-hub' | 'hardware-corner' = 'digital-assets';
+  if (catStr.includes('compute')) bigCategory = 'compute-hub';
+  else if (catStr.includes('hardware')) bigCategory = 'hardware-corner';
+
+  return {
+    id: `user-${row.id}`,
+    name: row.title || 'Untitled Listing',
+    description: row.description || '',
+    bigCategory,
+    subcategory: row.subcategory || '',
+    price: row.price || 0,
+    unit: row.pricing_type === 'free' ? 'free' : 'one-time',
+    seller: {
+      name: row.seller_name || 'WhichAI Seller',
+      rating: 5.0,
+      reviews: 0,
+      verified: true,
+      badge: 'new' as const,
+    },
+    badge: row.is_boosted ? 'Boosted' : undefined,
+    featured: row.is_boosted || false,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    emoji: bigCategory === 'compute-hub' ? '⚡' : bigCategory === 'hardware-corner' ? '🖥️' : '🤖',
+    images: Array.isArray(row.photo_urls) ? row.photo_urls : [],
+    trendingScore: row.views || 0,
+  };
+}
+
 export default function MarketplacePage() {
   const { user } = useAuth();
   const [products, setProducts] = useState<AIProduct[]>([]);
@@ -353,7 +385,9 @@ export default function MarketplacePage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState(500);
   const [filters, setFilters] = useState<FilterState>({ sortBy: 'trending', priceRange: [0, 10000], minRating: 0, vramMin: 0, frameworks: [], subcategories: [], maxDistance: 500 });
+  const [userListings, setUserListings] = useState<MarketListingV3[]>([]);
 
+  // Fetch AI tools directory
   useEffect(() => {
     const loadProducts = async () => {
       setLoadingTools(true);
@@ -364,8 +398,50 @@ export default function MarketplacePage() {
     loadProducts();
   }, []);
 
+  // Fetch user-created listings from Supabase
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      try {
+        // 1. Fetch all active listings
+        const { data: listings, error } = await supabase
+          .from('user_listings')
+          .select('*')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (error) { console.error('Error fetching user listings:', error); return; }
+        if (!listings || listings.length === 0) { setUserListings([]); return; }
+
+        // 2. Fetch seller profiles for those user IDs
+        const userIds = [...new Set(listings.map((l: any) => l.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .in('id', userIds);
+
+        const profileMap = new Map<string, any>();
+        (profiles || []).forEach((p: any) => profileMap.set(p.id, p));
+
+        // 3. Convert to MarketplaceListing format
+        const converted = listings.map((row: any) => {
+          const profile = profileMap.get(row.user_id);
+          const sellerName = profile
+            ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email?.split('@')[0] || 'WhichAI Seller'
+            : 'WhichAI Seller';
+          return supabaseRowToListing({ ...row, seller_name: sellerName });
+        });
+        setUserListings(converted);
+      } catch (err) {
+        console.error('Failed to fetch user listings:', err);
+      }
+    };
+    fetchUserListings();
+  }, [showSellModal]); // Re-fetch when sell modal closes (new listing may have been added)
+
   const getFilteredListings = () => {
-    let filtered = allListingsV3.filter((listing) => {
+    // Merge static demo listings with real user listings from Supabase
+    const allCombinedListings = [...userListings, ...allListingsV3];
+    let filtered = allCombinedListings.filter((listing) => {
       if (searchQuery) { const q = searchQuery.toLowerCase(); return listing.name.toLowerCase().includes(q) || listing.description.toLowerCase().includes(q) || listing.tags.some((t) => t.toLowerCase().includes(q)); }
       return true;
     });
@@ -483,7 +559,7 @@ export default function MarketplacePage() {
       {compareIds.length > 0 && (
         <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-0 left-0 right-0 bg-white/95 border-t border-gray-200 backdrop-blur-sm p-4 z-40 shadow-lg">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div><p className="text-slate-900 font-semibold">{compareIds.length} item{compareIds.length !== 1 ? 's' : ''} selected for comparison</p><p className="text-slate-500 text-sm">{compareIds.map((id) => allListingsV3.find((l) => l.id === id)?.name).join(', ')}</p></div>
+            <div><p className="text-slate-900 font-semibold">{compareIds.length} item{compareIds.length !== 1 ? 's' : ''} selected for comparison</p><p className="text-slate-500 text-sm">{compareIds.map((id) => [...userListings, ...allListingsV3].find((l) => l.id === id)?.name).join(', ')}</p></div>
             <div className="flex gap-3">
               <motion.button whileHover={{ scale: 1.05 }} className="px-4 py-2 rounded-lg bg-purple-100 border border-purple-300 text-purple-700 font-semibold text-sm">Compare Now</motion.button>
               <motion.button onClick={() => setCompareIds([])} whileHover={{ scale: 1.05 }} className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-200 text-gray-600 font-semibold text-sm">Clear</motion.button>
