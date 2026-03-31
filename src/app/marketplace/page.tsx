@@ -130,6 +130,23 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
         await supabase.auth.refreshSession();
       }
 
+      // Upload photos to Supabase Storage first
+      const photoUrls: string[] = [];
+      if (photos.length > 0) {
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          const ext = photo.file.name.split('.').pop() || 'jpg';
+          const path = `listings/${user.id}/${Date.now()}-${i}.${ext}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('listing-photos')
+            .upload(path, photo.file, { upsert: true });
+          if (!uploadError && uploadData) {
+            const { data: urlData } = supabase.storage.from('listing-photos').getPublicUrl(uploadData.path);
+            if (urlData?.publicUrl) photoUrls.push(urlData.publicUrl);
+          }
+        }
+      }
+
       // Build the insert payload
       const payload = {
         user_id: user.id,
@@ -146,6 +163,7 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
         frameworks: frameworks || null,
         delivery_method: deliveryMethod,
         location: location || null,
+        photo_urls: photoUrls,
         status: 'active',
       };
 
