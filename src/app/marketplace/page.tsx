@@ -128,7 +128,16 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
         title,
         description,
         category: `${category}${subcategory ? ` > ${subcategory}` : ''}`,
+        subcategory: subcategory || null,
         price: pricingType === 'free' ? 0 : parseFloat(price) || 0,
+        pricing_type: pricingType,
+        condition: condition || null,
+        tags: tags ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+        license: license || null,
+        demo_url: demoUrl || null,
+        frameworks: frameworks || null,
+        delivery_method: deliveryMethod,
+        location: location || null,
         status: 'active',
       });
       if (error) throw error;

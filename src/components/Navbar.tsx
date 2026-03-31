@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Bell, ChevronDown, LogOut, User, LayoutGrid } from "lucide-react";
+import { Menu, X, Bell, ChevronDown, LogOut, User, LayoutGrid, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -162,6 +162,14 @@ export default function Navbar() {
                       >
                         <User className="w-4 h-4" />
                         Profile
+                      </Link>
+                      <Link
+                        href="/my-listings"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        <Package className="w-4 h-4" />
+                        My Listings
                       </Link>
                       <button
                         onClick={handleSignOut}
