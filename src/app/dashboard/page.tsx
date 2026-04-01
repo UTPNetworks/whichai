@@ -6,7 +6,6 @@ import {
   Zap,
   TrendingDown,
   Crown,
-  LogOut,
   Copy,
   Check,
   ArrowRight,

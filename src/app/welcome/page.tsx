@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
-import { signOut } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 const NAV_TILES = [
   {
@@ -59,8 +59,14 @@ export default function WelcomePage() {
   }, [loading, user, router]);
 
   const handleSignOut = async () => {
-    await signOut();
-    router.replace("/");
+    try {
+      await supabase.auth.signOut();
+      router.refresh();
+      router.push("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      router.push("/");
+    }
   };
 
   if (loading) {

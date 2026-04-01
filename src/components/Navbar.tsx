@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { signOut } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 const mockNotifications = [
   { id: 1, text: "ð¥ New deal: OpenAI credits 10% off!", time: "2m ago" },
@@ -43,16 +43,14 @@ export default function Navbar() {
     setDropdownOpen(false);
     setMobileOpen(false);
     try {
-      // Use timeout to prevent sign-out from hanging on stale session
-      const signOutPromise = signOut();
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
-      await Promise.race([signOutPromise, timeoutPromise]);
-    } catch {
-      // Ignore errors — still redirect
+      await supabase.auth.signOut();
+      router.refresh();
+      router.push("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Still redirect even if there's an error
+      router.push("/");
     }
-    // Force a hard reload to clear all auth state (React cache, Supabase tokens, etc.)
-    // Using replace so the back button doesn't return the user to a protected page
-    window.location.replace("/");
   };
 
   const displayName = profile?.first_name || user?.email?.split("@")[0] || "User";
