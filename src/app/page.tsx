@@ -39,12 +39,12 @@ function VisitorCounter() {
   if (count === null) return null;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.5 }}
-      className="fixed bottom-6 right-6 z-50"
+      transition={{ delay: 0.6 }}
+      className="bg-gradient-to-r from-violet-50 via-white to-white border-b border-gray-100"
     >
-      <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 border border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center gap-2">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -196,6 +196,9 @@ export default function Home() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <Navbar />
       </div>
+
+      {/* Visitor counter — below navbar */}
+      <VisitorCounter />
 
       {/* ── HERO — full width ─────────────────────────────────────── */}
       <section className="relative bg-white overflow-hidden">
@@ -401,7 +404,6 @@ export default function Home() {
 
       </div>{/* end main content */}
 
-      <VisitorCounter />
     </div>
   );
 }
