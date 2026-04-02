@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Brain, BookOpen, Briefcase, ArrowRight, Sparkles,
   Zap, TrendingUp, Globe, ExternalLink, RefreshCw, Home, Search,
-  ChevronRight, Loader2,
+  ChevronRight, Loader2, MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -65,23 +65,23 @@ function NeuralPulseTicker() {
 
   return (
     <div
-      className="w-screen relative left-1/2 -translate-x-1/2 border-b border-gray-200/60 bg-gradient-to-r from-slate-900 via-violet-950 to-slate-900 overflow-hidden"
+      className="w-screen relative left-1/2 -translate-x-1/2 border-b border-indigo-200/60 bg-gradient-to-r from-indigo-50 via-white to-violet-50 overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       {/* Header bar */}
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center shadow-md shadow-violet-500/30">
+          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-md shadow-violet-300/40">
             <Zap className="w-3 h-3 text-white" />
           </div>
-          <span className="text-xs font-black text-white/90 tracking-tight">NeuralPulse</span>
+          <span className="text-xs font-black text-slate-800 tracking-tight">NeuralPulse</span>
           <div className="flex items-center gap-1.5 ml-1">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
             </span>
-            <span className="text-[10px] text-white/40 hidden sm:inline">Live · {lastUpdated || "..."}</span>
+            <span className="text-[10px] text-slate-400 hidden sm:inline">Live · {lastUpdated || "..."}</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -91,8 +91,8 @@ function NeuralPulseTicker() {
               onClick={() => setActiveTab(tab)}
               className={`hidden md:inline-block text-[9px] font-semibold px-2 py-0.5 rounded-full border transition-all duration-200 cursor-pointer ${
                 activeTab === tab
-                  ? "text-white bg-white/15 border-white/30 shadow-sm shadow-violet-500/20"
-                  : "text-white/30 border-white/10 hover:text-white/60 hover:border-white/20 hover:bg-white/5"
+                  ? "text-violet-700 bg-violet-100 border-violet-300 shadow-sm"
+                  : "text-slate-400 border-slate-200 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               }`}
             >
               {tab}
@@ -104,16 +104,16 @@ function NeuralPulseTicker() {
       {/* Marquee ticker */}
       <div className="relative h-10 overflow-hidden">
         {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-slate-900 to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-slate-900 to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-indigo-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-violet-50 to-transparent z-10 pointer-events-none" />
 
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-4 h-4 text-violet-400 animate-spin" />
-            <span className="text-xs text-white/30 ml-2">Loading news...</span>
+            <Loader2 className="w-4 h-4 text-violet-500 animate-spin" />
+            <span className="text-xs text-slate-400 ml-2">Loading news...</span>
           </div>
         ) : tickerItems.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-xs text-white/30">
+          <div className="flex items-center justify-center h-full text-xs text-slate-400">
             No stories right now
           </div>
         ) : (
@@ -135,13 +135,13 @@ function NeuralPulseTicker() {
                 <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${CATEGORY_COLORS[item.category] || CATEGORY_COLORS["General AI"]}`}>
                   {item.category}
                 </span>
-                <span className="text-[11px] font-medium text-white/70 group-hover:text-cyan-300 transition-colors max-w-[340px] truncate">
+                <span className="text-[12px] font-semibold text-slate-700 group-hover:text-violet-600 transition-colors max-w-[380px] truncate">
                   {item.title}
                 </span>
-                <span className="text-[9px] text-white/25 flex items-center gap-0.5">
+                <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
                   <TrendingUp className="w-2.5 h-2.5" />{item.points}
                 </span>
-                <span className="text-white/10">│</span>
+                <span className="text-slate-200">│</span>
               </a>
             ))}
           </div>
@@ -165,6 +165,7 @@ const SEARCH_CATEGORIES = [
   { id: "know-your-ai", label: "Know Your AI", icon: Brain, href: "/know-your-ai", color: "from-cyan-500 to-blue-600", count: "200+", desc: "AI models & benchmarks" },
   { id: "learning-hub", label: "Learning Hub", icon: BookOpen, href: "/learning-hub", color: "from-emerald-500 to-green-600", count: "50+", desc: "Courses & hands-on labs" },
   { id: "ai-task-board", label: "AI Task Board", icon: Briefcase, href: "/ai-task-board", color: "from-amber-500 to-orange-600", count: "500+", desc: "AI dev tasks & bounties" },
+  { id: "prompt-hub", label: "Prompt Hub", icon: MessageSquare, href: "/prompt-hub", color: "from-pink-500 to-rose-600", count: "4,800+", desc: "Buy, sell & share prompts" },
 ];
 
 function UniversalSearchBar() {
@@ -354,6 +355,28 @@ const hubs = [
     tags: ["AI Development", "Bounties", "Escrow"],
     stats: [{ val: "500+", label: "AI devs" }, { val: "48hr", label: "avg delivery" }, { val: "Escrow", label: "protected" }],
   },
+  {
+    id: "prompt-hub",
+    href: "/prompt-hub",
+    icon: MessageSquare,
+    label: "Prompt Hub",
+    tagline: "Prompts Marketplace",
+    description: "Buy, sell, learn, and donate AI prompt packages. The largest collection of battle-tested prompts for ChatGPT, Claude, Gemini & more.",
+    g1: "#831843", g2: "#e11d48", g3: "#fb7185",
+    glow: "rgba(225, 29, 72, 0.35)",
+    shimmer: "rgba(251,113,133,0.2)",
+    bannerEmojis: [
+      { e: "✍️", x: "10%", y: "16%", r: "-10deg", s: 1.1 },
+      { e: "💬", x: "80%", y: "12%", r: "8deg", s: 0.9 },
+      { e: "🎯", x: "20%", y: "70%", r: "6deg", s: 1.15 },
+      { e: "📝", x: "70%", y: "68%", r: "-12deg", s: 1.0 },
+      { e: "🔥", x: "48%", y: "38%", r: "15deg", s: 0.85 },
+      { e: "💎", x: "88%", y: "48%", r: "-5deg", s: 0.95 },
+    ],
+    cta: "Browse Prompts",
+    tags: ["Buy & Sell", "Free Prompts", "Packages"],
+    stats: [{ val: "4,800+", label: "prompts" }, { val: "12", label: "categories" }, { val: "Free", label: "& paid" }],
+  },
 ];
 
 // ── Hub Page ────────────────────────────────────────────────────────────
@@ -402,7 +425,7 @@ export default function HubPage() {
         </motion.div>
 
         {/* ── 4 Hub Cards (revamped with glow + lift) ──────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 auto-rows-fr">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 auto-rows-fr">
           {hubs.map((hub, i) => {
             const Icon = hub.icon;
             return (
