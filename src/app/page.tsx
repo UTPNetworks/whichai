@@ -2,18 +2,18 @@
 
 import { motion } from "framer-motion";
 import {
-  Sparkles, ArrowRight, Loader2, ShoppingBag, Tag,
-  Star, Shield, Zap, Users, DollarSign, Package, GraduationCap,
-  ChevronRight, BadgeCheck, Upload, HandCoins, CheckCircle2,
-  Brain, Cpu, Monitor, Rocket, Search,
+  Sparkles, ArrowRight, ShoppingBag, Tag,
+  Star, Shield, Zap, Users, DollarSign, Package,
+  BadgeCheck, Upload, HandCoins,
+  Rocket, Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { getFeaturedListings, type MarketplaceListing } from "@/lib/data";
 import { useAuth } from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
+import MarketplaceAssetsBar from "@/components/MarketplaceAssetsBar";
 
 // ── Visitor Counter ────────────────────────────────────────────
 function VisitorCounter() {
@@ -57,119 +57,6 @@ function VisitorCounter() {
   );
 }
 
-// ── Star Rating ────────────────────────────────────────────────
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Star
-          key={n}
-          className={`w-3 h-3 ${
-            n <= Math.floor(rating) ? "fill-amber-400 text-amber-400" : "text-gray-200"
-          }`}
-        />
-      ))}
-      <span className="text-[11px] text-slate-400 ml-1">{rating.toFixed(1)}</span>
-    </div>
-  );
-}
-
-// ── Category badge colors ───────────────────────────────────────
-const catBadgeStyle: Record<string, string> = {
-  "digital-assets": "bg-purple-100 text-purple-700",
-  "compute-hub": "bg-cyan-100 text-cyan-700",
-  "hardware-corner": "bg-emerald-100 text-emerald-700",
-};
-const catBadgeLabel: Record<string, string> = {
-  "digital-assets": "Digital Asset",
-  "compute-hub": "Compute Hub",
-  "hardware-corner": "Hardware",
-};
-const listingBadgeGradients: Record<string, string> = {
-  Bestseller: "from-amber-400 to-orange-500",
-  Verified: "from-emerald-400 to-teal-500",
-  Hot: "from-red-400 to-orange-500",
-  Student: "from-violet-400 to-purple-500",
-  "Best Value": "from-emerald-400 to-green-500",
-  "Verified HW": "from-blue-400 to-indigo-500",
-  "Certified Refurb": "from-blue-400 to-cyan-500",
-  Professional: "from-slate-500 to-slate-600",
-  Popular: "from-pink-400 to-rose-500",
-  New: "from-cyan-400 to-blue-500",
-};
-
-// ── Featured Listing Card ──────────────────────────────────────
-function ListingCard({ listing, index }: { listing: MarketplaceListing; index: number }) {
-  const discountPct = listing.originalPrice
-    ? Math.round(((listing.originalPrice - listing.price) / listing.originalPrice) * 100)
-    : null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.08, duration: 0.45 }}
-      whileHover={{ y: -4, boxShadow: "0 20px 40px rgba(0,0,0,0.09)" }}
-      className="relative bg-white rounded-2xl p-5 border border-gray-200 hover:border-purple-200 transition-all duration-300 flex flex-col"
-    >
-      {discountPct && (
-        <div className="absolute -top-2.5 -right-2.5 z-10 bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow">
-          -{discountPct}%
-        </div>
-      )}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${catBadgeStyle[listing.bigCategory]}`}>
-          {catBadgeLabel[listing.bigCategory]}
-        </span>
-        {listing.badge && (
-          <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold text-white bg-gradient-to-r ${listingBadgeGradients[listing.badge] ?? "from-slate-400 to-slate-500"}`}>
-            {listing.badge}
-          </span>
-        )}
-      </div>
-      <div className="flex items-start gap-3 mb-2">
-        <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${catBadgeStyle[listing.bigCategory]}`}>
-          {listing.bigCategory === "digital-assets" && <Brain className="w-5 h-5" />}
-          {listing.bigCategory === "compute-hub" && <Cpu className="w-5 h-5" />}
-          {listing.bigCategory === "hardware-corner" && <Monitor className="w-5 h-5" />}
-        </div>
-        <h3 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2">{listing.name}</h3>
-      </div>
-      <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3 flex-1">{listing.description}</p>
-      <div className="flex flex-wrap gap-1 mb-3">
-        {listing.tags.slice(0, 3).map((tag) => (
-          <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{tag}</span>
-        ))}
-      </div>
-      <div className="flex items-center justify-between py-3 border-t border-b border-gray-100 mb-3">
-        <div>
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-medium text-slate-700">{listing.seller.name}</span>
-            {listing.seller.verified && <BadgeCheck className="w-3.5 h-3.5 text-blue-500" />}
-          </div>
-          <StarRating rating={listing.seller.rating} />
-        </div>
-        <span className="text-[10px] text-slate-400">{listing.seller.reviews} reviews</span>
-      </div>
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="text-xl font-black text-slate-900">${listing.price.toFixed(2)}</span>
-          <span className="text-xs text-slate-400 ml-1">{listing.unit}</span>
-          {listing.originalPrice && (
-            <div className="text-[11px] text-slate-400 line-through">${listing.originalPrice.toFixed(2)}</div>
-          )}
-        </div>
-        <Link
-          href="/marketplace"
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-[0_0_15px_rgba(168,85,247,0.35)] transition-all"
-        >
-          View Deal <ChevronRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-    </motion.div>
-  );
-}
 
 // ── Hero Search Bar ────────────────────────────────────────────
 function HeroSearchBar() {
@@ -271,55 +158,12 @@ function HeroSearchBar() {
 // ── Main Page ──────────────────────────────────────────────────
 export default function Home() {
   const { user } = useAuth();
-  const featuredListings = getFeaturedListings().slice(0, 6);
 
   const stats = [
     { value: "15K+", label: "Listings", icon: Package },
     { value: "$3.2M", label: "Traded", icon: DollarSign },
     { value: "6.4K", label: "Sellers", icon: Users },
     { value: "99%", label: "Satisfaction", icon: Star },
-  ];
-
-  const pillars = [
-    {
-      icon: Brain,
-      iconBg: "bg-purple-100 text-purple-600",
-      title: "Digital Assets",
-      description: "Prompt bundles, custom AI agents, fine-tuned models & LoRAs for every use case.",
-      tags: ["Prompts", "Agents", "Fine-tuned Models", "LoRAs"],
-      href: "/marketplace?cat=digital-assets",
-      gradient: "from-purple-50 to-indigo-50",
-      border: "border-purple-200",
-      tagStyle: "bg-purple-100 text-purple-700",
-      linkStyle: "text-purple-600 hover:text-purple-800",
-      count: "8,200+ listings",
-    },
-    {
-      icon: Cpu,
-      iconBg: "bg-cyan-100 text-cyan-600",
-      title: "Compute Hub",
-      description: "P2P GPU rentals, discounted API tokens, and group-buy AI subscriptions.",
-      tags: ["GPU Rentals", "API Credits", "Subscriptions", "Cloud Compute"],
-      href: "/marketplace?cat=compute-hub",
-      gradient: "from-cyan-50 to-sky-50",
-      border: "border-cyan-200",
-      tagStyle: "bg-cyan-100 text-cyan-700",
-      linkStyle: "text-cyan-600 hover:text-cyan-800",
-      count: "4,100+ listings",
-    },
-    {
-      icon: Monitor,
-      iconBg: "bg-emerald-100 text-emerald-600",
-      title: "Hardware Corner",
-      description: "Verified used GPUs, AI edge kits, and pre-configured AI laptops & servers.",
-      tags: ["Used GPUs", "AI Kits", "Laptops", "Servers"],
-      href: "/marketplace?cat=hardware-corner",
-      gradient: "from-emerald-50 to-teal-50",
-      border: "border-emerald-200",
-      tagStyle: "bg-emerald-100 text-emerald-700",
-      linkStyle: "text-emerald-600 hover:text-emerald-800",
-      count: "2,700+ listings",
-    },
   ];
 
   const steps = [
@@ -344,13 +188,6 @@ export default function Home() {
       color: "text-emerald-500 bg-emerald-50",
       num: "03",
     },
-  ];
-
-  const studentPerks = [
-    "50% off Claude Pro",
-    "GPU credits for finals",
-    "Free agent templates",
-    "Study group compute pools",
   ];
 
   return (
@@ -464,7 +301,7 @@ export default function Home() {
       {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
       <div>
 
-          {/* ── CATEGORY PILLARS ─────────────────────────────────────── */}
+          {/* ── MARKETPLACE ASSETS ─────────────────────────────────────── */}
           <section className="bg-white py-16 px-6">
             <div className="max-w-5xl mx-auto">
               <motion.div
@@ -481,113 +318,10 @@ export default function Home() {
                 </h2>
                 <p className="text-slate-500 text-base">Three categories. Infinite possibilities.</p>
               </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {pillars.map((pillar, i) => (
-                  <motion.div
-                    key={pillar.title}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    whileHover={{ y: -5 }}
-                    className={`group relative overflow-hidden rounded-3xl p-7 border-2 ${pillar.border} bg-gradient-to-br ${pillar.gradient} transition-all duration-300 hover:shadow-xl`}
-                  >
-                    <div className={`w-12 h-12 rounded-2xl ${pillar.iconBg} flex items-center justify-center mb-4`}>
-                      <pillar.icon className="w-6 h-6" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{pillar.title}</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed mb-4">{pillar.description}</p>
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {pillar.tags.map((tag) => (
-                        <span key={tag} className={`text-xs px-2.5 py-1 rounded-full font-medium ${pillar.tagStyle}`}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400">{pillar.count}</span>
-                      <Link
-                        href={pillar.href}
-                        className={`flex items-center gap-1 text-sm font-semibold ${pillar.linkStyle} transition-colors`}
-                      >
-                        Browse <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
             </div>
+            <MarketplaceAssetsBar />
           </section>
 
-          {/* ── FEATURED LISTINGS ─────────────────────────────────────── */}
-          <section className="bg-gray-50 py-16 px-6">
-            <div className="max-w-5xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="flex items-center justify-between mb-8"
-              >
-                <div>
-                  <h2 className="text-2xl font-extrabold text-slate-900">Featured Listings</h2>
-                  <p className="text-slate-500 mt-1 text-sm">Handpicked by the WhichAi team</p>
-                </div>
-                <Link
-                  href="/marketplace"
-                  className="flex items-center gap-1 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
-                >
-                  View all <ArrowRight className="w-4 h-4" />
-                </Link>
-              </motion.div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {featuredListings.map((listing, i) => (
-                  <ListingCard key={listing.id} listing={listing} index={i} />
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ── STUDENT SWAP ───────────────────────────────────────────── */}
-          <section className="relative overflow-hidden py-16 px-6 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-              <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl" />
-            </div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="relative z-10 max-w-2xl mx-auto text-center"
-            >
-              <div className="w-16 h-16 rounded-3xl bg-white/20 flex items-center justify-center mx-auto mb-5">
-                <GraduationCap className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3">The Student Swap</h2>
-              <p className="text-purple-200 text-base mb-7 leading-relaxed">
-                A dedicated space for university students to trade AI credits, borrow GPU power for final
-                projects, and unlock verified student discounts — using your{" "}
-                <code className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">.edu</code> email.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-2.5 mb-7">
-                {studentPerks.map((perk) => (
-                  <span key={perk} className="flex items-center gap-1.5 text-sm text-purple-100 bg-white/10 px-4 py-2 rounded-full">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-300 shrink-0" />
-                    {perk}
-                  </span>
-                ))}
-              </div>
-              <Link
-                href={user ? "/marketplace" : "/auth/signup"}
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-purple-700 bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all"
-              >
-                <GraduationCap className="w-5 h-5" />
-                {user ? "Go to Student Swap" : "Join with .edu Email"}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </motion.div>
-          </section>
 
           {/* ── HOW IT WORKS ───────────────────────────────────────────── */}
           <section className="bg-white py-16 px-6">
