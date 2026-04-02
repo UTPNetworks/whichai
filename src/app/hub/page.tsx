@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingBag, Brain, BookOpen, Briefcase, ArrowRight, Sparkles,
   Zap, TrendingUp, Globe, ExternalLink, RefreshCw, Home, Search,
-  ChevronRight, Loader2, MessageSquare,
+  ChevronRight, Loader2, MessageSquare, Users,
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -166,6 +166,7 @@ const SEARCH_CATEGORIES = [
   { id: "learning-hub", label: "Learning Hub", icon: BookOpen, href: "/learning-hub", color: "from-emerald-500 to-green-600", count: "50+", desc: "Courses & hands-on labs" },
   { id: "ai-task-board", label: "AI Task Board", icon: Briefcase, href: "/ai-task-board", color: "from-amber-500 to-orange-600", count: "500+", desc: "AI dev tasks & bounties" },
   { id: "prompt-hub", label: "Prompt Hub", icon: MessageSquare, href: "/prompt-hub", color: "from-pink-500 to-rose-600", count: "4,800+", desc: "Buy, sell & share prompts" },
+  { id: "community", label: "Community", icon: Users, href: "/community", color: "from-indigo-500 to-violet-600", count: "52K+", desc: "Discuss, learn & connect" },
 ];
 
 function UniversalSearchBar() {
@@ -377,6 +378,28 @@ const hubs = [
     tags: ["Buy & Sell", "Free Prompts", "Packages"],
     stats: [{ val: "4,800+", label: "prompts" }, { val: "12", label: "categories" }, { val: "Free", label: "& paid" }],
   },
+  {
+    id: "community",
+    href: "/community",
+    icon: Users,
+    label: "Community",
+    tagline: "The Signal",
+    description: "Ask, learn, gossip, and build together. The only AI community where your reputation follows you to the marketplace.",
+    g1: "#312e81", g2: "#6366f1", g3: "#a5b4fc",
+    glow: "rgba(99, 102, 241, 0.35)",
+    shimmer: "rgba(165,180,252,0.2)",
+    bannerEmojis: [
+      { e: "💬", x: "10%", y: "16%", r: "-8deg", s: 1.1 },
+      { e: "🧠", x: "80%", y: "12%", r: "10deg", s: 0.9 },
+      { e: "🔥", x: "20%", y: "70%", r: "6deg", s: 1.15 },
+      { e: "⚡", x: "70%", y: "68%", r: "-10deg", s: 1.0 },
+      { e: "🏆", x: "48%", y: "38%", r: "12deg", s: 0.85 },
+      { e: "📡", x: "88%", y: "48%", r: "-6deg", s: 0.95 },
+    ],
+    cta: "Join Community",
+    tags: ["Spaces", "Q&A", "Leaderboard"],
+    stats: [{ val: "52K+", label: "members" }, { val: "10", label: "spaces" }, { val: "Live", label: "chat" }],
+  },
 ];
 
 // ── Hub Page ────────────────────────────────────────────────────────────
@@ -425,7 +448,7 @@ export default function HubPage() {
         </motion.div>
 
         {/* ── 4 Hub Cards (revamped with glow + lift) ──────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 auto-rows-fr">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5 auto-rows-fr">
           {hubs.map((hub, i) => {
             const Icon = hub.icon;
             return (
