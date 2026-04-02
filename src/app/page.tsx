@@ -42,9 +42,9 @@ function VisitorCounter() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6 }}
-      className="bg-gradient-to-r from-violet-50 via-white to-white border-b border-gray-100"
+      className="border-b border-gray-100"
     >
-      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center gap-2">
+      <div className="px-6 py-1.5 flex items-center gap-2">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
