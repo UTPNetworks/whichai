@@ -326,7 +326,7 @@ const hubs = [
     label: "Prompt Hub",
     tagline: "Prompts Marketplace",
     description: "Buy, sell, learn, and donate AI prompt packages. The largest collection of battle-tested prompts for ChatGPT, Claude, Gemini & more.",
-    image: "https://images.unsplash.com/photo-1675557009875-436f7a5c1d42?w=600&h=420&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1655720828018-edd2daec9349?w=600&h=420&fit=crop&q=80",
     categoryColor: "bg-pink-600/80",
     tagBg: "bg-pink-50", tagText: "text-pink-700",
     arrowBg: "bg-pink-50", arrowText: "text-pink-600",
