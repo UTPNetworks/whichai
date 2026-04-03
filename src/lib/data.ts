@@ -413,6 +413,17 @@ export interface MarketplaceListing {
   techSpecs?: TechSpecs;
   trendingScore?: number;
   codeSnippet?: string;
+  // V4 marketplace commerce fields
+  pricingType?: 'fixed' | 'negotiable' | 'auction' | 'free';
+  condition?: 'new' | 'like-new' | 'good' | 'fair' | 'refurbished';
+  // Auction fields
+  currentBid?: number;
+  bidCount?: number;
+  reservePrice?: number;
+  auctionEnd?: string; // ISO date string
+  // Delivery
+  deliveryType?: 'digital' | 'physical' | 'both';
+  shippingInfo?: string;
 }
 
 export const allListings: MarketplaceListing[] = [
@@ -431,6 +442,8 @@ export const allListings: MarketplaceListing[] = [
     featured: true,
     tags: ['GPT-4', 'prompts', 'productivity'],
     emoji: '',
+    pricingType: 'fixed',
+    deliveryType: 'digital',
   },
   {
     id: 'listing-2',
@@ -445,6 +458,8 @@ export const allListings: MarketplaceListing[] = [
     featured: true,
     tags: ['legal', 'agent', 'GPT-4'],
     emoji: '',
+    pricingType: 'fixed',
+    deliveryType: 'digital',
   },
   {
     id: 'listing-3',
@@ -517,6 +532,8 @@ export const allListings: MarketplaceListing[] = [
     featured: true,
     tags: ['RTX 4090', 'GPU', 'rental', 'inference'],
     emoji: '',
+    pricingType: 'fixed',
+    deliveryType: 'digital',
   },
   {
     id: 'listing-8',
@@ -532,6 +549,8 @@ export const allListings: MarketplaceListing[] = [
     featured: true,
     tags: ['OpenAI', 'credits', 'API', 'GPT-4o'],
     emoji: '',
+    pricingType: 'fixed',
+    deliveryType: 'digital',
   },
   {
     id: 'listing-9',
@@ -593,6 +612,9 @@ export const allListings: MarketplaceListing[] = [
     featured: true,
     tags: ['RTX 4090', 'GPU', 'NVIDIA', 'used'],
     emoji: '',
+    pricingType: 'negotiable',
+    condition: 'like-new',
+    deliveryType: 'physical',
   },
   {
     id: 'listing-13',
@@ -622,6 +644,9 @@ export const allListings: MarketplaceListing[] = [
     featured: true,
     tags: ['MacBook', 'Apple Silicon', 'M3', 'local LLM'],
     emoji: '',
+    pricingType: 'negotiable',
+    condition: 'refurbished',
+    deliveryType: 'physical',
   },
   {
     id: 'listing-15',
@@ -637,6 +662,135 @@ export const allListings: MarketplaceListing[] = [
     tags: ['Raspberry Pi', 'edge-AI', 'HAT', 'vision'],
     emoji: '',
   },
+  // ── Auctions ─────────────────────────────────────────────
+  {
+    id: 'auction-1',
+    name: 'NVIDIA H100 80GB SXM5 — Sealed',
+    description: 'Brand new sealed NVIDIA H100 80GB SXM5. Full warranty. Starting bid below market price.',
+    bigCategory: 'hardware-corner',
+    subcategory: 'gpu-auction',
+    price: 2340,
+    unit: 'auction',
+    seller: { name: 'Enterprise_GPU', rating: 4.9, reviews: 67, verified: true, badge: 'top-seller' },
+    badge: 'Auction',
+    featured: true,
+    tags: ['H100', 'NVIDIA', 'sealed', 'auction'],
+    emoji: '⚡',
+    pricingType: 'auction',
+    currentBid: 2340,
+    bidCount: 23,
+    reservePrice: 3000,
+    auctionEnd: '2026-04-06T14:37:00Z',
+    deliveryType: 'physical',
+    condition: 'new',
+  },
+  {
+    id: 'auction-2',
+    name: '8x A100 Training Cluster — Full Rack',
+    description: 'Complete 8x A100 40GB training rack with NVLink. Decommissioned from data center. Tested and certified.',
+    bigCategory: 'hardware-corner',
+    subcategory: 'server-auction',
+    price: 8750,
+    unit: 'auction',
+    seller: { name: 'DataCenter_Surplus', rating: 4.7, reviews: 34, verified: true },
+    badge: 'Auction',
+    featured: true,
+    tags: ['A100', 'cluster', 'training', 'rack'],
+    emoji: '🖥️',
+    pricingType: 'auction',
+    currentBid: 8750,
+    bidCount: 41,
+    auctionEnd: '2026-04-03T17:12:00Z',
+    deliveryType: 'physical',
+    condition: 'refurbished',
+  },
+  {
+    id: 'auction-3',
+    name: 'Custom Fine-tuned GPT-4 — Medical Diagnosis Assistant',
+    description: 'Production-ready medical diagnosis AI fine-tuned on 200K clinical cases. FDA pathway documentation included.',
+    bigCategory: 'digital-assets',
+    subcategory: 'fine-tuned-model',
+    price: 4200,
+    unit: 'auction',
+    seller: { name: 'MedAI_Labs', rating: 5.0, reviews: 19, verified: true },
+    badge: 'Auction',
+    featured: false,
+    tags: ['GPT-4', 'medical', 'fine-tune', 'clinical'],
+    emoji: '🧠',
+    pricingType: 'auction',
+    currentBid: 4200,
+    bidCount: 15,
+    reservePrice: 5000,
+    auctionEnd: '2026-04-09T02:31:00Z',
+    deliveryType: 'digital',
+  },
+  // ── Negotiable listings ──────────────────────────────────
+  {
+    id: 'negotiable-1',
+    name: 'AI Copywriting SaaS — $4.2K MRR, 800 Users',
+    description: 'Profitable AI copywriting SaaS with 800 active users. Built on Next.js + OpenAI. Includes codebase, domain, and customer list.',
+    bigCategory: 'digital-assets',
+    subcategory: 'saas-company',
+    price: 48000,
+    unit: 'one-time',
+    seller: { name: 'FounderFlip', rating: 4.8, reviews: 12, verified: true },
+    badge: 'Hot',
+    featured: true,
+    tags: ['SaaS', 'profitable', 'AI', 'acquisition'],
+    emoji: '🌐',
+    pricingType: 'negotiable',
+    deliveryType: 'digital',
+  },
+  {
+    id: 'negotiable-2',
+    name: 'Dell PowerEdge R750 — Dual A100 40GB + 512GB RAM',
+    description: 'Refurbished enterprise server with dual A100 GPUs. Perfect for on-premise AI training. Ships with rack rails.',
+    bigCategory: 'hardware-corner',
+    subcategory: 'ai-server',
+    price: 18500,
+    unit: 'each',
+    seller: { name: 'ServerVault', rating: 4.9, reviews: 88, verified: true, badge: 'top-seller' },
+    badge: 'Make Offer',
+    featured: true,
+    tags: ['A100', 'server', 'Dell', 'enterprise'],
+    emoji: '🖥️',
+    pricingType: 'negotiable',
+    deliveryType: 'physical',
+    condition: 'refurbished',
+    shippingInfo: 'Free freight shipping (US)',
+  },
+  // ── Free listing ─────────────────────────────────────────
+  {
+    id: 'free-1',
+    name: '10K Curated AI Art Prompts with Style Tags',
+    description: 'Open-source collection of 10,000 AI art prompts organized by style, mood, and technique. Works with SDXL, Midjourney, and DALL-E.',
+    bigCategory: 'digital-assets',
+    subcategory: 'prompt-bundle',
+    price: 0,
+    unit: 'free',
+    seller: { name: 'OpenDataAI', rating: 4.6, reviews: 234, verified: true },
+    badge: 'Free',
+    featured: false,
+    tags: ['prompts', 'art', 'SDXL', 'free'],
+    emoji: '🎨',
+    pricingType: 'free',
+    deliveryType: 'digital',
+  },
+];
+
+export const MARKETPLACE_CATEGORIES = [
+  { id: 'ai-agents', label: 'AI Agents', emoji: '🤖', count: 2140, color: '#f5f3ff' },
+  { id: 'llms', label: 'LLMs', emoji: '💬', count: 890, color: '#ecfdf5' },
+  { id: 'gpus', label: 'GPUs', emoji: '⚡', count: 1420, color: '#fef3c7' },
+  { id: 'fine-tuned', label: 'Fine-tuned Models', emoji: '🎨', count: 760, color: '#fce7f3' },
+  { id: 'api-credits', label: 'API Credits', emoji: '🔑', count: 3200, color: '#ecfeff' },
+  { id: 'datasets', label: 'Datasets', emoji: '📊', count: 580, color: '#f0fdf4' },
+  { id: 'prompts', label: 'Prompt Packs', emoji: '📝', count: 1680, color: '#fff7ed' },
+  { id: 'servers', label: 'AI Servers', emoji: '🖥️', count: 340, color: '#fef2f2' },
+  { id: 'macbooks', label: 'MacBooks', emoji: '💻', count: 220, color: '#f5f3ff' },
+  { id: 'courses', label: 'AI Courses', emoji: '🧠', count: 450, color: '#ecfeff' },
+  { id: 'chips', label: 'AI Chips (TPU/NPU)', emoji: '🔌', count: 180, color: '#fdf4ff' },
+  { id: 'saas', label: 'SaaS Companies', emoji: '🌐', count: 95, color: '#f8fafc' },
 ];
 
 export function getListingsByCategory(cat?: BigCategory): MarketplaceListing[] {

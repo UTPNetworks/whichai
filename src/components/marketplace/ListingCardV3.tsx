@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Zap, MapPin, Check } from 'lucide-react';
+import { Star, Zap, MapPin, Check, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { MarketListingV3 } from '@/lib/data';
 import MicroGallery from './MicroGallery';
@@ -26,6 +26,33 @@ const categoryBadges: Record<string, { bg: string; text: string }> = {
   'compute-hub': { bg: 'bg-cyan-50', text: 'text-cyan-700' },
   'hardware-corner': { bg: 'bg-green-50', text: 'text-green-700' },
 };
+
+function AuctionTimer({ endTime, bidCount }: { endTime: string; bidCount?: number }) {
+  const [timeLeft, setTimeLeft] = React.useState('');
+  React.useEffect(() => {
+    const update = () => {
+      const diff = new Date(endTime).getTime() - Date.now();
+      if (diff <= 0) { setTimeLeft('Ended'); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${d}d ${h}h ${m}m ${s}s`);
+    };
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [endTime]);
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-amber-600 font-semibold flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+        {timeLeft}
+      </span>
+      {bidCount && <span className="text-slate-400">{bidCount} bids</span>}
+    </div>
+  );
+}
 
 export default function ListingCardV3({
   listing,
@@ -77,6 +104,15 @@ export default function ListingCardV3({
               <span className="px-2 py-1 text-xs font-semibold rounded bg-amber-50 border border-amber-200 text-amber-700">
                 {listing.badge}
               </span>
+            )}
+            {listing.pricingType === 'auction' && (
+              <span className="px-2 py-1 text-xs font-semibold rounded bg-amber-50 border border-amber-200 text-amber-700">⚡ Auction</span>
+            )}
+            {listing.pricingType === 'negotiable' && (
+              <span className="px-2 py-1 text-xs font-semibold rounded bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-700">💬 Make Offer</span>
+            )}
+            {listing.pricingType === 'free' && (
+              <span className="px-2 py-1 text-xs font-semibold rounded bg-green-50 border border-green-200 text-green-700">🆓 Free</span>
             )}
           </div>
 
@@ -172,34 +208,58 @@ export default function ListingCardV3({
             </motion.div>
           )}
 
-          <div className="mt-auto pt-3 border-t border-gray-200 flex items-center justify-between">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg font-bold text-slate-900">
-                  ${listing.price.toFixed(2)}
-                </span>
-                {listing.originalPrice && (
-                  <span className="text-xs text-gray-500 line-through">
-                    ${listing.originalPrice.toFixed(2)}
-                  </span>
+          <div className="mt-auto pt-3 border-t border-gray-200">
+            {/* Auction timer */}
+            {listing.pricingType === 'auction' && listing.auctionEnd && (
+              <AuctionTimer endTime={listing.auctionEnd} bidCount={listing.bidCount} />
+            )}
+            <div className="flex items-center justify-between mt-2">
+              <div>
+                {listing.pricingType === 'auction' ? (
+                  <>
+                    <p className="text-[10px] text-amber-600 font-semibold uppercase">Current Bid</p>
+                    <span className="text-lg font-bold text-amber-700">${(listing.currentBid || listing.price).toLocaleString()}</span>
+                  </>
+                ) : listing.pricingType === 'free' ? (
+                  <span className="text-lg font-bold text-green-600">Free</span>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-lg font-bold text-slate-900">${listing.price.toLocaleString()}</span>
+                      {listing.originalPrice && (
+                        <span className="text-xs text-gray-500 line-through">${listing.originalPrice.toLocaleString()}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500">{listing.unit}</p>
+                    {discountPct && <p className="text-xs text-green-600 font-semibold">Save {discountPct}%</p>}
+                  </>
                 )}
               </div>
-              <p className="text-xs text-slate-500">{listing.unit}</p>
-              {discountPct && (
-                <p className="text-xs text-green-600 font-semibold">
-                  Save {discountPct}%
-                </p>
-              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => e.preventDefault()}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  listing.pricingType === 'auction'
+                    ? 'bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100'
+                    : listing.pricingType === 'negotiable'
+                    ? 'bg-fuchsia-50 border border-fuchsia-300 text-fuchsia-700 hover:bg-fuchsia-100'
+                    : listing.pricingType === 'free'
+                    ? 'bg-green-500 text-white hover:bg-green-600'
+                    : 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white hover:from-purple-600 hover:to-cyan-600'
+                }`}
+              >
+                {listing.pricingType === 'auction' ? (
+                  <><Clock size={14} className="inline mr-1" />Bid</>
+                ) : listing.pricingType === 'negotiable' ? (
+                  '💬 Offer'
+                ) : listing.pricingType === 'free' ? (
+                  '⬇ Get'
+                ) : (
+                  <><Zap size={14} className="inline mr-1" />Buy</>
+                )}
+              </motion.button>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => e.preventDefault()}
-              className="px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all"
-            >
-              <Zap size={14} className="inline mr-1" />
-              Buy
-            </motion.button>
           </div>
         </div>
       </motion.div>
