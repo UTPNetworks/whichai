@@ -15,6 +15,7 @@ import PowerFilterPanel, { FilterState } from '@/components/marketplace/PowerFil
 import LocationSearch from '@/components/marketplace/LocationSearch';
 import MapView from '@/components/marketplace/MapView';
 import ListingCardV3 from '@/components/marketplace/ListingCardV3';
+import AuctionCard from '@/components/marketplace/AuctionCard';
 import ComputeHeatmap from '@/components/marketplace/ComputeHeatmap';
 import CompatibilityChecker from '@/components/marketplace/CompatibilityChecker';
 import {
@@ -599,7 +600,7 @@ export default function MarketplacePage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredListings.filter((l) => l.pricingType === 'auction').map((listing, idx) => (
-                  <ListingCardV3 key={listing.id} listing={listing} index={idx} onCompare={handleCompare} />
+                  <AuctionCard key={listing.id} listing={listing} index={idx} />
                 ))}
               </div>
             </motion.section>

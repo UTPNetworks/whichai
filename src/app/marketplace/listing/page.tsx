@@ -187,9 +187,9 @@ function SellerCard({ seller }: { seller: MarketListingV3['seller'] }) {
           <span>Usually responds within 1 hour</span>
         </div>
       </div>
-      <button className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-slate-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-        <Eye className="w-4 h-4" />View Seller Profile
-      </button>
+      <Link href="/marketplace/store?id=neuralforge" className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-slate-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+        <Eye className="w-4 h-4" />Visit Store
+      </Link>
     </div>
   );
 }
@@ -574,6 +574,32 @@ function ListingDetailContent() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Q&A Section */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-2xl border border-gray-200 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-slate-900">Q&A (12 questions)</h2>
+              </div>
+              <div className="space-y-3 mb-4">
+                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs font-semibold text-slate-800 mb-1.5">Q: Does this come with documentation or setup instructions?</p>
+                  <p className="text-xs text-slate-500">A: Yes, full documentation included with setup guide, API reference, and example code. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs font-semibold text-slate-800 mb-1.5">Q: Is there a warranty or money-back guarantee?</p>
+                  <p className="text-xs text-slate-500">A: All purchases are covered by WhichAI&apos;s 30-day buyer protection. If it doesn&apos;t work as described, full refund. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+                </div>
+                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs font-semibold text-slate-800 mb-1.5">Q: Can this be used commercially?</p>
+                  <p className="text-xs text-slate-500">A: Please check the license details above. Commercial use terms vary by listing. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+                </div>
+              </div>
+              <button className="w-full py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold hover:bg-purple-100 transition-colors">
+                Ask a Question
+              </button>
+            </div>
           </div>
 
           {/* Right: Related/Similar (placeholder) */}
