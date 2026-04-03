@@ -6,7 +6,7 @@ import {
   ArrowLeft, Heart, Share2, Flag, MessageCircle, ShoppingCart, Zap, Star, Check,
   MapPin, Shield, Clock, Tag, ChevronLeft, ChevronRight, Package, Eye, Users,
   ExternalLink, Copy, Bookmark, Send, X, BadgeCheck, Truck, CreditCard,
-  Globe, Award, TrendingUp, ThumbsUp,
+  Globe, Award, TrendingUp, ThumbsUp, Store,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -15,7 +15,6 @@ import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { allListingsV3, MarketListingV3 } from '@/lib/data';
 
-// Convert Supabase row to MarketListingV3 (same as marketplace page)
 function supabaseRowToListing(row: any, sellerName: string): MarketListingV3 {
   const catStr = (row.category || '').toLowerCase();
   let bigCategory: 'digital-assets' | 'compute-hub' | 'hardware-corner' = 'digital-assets';
@@ -39,7 +38,7 @@ function supabaseRowToListing(row: any, sellerName: string): MarketListingV3 {
   };
 }
 
-// Photo Gallery Component (eBay style)
+/* ── Photo Gallery with vertical left-side thumbnails ── */
 function PhotoGallery({ images, name }: { images: string[]; name: string }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
@@ -49,65 +48,63 @@ function PhotoGallery({ images, name }: { images: string[]; name: string }) {
 
   return (
     <>
-      <div className="relative group">
-        {/* Main Image */}
-        <div
-          className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl overflow-hidden cursor-zoom-in"
-          onClick={() => images.length > 0 && setFullscreen(true)}
-        >
-          {images.length > 0 ? (
-            <motion.img
-              key={activeIdx}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              src={images[activeIdx]}
-              alt={name}
-              className="w-full h-full object-contain bg-white"
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
-              <Package className="w-16 h-16 mb-3" />
-              <p className="text-sm font-medium">No photos available</p>
+      <div className="flex gap-3">
+        {/* Vertical thumbnail strip (left) */}
+        {images.length > 1 && (
+          <div className="flex flex-col gap-2 shrink-0">
+            {images.map((url, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveIdx(i)}
+                className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${
+                  i === activeIdx ? 'border-purple-500 shadow-md ring-2 ring-purple-200' : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <img src={url} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Main image */}
+        <div className="relative flex-1 group">
+          <div
+            className="aspect-[4/3] bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl overflow-hidden cursor-zoom-in"
+            onClick={() => images.length > 0 && setFullscreen(true)}
+          >
+            {images.length > 0 ? (
+              <motion.img
+                key={activeIdx}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                src={images[activeIdx]}
+                alt={name}
+                className="w-full h-full object-contain bg-white"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-300">
+                <Package className="w-16 h-16 mb-3" />
+                <p className="text-sm font-medium">No photos available</p>
+              </div>
+            )}
+          </div>
+          {images.length > 1 && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white">
+                <ChevronLeft className="w-5 h-5 text-slate-700" />
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white">
+                <ChevronRight className="w-5 h-5 text-slate-700" />
+              </button>
+            </>
+          )}
+          {images.length > 1 && (
+            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs font-medium">
+              {activeIdx + 1} / {images.length}
             </div>
           )}
         </div>
-
-        {/* Nav arrows */}
-        {images.length > 1 && (
-          <>
-            <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white">
-              <ChevronLeft className="w-5 h-5 text-slate-700" />
-            </button>
-            <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white">
-              <ChevronRight className="w-5 h-5 text-slate-700" />
-            </button>
-          </>
-        )}
-
-        {/* Photo counter */}
-        {images.length > 1 && (
-          <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs font-medium">
-            {activeIdx + 1} / {images.length}
-          </div>
-        )}
       </div>
-
-      {/* Thumbnail strip */}
-      {images.length > 1 && (
-        <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-          {images.map((url, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveIdx(i)}
-              className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${
-                i === activeIdx ? 'border-purple-500 shadow-md ring-2 ring-purple-200' : 'border-transparent hover:border-gray-300'
-              }`}
-            >
-              <img src={url} alt={`${name} ${i + 1}`} className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Fullscreen overlay */}
       <AnimatePresence>
@@ -145,55 +142,6 @@ function PhotoGallery({ images, name }: { images: string[]; name: string }) {
   );
 }
 
-// Seller Card Component
-function SellerCard({ seller }: { seller: MarketListingV3['seller'] }) {
-  const initial = seller.name.charAt(0).toUpperCase();
-  return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-5">
-      <h3 className="text-sm font-bold text-slate-900 mb-4">Seller Information</h3>
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-cyan-400 flex items-center justify-center text-white text-lg font-bold shadow-md">
-          {initial}
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className="font-bold text-slate-900">{seller.name}</p>
-            {seller.verified && (
-              <BadgeCheck className="w-4 h-4 text-cyan-500" />
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <div className="flex items-center gap-0.5">
-              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-              <span className="text-xs font-semibold text-slate-700">{seller.rating}</span>
-            </div>
-            <span className="text-xs text-slate-400">({seller.reviews} reviews)</span>
-          </div>
-        </div>
-      </div>
-      <div className="space-y-2">
-        {seller.badge && (
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <Award className="w-4 h-4 text-purple-500" />
-            <span className="capitalize">{seller.badge.replace(/-/g, ' ')}</span>
-          </div>
-        )}
-        <div className="flex items-center gap-2 text-xs text-slate-600">
-          <Shield className="w-4 h-4 text-emerald-500" />
-          <span>Verified seller</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-slate-600">
-          <Clock className="w-4 h-4 text-blue-500" />
-          <span>Usually responds within 1 hour</span>
-        </div>
-      </div>
-      <Link href="/marketplace/store?id=neuralforge" className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-slate-700 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
-        <Eye className="w-4 h-4" />Visit Store
-      </Link>
-    </div>
-  );
-}
-
 function ListingDetailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -207,46 +155,33 @@ function ListingDetailContent() {
   const [message, setMessage] = useState('Hi, is this still available?');
   const [messageSent, setMessageSent] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // Extra Supabase data for user listings
   const [supabaseData, setSupabaseData] = useState<any>(null);
 
   const fetchListing = useCallback(async () => {
     setLoading(true);
-
-    // Check if it's a user listing (id starts with "user-")
     if (listingId.startsWith('user-')) {
       const dbId = listingId.replace('user-', '');
       try {
-        // Use timeout to prevent infinite hang
         const fetchPromise = supabase.from('user_listings').select('*').eq('id', dbId).single();
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timed out')), 10000));
         const { data: row, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
-
         if (!error && row) {
           setSupabaseData(row);
-          // Fetch seller profile (with timeout)
           const profilePromise = supabase.from('profiles').select('id, first_name, last_name, email').eq('id', row.user_id).single();
           const { data: profile } = await Promise.race([profilePromise, new Promise((resolve) => setTimeout(() => resolve({ data: null }), 5000))]) as any;
-
           const sellerName = profile
             ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email?.split('@')[0] || 'WhichAI Seller'
             : 'WhichAI Seller';
-
           setListing(supabaseRowToListing(row, sellerName));
-
-          // Increment views (fire and forget, don't block)
           supabase.from('user_listings').update({ views: (row.views || 0) + 1 }).eq('id', dbId).then(() => {});
         }
       } catch (err) {
         console.error('Failed to fetch listing:', err);
       }
     } else {
-      // Static demo listing
       const found = allListingsV3.find((l) => l.id === listingId);
       if (found) setListing(found);
     }
-
     setLoading(false);
   }, [listingId]);
 
@@ -258,9 +193,7 @@ function ListingDetailContent() {
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // fallback
-    }
+    } catch { /* fallback */ }
   };
 
   const handleSendMessage = () => {
@@ -301,6 +234,9 @@ function ListingDetailContent() {
     'hardware-corner': 'Hardware Corner',
   };
 
+  const watcherCount = listing.trendingScore || Math.floor(Math.random() * 400) + 50;
+  const reviewCount = listing.seller.reviews || 127;
+
   return (
     <div className="min-h-screen bg-[#f4f0eb]">
       <Navbar />
@@ -331,137 +267,84 @@ function ListingDetailContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Left: Photos (3 cols) */}
-          <div className="lg:col-span-3">
+          {/* ── LEFT: Gallery + Specs (3 cols) ── */}
+          <div className="lg:col-span-3 space-y-5">
             <PhotoGallery images={listing.images || []} name={listing.name} />
-          </div>
 
-          {/* Right: Details (2 cols) */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Main info card */}
+            {/* Specifications Table */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              {/* Badges */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-50 text-purple-700">
-                  {categoryLabels[listing.bigCategory]}
-                </span>
-                {listing.badge && (
-                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                    {listing.badge}
-                  </span>
-                )}
-                {listing.featured && (
-                  <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-cyan-50 text-cyan-700">
-                    Featured
-                  </span>
-                )}
-              </div>
-
-              {/* Title */}
-              <h1 className="text-xl font-bold text-slate-900 mb-2">{listing.name}</h1>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-3 mb-4">
-                <span className="text-3xl font-bold text-slate-900">
-                  {listing.unit === 'free' ? 'Free' : `$${listing.price.toFixed(2)}`}
-                </span>
-                {listing.originalPrice && (
-                  <span className="text-lg text-gray-400 line-through">${listing.originalPrice.toFixed(2)}</span>
-                )}
-                {listing.originalPrice && (
-                  <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
-                    {Math.round(((listing.originalPrice - listing.price) / listing.originalPrice) * 100)}% OFF
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-400 mb-4 capitalize">{listing.unit === 'free' ? 'Free' : listing.unit}</p>
-
-              {/* Action Buttons */}
-              <div className="space-y-2.5 mb-4">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-500 to-cyan-500 hover:shadow-lg hover:shadow-purple-200/50 transition-all flex items-center justify-center gap-2"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  {listing.unit === 'free' ? 'Get it Free' : 'Buy Now'}
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-xl text-sm font-bold text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 transition-all flex items-center justify-center gap-2"
-                >
-                  <CreditCard className="w-4 h-4" />Make an Offer
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setShowMessageModal(true)}
-                  className="w-full py-3 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-4 h-4" />Message Seller
-                </motion.button>
-              </div>
-
-              {/* Quick actions row */}
-              <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-                <button
-                  onClick={() => setSaved(!saved)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    saved ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-slate-600 hover:bg-gray-100 border border-transparent'
-                  }`}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${saved ? 'fill-pink-500' : ''}`} />
-                  {saved ? 'Saved' : 'Save'}
-                </button>
-                <button onClick={handleShare} className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gray-50 text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1.5 transition-all">
-                  <Share2 className="w-3.5 h-3.5" />Share
-                </button>
-                <button className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gray-50 text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1.5 transition-all">
-                  <Flag className="w-3.5 h-3.5" />Report
-                </button>
-              </div>
+              <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4">Specifications</h3>
+              <table className="w-full text-sm">
+                <tbody>
+                  {listing.techSpecs?.gpuType && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium w-40">GPU Model</td>
+                      <td className="py-3 text-slate-900 font-semibold">{listing.techSpecs.gpuType}</td>
+                    </tr>
+                  )}
+                  {listing.techSpecs?.vram && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">VRAM</td>
+                      <td className="py-3 text-slate-900 font-semibold">{listing.techSpecs.vram} GB</td>
+                    </tr>
+                  )}
+                  {(listing.techSpecs?.condition || listing.condition) && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Condition</td>
+                      <td className="py-3 text-slate-900 font-semibold capitalize">{listing.techSpecs?.condition || listing.condition}</td>
+                    </tr>
+                  )}
+                  {listing.techSpecs?.framework && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Framework</td>
+                      <td className="py-3 text-slate-900 font-semibold">{listing.techSpecs.framework.join(', ')}</td>
+                    </tr>
+                  )}
+                  {listing.techSpecs?.tokenCount && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Token Count</td>
+                      <td className="py-3 text-slate-900 font-semibold">{listing.techSpecs.tokenCount.toLocaleString()}</td>
+                    </tr>
+                  )}
+                  {listing.deliveryType && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Delivery</td>
+                      <td className="py-3 text-slate-900 font-semibold capitalize">{listing.deliveryType === 'physical' ? 'Physical Shipping' : listing.deliveryType === 'digital' ? 'Digital Download' : listing.deliveryType}</td>
+                    </tr>
+                  )}
+                  {supabaseData?.location && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Seller Location</td>
+                      <td className="py-3 text-slate-900 font-semibold">{supabaseData.location}</td>
+                    </tr>
+                  )}
+                  {supabaseData?.license && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">License</td>
+                      <td className="py-3 text-slate-900 font-semibold">{supabaseData.license}</td>
+                    </tr>
+                  )}
+                  {supabaseData?.frameworks && (
+                    <tr className="border-b border-gray-100">
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Frameworks</td>
+                      <td className="py-3 text-slate-900 font-semibold">{supabaseData.frameworks}</td>
+                    </tr>
+                  )}
+                  {/* Always show at least category + subcategory */}
+                  <tr className="border-b border-gray-100">
+                    <td className="py-3 pr-4 text-slate-500 font-medium">Category</td>
+                    <td className="py-3 text-slate-900 font-semibold">{categoryLabels[listing.bigCategory]}</td>
+                  </tr>
+                  {listing.subcategory && (
+                    <tr>
+                      <td className="py-3 pr-4 text-slate-500 font-medium">Type</td>
+                      <td className="py-3 text-slate-900 font-semibold capitalize">{listing.subcategory.replace(/-/g, ' ')}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
 
-            {/* Delivery & Protection */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center"><Truck className="w-4 h-4 text-emerald-600" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {supabaseData?.delivery_method === 'physical' ? 'Physical Shipping' :
-                       supabaseData?.delivery_method === 'api' ? 'API Access' :
-                       supabaseData?.delivery_method === 'license' ? 'License Key' :
-                       'Instant Digital Delivery'}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {supabaseData?.delivery_method === 'physical' ? 'Ships within 3-5 business days' : 'Access immediately after purchase'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center"><Shield className="w-4 h-4 text-blue-600" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Buyer Protection</p>
-                    <p className="text-xs text-slate-400">30-day money-back guarantee</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center"><Globe className="w-4 h-4 text-purple-600" /></div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">Secure Transaction</p>
-                    <p className="text-xs text-slate-400">Encrypted payment processing</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Seller Card */}
-            <SellerCard seller={listing.seller} />
-          </div>
-        </div>
-
-        {/* Description + Details section (below photos) */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
-          <div className="lg:col-span-3 space-y-4">
             {/* Description */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h2 className="text-base font-bold text-slate-900 mb-3">Description</h2>
@@ -489,121 +372,149 @@ function ListingDetailContent() {
                 </div>
               </div>
             )}
-
-            {/* Tech Specs (if available) */}
-            {listing.techSpecs && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                <h2 className="text-base font-bold text-slate-900 mb-3">Technical Specifications</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {listing.techSpecs.vram && (
-                    <div className="p-3 rounded-xl bg-gray-50">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-1">VRAM</p>
-                      <p className="text-sm font-bold text-slate-900">{listing.techSpecs.vram} GB</p>
-                    </div>
-                  )}
-                  {listing.techSpecs.framework && (
-                    <div className="p-3 rounded-xl bg-gray-50">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-1">Framework</p>
-                      <p className="text-sm font-bold text-slate-900">{listing.techSpecs.framework.join(', ')}</p>
-                    </div>
-                  )}
-                  {listing.techSpecs.gpuType && (
-                    <div className="p-3 rounded-xl bg-gray-50">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-1">GPU Type</p>
-                      <p className="text-sm font-bold text-slate-900">{listing.techSpecs.gpuType}</p>
-                    </div>
-                  )}
-                  {listing.techSpecs.tokenCount && (
-                    <div className="p-3 rounded-xl bg-gray-50">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-1">Token Count</p>
-                      <p className="text-sm font-bold text-slate-900">{listing.techSpecs.tokenCount.toLocaleString()}</p>
-                    </div>
-                  )}
-                  {listing.techSpecs.condition && (
-                    <div className="p-3 rounded-xl bg-gray-50">
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-1">Condition</p>
-                      <p className="text-sm font-bold text-slate-900">{listing.techSpecs.condition}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Item Details for Supabase listings */}
-            {supabaseData && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-5">
-                <h2 className="text-base font-bold text-slate-900 mb-3">Item Details</h2>
-                <div className="grid grid-cols-2 gap-y-3 gap-x-6">
-                  {supabaseData.condition && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Condition</p>
-                      <p className="text-sm text-slate-800 capitalize">{supabaseData.condition}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Category</p>
-                    <p className="text-sm text-slate-800">{supabaseData.category || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Delivery</p>
-                    <p className="text-sm text-slate-800 capitalize">{supabaseData.delivery_method || 'Digital'}</p>
-                  </div>
-                  {supabaseData.location && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Location</p>
-                      <p className="text-sm text-slate-800 flex items-center gap-1"><MapPin className="w-3 h-3 text-blue-500" />{supabaseData.location}</p>
-                    </div>
-                  )}
-                  {supabaseData.license && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">License</p>
-                      <p className="text-sm text-slate-800">{supabaseData.license}</p>
-                    </div>
-                  )}
-                  {supabaseData.frameworks && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Frameworks</p>
-                      <p className="text-sm text-slate-800">{supabaseData.frameworks}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100 text-xs text-slate-400">
-                  <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{supabaseData.views || 0} views</span>
-                  <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{supabaseData.saves || 0} saves</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Listed {new Date(supabaseData.created_at).toLocaleDateString()}</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Q&A Section */}
-          <div className="lg:col-span-3">
+          {/* ── RIGHT: Info + Q&A + Seller (2 cols) ── */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Main info card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-slate-900">Q&A (12 questions)</h2>
+              {/* Category breadcrumb */}
+              <p className="text-[11px] font-bold text-purple-600 uppercase tracking-wider mb-2">
+                {listing.subcategory ? `${listing.subcategory.replace(/-/g, ' ')} · ` : ''}{listing.condition ? `${listing.condition} · ` : ''}{categoryLabels[listing.bigCategory]}
+              </p>
+
+              {/* Title */}
+              <h1 className="text-xl font-bold text-slate-900 mb-3">{listing.name}</h1>
+
+              {/* Rating + watchers */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className={`w-4 h-4 ${i < Math.floor(listing.seller.rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}`} />
+                  ))}
+                </div>
+                <span className="text-xs font-semibold text-slate-700">{listing.seller.rating}</span>
+                <span className="text-xs text-slate-400">({reviewCount} reviews)</span>
+                <span className="text-xs text-purple-600 font-semibold ml-auto flex items-center gap-1">
+                  <Heart className="w-3 h-3" />{watcherCount} watchers
+                </span>
               </div>
-              <div className="space-y-3 mb-4">
-                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
-                  <p className="text-xs font-semibold text-slate-800 mb-1.5">Q: Does this come with documentation or setup instructions?</p>
-                  <p className="text-xs text-slate-500">A: Yes, full documentation included with setup guide, API reference, and example code. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+
+              {/* Price */}
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-3xl font-bold text-slate-900">
+                  {listing.unit === 'free' ? 'Free' : `$${listing.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                </span>
+                {listing.originalPrice && (
+                  <span className="text-lg text-gray-400 line-through">${listing.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                )}
+                {listing.originalPrice && (
+                  <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-semibold">
+                    Save {Math.round(((listing.originalPrice - listing.price) / listing.originalPrice) * 100)}%
+                  </span>
+                )}
+              </div>
+
+              {/* ── Side-by-side Buy & Offer buttons ── */}
+              <div className="flex gap-2 mt-4 mb-3">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:shadow-lg hover:shadow-purple-200/50 transition-all flex items-center justify-center gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  {listing.unit === 'free' ? 'Get it Free' : 'Buy Now'}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-purple-700 bg-white border-2 border-purple-200 hover:bg-purple-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />Make Offer
+                </motion.button>
+              </div>
+
+              {/* ── Side-by-side Delivery + Protection ── */}
+              <div className="flex gap-2 mb-3">
+                <div className="flex-1 p-3 rounded-xl bg-gray-50 border border-gray-100 text-center">
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase">Delivery</p>
+                  <p className="text-xs font-bold text-slate-900 mt-1 flex items-center justify-center gap-1">
+                    <Package className="w-3.5 h-3.5 text-purple-500" />
+                    {listing.deliveryType === 'physical' ? 'Ships in 2 days' : 'Instant Download'}
+                  </p>
                 </div>
-                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
-                  <p className="text-xs font-semibold text-slate-800 mb-1.5">Q: Is there a warranty or money-back guarantee?</p>
-                  <p className="text-xs text-slate-500">A: All purchases are covered by WhichAI&apos;s 30-day buyer protection. If it doesn&apos;t work as described, full refund. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
-                </div>
-                <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
-                  <p className="text-xs font-semibold text-slate-800 mb-1.5">Q: Can this be used commercially?</p>
-                  <p className="text-xs text-slate-500">A: Please check the license details above. Commercial use terms vary by listing. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+                <div className="flex-1 p-3 rounded-xl bg-gray-50 border border-gray-100 text-center">
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase">Protection</p>
+                  <p className="text-xs font-bold text-slate-900 mt-1 flex items-center justify-center gap-1">
+                    <Shield className="w-3.5 h-3.5 text-emerald-500" />Escrow Protected
+                  </p>
                 </div>
               </div>
-              <button className="w-full py-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold hover:bg-purple-100 transition-colors">
+
+              {/* Quick actions row */}
+              <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                <button
+                  onClick={() => setSaved(!saved)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    saved ? 'bg-pink-50 text-pink-600 border border-pink-200' : 'bg-gray-50 text-slate-600 hover:bg-gray-100 border border-transparent'
+                  }`}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${saved ? 'fill-pink-500' : ''}`} />
+                  {saved ? 'Saved' : 'Save'}
+                </button>
+                <button onClick={handleShare} className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gray-50 text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1.5 transition-all">
+                  <Share2 className="w-3.5 h-3.5" />Share
+                </button>
+                <button onClick={() => setShowMessageModal(true)} className="flex-1 py-2 rounded-lg text-xs font-semibold bg-gray-50 text-slate-600 hover:bg-gray-100 flex items-center justify-center gap-1.5 transition-all">
+                  <Send className="w-3.5 h-3.5" />Message
+                </button>
+              </div>
+            </div>
+
+            {/* ── Q&A Section ── */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-5">
+              <h3 className="text-sm font-bold text-slate-900 mb-3">Q&A (12 questions)</h3>
+              <div className="space-y-2.5 mb-3">
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-[11px] font-semibold text-slate-800 mb-1">Q: Does this come with documentation or setup instructions?</p>
+                  <p className="text-[11px] text-slate-500">A: Yes, full documentation included with setup guide, API reference, and example code. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+                </div>
+                <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                  <p className="text-[11px] font-semibold text-slate-800 mb-1">Q: Is there a warranty or money-back guarantee?</p>
+                  <p className="text-[11px] text-slate-500">A: All purchases covered by WhichAI&apos;s 30-day buyer protection. Full refund if not as described. — <span className="text-purple-600 font-semibold">{listing.seller.name}</span></p>
+                </div>
+              </div>
+              <button className="w-full py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-[11px] font-bold hover:bg-purple-100 transition-colors">
                 Ask a Question
               </button>
             </div>
-          </div>
 
-          {/* Right: Related/Similar (placeholder) */}
-          <div className="lg:col-span-2">
+            {/* ── Seller Card (enhanced) ── */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-cyan-400 flex items-center justify-center text-white text-lg font-bold shadow-md">
+                  {listing.seller.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-bold text-slate-900">{listing.seller.name}</p>
+                    {listing.seller.verified && <BadgeCheck className="w-4 h-4 text-cyan-500" />}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    <Star className="w-3 h-3 text-amber-400 fill-amber-400 inline" /> {listing.seller.rating} · {reviewCount} sales · Member since 2024
+                  </p>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
+                Professional seller on WhichAI marketplace. All items tested and guaranteed. Fast response times and dedicated buyer support.
+              </p>
+              <Link
+                href="/marketplace/store?id=neuralforge"
+                className="w-full py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-sm font-bold text-purple-700 hover:bg-purple-100 transition-all flex items-center justify-center gap-2"
+              >
+                <Store className="w-4 h-4" />Visit Store
+              </Link>
+            </div>
+
+            {/* You might also like */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-purple-500" />You might also like
@@ -639,6 +550,52 @@ function ListingDetailContent() {
             </div>
           </div>
         </div>
+
+        {/* Item Details for Supabase listings (full width below) */}
+        {supabaseData && (
+          <div className="mt-6 bg-white rounded-2xl border border-gray-200 p-5">
+            <h2 className="text-base font-bold text-slate-900 mb-3">Item Details</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-3 gap-x-6">
+              {supabaseData.condition && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Condition</p>
+                  <p className="text-sm text-slate-800 capitalize">{supabaseData.condition}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Category</p>
+                <p className="text-sm text-slate-800">{supabaseData.category || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Delivery</p>
+                <p className="text-sm text-slate-800 capitalize">{supabaseData.delivery_method || 'Digital'}</p>
+              </div>
+              {supabaseData.location && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Location</p>
+                  <p className="text-sm text-slate-800 flex items-center gap-1"><MapPin className="w-3 h-3 text-blue-500" />{supabaseData.location}</p>
+                </div>
+              )}
+              {supabaseData.license && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">License</p>
+                  <p className="text-sm text-slate-800">{supabaseData.license}</p>
+                </div>
+              )}
+              {supabaseData.frameworks && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400 font-semibold mb-0.5">Frameworks</p>
+                  <p className="text-sm text-slate-800">{supabaseData.frameworks}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100 text-xs text-slate-400">
+              <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{supabaseData.views || 0} views</span>
+              <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{supabaseData.saves || 0} saves</span>
+              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Listed {new Date(supabaseData.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Message Seller Modal */}
@@ -666,7 +623,6 @@ function ListingDetailContent() {
                 <button onClick={() => setShowMessageModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
               </div>
               <div className="p-6">
-                {/* Listing preview */}
                 <div className="flex gap-3 p-3 rounded-xl bg-gray-50 mb-4">
                   <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
                     {listing.images && listing.images.length > 0 ? (
@@ -691,7 +647,6 @@ function ListingDetailContent() {
                   </motion.div>
                 ) : (
                   <>
-                    {/* Quick replies */}
                     <div className="flex flex-wrap gap-2 mb-3">
                       {['Hi, is this still available?', 'What\'s the lowest price?', 'Can you ship this?', 'Is this negotiable?'].map((q) => (
                         <button key={q} onClick={() => setMessage(q)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${message === q ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-gray-100 text-slate-600 hover:bg-gray-200 border border-transparent'}`}>
