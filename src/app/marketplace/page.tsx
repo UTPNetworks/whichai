@@ -8,7 +8,7 @@ import {
   Key, MessageSquare, Cpu, Shield, Clock, Package, Download, Gavel, MessageCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/Navbar'
 import CategorySidebar from '@/components/marketplace/CategorySidebar';
 import HeroSearchBar from '@/components/marketplace/HeroSearchBar'
 import PowerFilterPanel, { FilterState } from '@/components/marketplace/PowerFilterPanel';
@@ -152,7 +152,11 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
         category: `${category}${subcategory ? ` > ${subcategory}` : ''}`,
         subcategory: subcategory || null,
         price: pricingType === 'free' ? 0 : parseFloat(price) || 0,
-        pricing_type: pricingType,
+        pricing_type: pricingType === 'fixed' ? 'one-time'
+                    : pricingType === 'auction' ? 'negotiable'
+                    : pricingType === 'pay-what-you-want' ? 'free'
+                    : pricingType === 'free' ? 'free'
+                    : 'one-time',
         condition: condition || null,
         tags: tags ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
         license: license || null,
