@@ -8,6 +8,7 @@ import {
   MoreHorizontal, X, BadgeCheck, AlertTriangle, Rocket, Star, Copy, ExternalLink,
   Archive, RefreshCw, Tag, Sparkles, Crown, Shield, CheckCircle2, ArrowLeft, ImagePlus,
   Camera, Upload, Save, ChevronRight, Store, XCircle, EyeOff, Check,
+  LayoutGrid, List,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -474,7 +475,8 @@ const ListingCard = ({
   onToggleStatus: () => void;
   onDuplicate: () => void;
   isSelected: boolean;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, index: number, isShiftKey: boolean) => void;
+  index: number;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -511,7 +513,7 @@ const ListingCard = ({
             </div>
             {/* Selection checkbox — always visible when selected, visible on hover otherwise */}
             <button
-              onClick={(e) => { e.stopPropagation(); onSelect(listing.id); }}
+              onClick={(e) => { e.stopPropagation(); onSelect(listing.id, index, e.shiftKey); }}
               className={`absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
                 isSelected
                   ? 'bg-purple-500 border-purple-500 opacity-100'
@@ -597,6 +599,128 @@ const ListingCard = ({
   );
 };
 
+// ── Listing Card (Grid View) ──
+const GridListingCard = ({
+  listing, onClick, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate,
+  isSelected, onSelect,
+}: {
+  listing: Listing;
+  onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onBoost: () => void;
+  onToggleStatus: () => void;
+  onDuplicate: () => void;
+  isSelected: boolean;
+  onSelect: (id: string, index: number, isShiftKey: boolean) => void;
+  index: number;
+}) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const statusColors: Record<string, { bg: string; text: string; dot: string }> = {
+    active:   { bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500' },
+    paused:   { bg: 'bg-amber-50',    text: 'text-amber-700',   dot: 'bg-amber-500'   },
+    draft:    { bg: 'bg-gray-100',    text: 'text-gray-600',    dot: 'bg-gray-400'    },
+    sold:     { bg: 'bg-blue-50',     text: 'text-blue-700',    dot: 'bg-blue-500'    },
+    hidden:   { bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400'   },
+    archived: { bg: 'bg-indigo-50',   text: 'text-indigo-700',  dot: 'bg-indigo-400'  },
+  };
+  const sc = statusColors[listing.status] || statusColors.draft;
+  const boostActive = listing.is_boosted && listing.boost_expires_at && new Date(listing.boost_expires_at) > new Date();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(147,51,234,0.12)' }}
+      className={`bg-white rounded-2xl border transition-all group flex flex-col h-full overflow-hidden ${isSelected ? 'border-purple-400 ring-2 ring-purple-200 shadow-md' : 'border-gray-200 hover:border-purple-300'}`}
+    >
+      {/* Thumbnail area */}
+      <div className="relative aspect-[4/3] w-full bg-gray-100 overflow-hidden cursor-pointer" onClick={onClick}>
+        {listing.photo_urls?.length > 0 ? (
+          <img src={listing.photo_urls[0]} alt={listing.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <Package className="w-12 h-12" />
+          </div>
+        )}
+
+        {/* Status Badge Overlay */}
+        <div className="absolute top-3 right-3 z-10">
+          <span className={`px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm ${sc.bg} ${sc.text} backdrop-blur-sm bg-opacity-90`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${sc.dot}`} />{listing.status.toUpperCase()}
+          </span>
+        </div>
+
+        {/* Checkbox Overlay */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onSelect(listing.id, index, e.shiftKey); }}
+          className={`absolute top-3 left-3 z-20 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shadow-md ${
+            isSelected
+              ? 'bg-purple-500 border-purple-500 opacity-100'
+              : 'bg-white/90 border-slate-300 opacity-0 group-hover:opacity-100 hover:border-purple-400'
+          }`}
+        >
+          {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+        </button>
+
+        {/* Boost/AI Badges */}
+        <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
+          {boostActive && (
+            <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-[9px] font-bold flex items-center gap-1 shadow-sm"><Zap className="w-2.5 h-2.5" />BOOSTED</span>
+          )}
+          {listing.ai_generated && listing.enrichment_status === 'complete' && (
+            <span className="px-2 py-0.5 rounded-lg bg-white/95 text-fuchsia-600 border border-fuchsia-100 text-[9px] font-bold flex items-center gap-1 shadow-sm">
+              <BadgeCheck className="w-2.5 h-2.5" />AI
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1" onClick={onClick}>
+        <div className="mb-2">
+          <h3 className="font-bold text-slate-900 text-sm line-clamp-2 group-hover:text-purple-700 transition-colors min-h-[40px]">{listing.title}</h3>
+        </div>
+
+        <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
+          <div className="flex flex-col">
+            <span className="text-lg font-extrabold text-slate-900 leading-tight">{listing.pricing_type === 'free' ? 'Free' : `$${listing.price.toFixed(2)}`}</span>
+            <span className="text-[10px] text-slate-400 font-medium capitalize">{listing.pricing_type}</span>
+          </div>
+
+          <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+            <button onClick={onEdit} className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-all" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+            <div className="relative">
+              <button onClick={() => setMenuOpen(!menuOpen)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-gray-100 transition-all"><MoreHorizontal className="w-3.5 h-3.5" /></button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl border border-gray-200 shadow-2xl z-30 overflow-hidden py-1">
+                    <button onClick={() => { onBoost(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-colors"><Rocket className="w-3.5 h-3.5" />Boost Visibility</button>
+                    <button onClick={() => { onDuplicate(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors"><Copy className="w-3.5 h-3.5" />Duplicate</button>
+                    <button onClick={() => { onToggleStatus(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-gray-50 transition-colors">
+                      {listing.status === 'active' ? <><ToggleRight className="w-3.5 h-3.5" />Pause Listing</> : <><ToggleLeft className="w-3.5 h-3.5" />Activate Listing</>}
+                    </button>
+                    <div className="border-t border-gray-100 my-1" />
+                    <button onClick={() => { onDelete(); setMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"><Trash2 className="w-3.5 h-3.5" />Delete</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats footer (small) */}
+        <div className="flex items-center gap-3 mt-3 text-[10px] text-slate-400">
+          <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{listing.views}</span>
+          <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{listing.saves}</span>
+          <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{listing.inquiries}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // ── Main Page ──
 export default function MyListingsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -606,13 +730,27 @@ export default function MyListingsPage() {
   const [tab, setTab] = useState<Tab>('all');
   const [sortBy, setSortBy] = useState<SortBy>('newest');
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [deletingListing, setDeletingListing] = useState<Listing | null>(null);
   const [boostingListing, setBoostingListing] = useState<Listing | null>(null);
   const [actionMsg, setActionMsg] = useState('');
 
+  // ── Persistence for viewMode ──
+  useEffect(() => {
+    const saved = localStorage.getItem('my-listings-view-mode');
+    if (saved === 'grid' || saved === 'list') setViewMode(saved as 'grid' | 'list');
+  }, []);
+
+  const handleToggleView = (mode: 'list' | 'grid') => {
+    setViewMode(mode);
+    localStorage.setItem('my-listings-view-mode', mode);
+  };
+
+
   // ── Batch selection state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
@@ -638,12 +776,27 @@ export default function MyListingsPage() {
   useEffect(() => { if (user) fetchListings(); }, [user, fetchListings]);
 
   // ── Selection helpers ──
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (id: string, index: number, isShiftKey: boolean = false) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      
+      if (isShiftKey && lastSelectedIndex !== null) {
+        const start = Math.min(lastSelectedIndex, index);
+        const end = Math.max(lastSelectedIndex, index);
+        const rangeIds = filtered.slice(start, end + 1).map(l => l.id);
+        
+        const isSelecting = !prev.has(id);
+        rangeIds.forEach(rangeId => {
+          if (isSelecting) next.add(rangeId);
+          else next.delete(rangeId);
+        });
+      } else {
+        if (next.has(id)) next.delete(id); else next.add(id);
+      }
+      
       return next;
     });
+    setLastSelectedIndex(index);
   };
 
   const handleSelectAll = () => {
@@ -735,6 +888,20 @@ export default function MyListingsPage() {
       showAction(`${ids.length} listing${ids.length > 1 ? 's' : ''} paused`);
     } else {
       alert(`Failed to pause listings: ${error.message}`);
+    }
+    setBulkActionLoading(false);
+  };
+
+  const handleBulkActivate = async () => {
+    const ids = Array.from(selectedIds);
+    setBulkActionLoading(true);
+    const { error } = await directUpdateMany('user_listings', { status: 'active', updated_at: new Date().toISOString() }, ids);
+    if (!error) {
+      setListings((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, status: 'active' } : l));
+      clearSelection();
+      showAction(`${ids.length} listing${ids.length > 1 ? 's' : ''} activated`);
+    } else {
+      alert(`Failed to activate listings: ${error.message}`);
     }
     setBulkActionLoading(false);
   };
@@ -900,106 +1067,40 @@ export default function MyListingsPage() {
                   </div>
                 </div>
 
-                {/* Search + Sort row */}
+                {/* Search + Sort + Toggle row */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title or #tag..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none text-sm" />
                   </div>
-                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm text-slate-600 outline-none focus:border-purple-400 shrink-0">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="most-views">Most Views</option>
-                  </select>
+                  
+                  <div className="flex items-center gap-2">
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm text-slate-600 outline-none focus:border-purple-400 shrink-0">
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="price-high">Price: High to Low</option>
+                      <option value="price-low">Price: Low to High</option>
+                      <option value="most-views">Most Views</option>
+                    </select>
+
+                    <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shrink-0">
+                      <button 
+                        onClick={() => handleToggleView('list')}
+                        className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        title="List View"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleToggleView('grid')}
+                        className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        title="Grid View"
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-
-                {/* ── Bulk Action Toolbar — slides in when items are selected ── */}
-                <AnimatePresence>
-                  {selectedIds.size > 0 && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900">
-                        {/* Left: count + select all */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-                              <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                            </div>
-                            <span className="text-white font-bold text-sm">{selectedIds.size} selected</span>
-                          </div>
-                          <button
-                            onClick={handleSelectAll}
-                            className="text-[11px] text-purple-300 hover:text-white transition-colors font-medium underline-offset-2 hover:underline"
-                          >
-                            {isAllSelected ? 'Deselect all' : `Select all ${filtered.length}`}
-                          </button>
-                        </div>
-
-                        {/* Right: action buttons + clear */}
-                        <div className="flex items-center gap-1.5">
-                          {bulkActionLoading ? (
-                            <div className="flex items-center gap-2 px-4 py-1.5">
-                              <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                              <span className="text-xs text-purple-300">Processing...</span>
-                            </div>
-                          ) : (
-                            <>
-                              <button
-                                onClick={handleBulkPause}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 transition-all"
-                                title="Pause selected listings"
-                              >
-                                <ToggleLeft className="w-3.5 h-3.5" />
-                                Pause
-                              </button>
-                              <button
-                                onClick={handleBulkHide}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-500/20 hover:text-slate-200 transition-all"
-                                title="Hide selected listings from marketplace"
-                              >
-                                <EyeOff className="w-3.5 h-3.5" />
-                                Hide
-                              </button>
-                              <button
-                                onClick={handleBulkArchive}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200 transition-all"
-                                title="Archive selected listings"
-                              >
-                                <Archive className="w-3.5 h-3.5" />
-                                Archive
-                              </button>
-                              <div className="w-px h-4 bg-white/10 mx-1" />
-                              <button
-                                onClick={() => setShowBulkDeleteConfirm(true)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all"
-                                title="Delete selected listings"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                                Delete
-                              </button>
-                            </>
-                          )}
-                          <div className="w-px h-4 bg-white/10 mx-1" />
-                          <button
-                            onClick={clearSelection}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
-                            title="Clear selection"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
 
               {/* Listing Cards */}
               {loading ? (
@@ -1016,20 +1117,37 @@ export default function MyListingsPage() {
                   )}
                 </motion.div>
               ) : (
-                <div className="space-y-3">
-                  {filtered.map((listing) => (
-                    <ListingCard
-                      key={listing.id}
-                      listing={listing}
-                      onClick={() => { clearSelection(); setSelectedListing(listing); }}
-                      onEdit={() => { clearSelection(); setSelectedListing(listing); }}
-                      onDelete={() => setDeletingListing(listing)}
-                      onBoost={() => setBoostingListing(listing)}
-                      onToggleStatus={() => handleToggleStatus(listing)}
-                      onDuplicate={() => handleDuplicate(listing)}
-                      isSelected={selectedIds.has(listing.id)}
-                      onSelect={toggleSelect}
-                    />
+                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
+                  {filtered.map((listing, index) => (
+                    viewMode === 'grid' ? (
+                      <GridListingCard
+                        key={listing.id}
+                        listing={listing}
+                        index={index}
+                        onClick={() => { clearSelection(); setSelectedListing(listing); }}
+                        onEdit={() => { clearSelection(); setSelectedListing(listing); }}
+                        onDelete={() => setDeletingListing(listing)}
+                        onBoost={() => setBoostingListing(listing)}
+                        onToggleStatus={() => handleToggleStatus(listing)}
+                        onDuplicate={() => handleDuplicate(listing)}
+                        isSelected={selectedIds.has(listing.id)}
+                        onSelect={toggleSelect}
+                      />
+                    ) : (
+                      <ListingCard
+                        key={listing.id}
+                        listing={listing}
+                        index={index}
+                        onClick={() => { clearSelection(); setSelectedListing(listing); }}
+                        onEdit={() => { clearSelection(); setSelectedListing(listing); }}
+                        onDelete={() => setDeletingListing(listing)}
+                        onBoost={() => setBoostingListing(listing)}
+                        onToggleStatus={() => handleToggleStatus(listing)}
+                        onDuplicate={() => handleDuplicate(listing)}
+                        isSelected={selectedIds.has(listing.id)}
+                        onSelect={toggleSelect}
+                      />
+                    )
                   ))}
                 </div>
               )}
@@ -1051,6 +1169,99 @@ export default function MyListingsPage() {
                   </div>
                 </motion.div>
               )}
+
+              {/* ── Bulk Action Toolbar — slides up from bottom when items are selected ── */}
+              <AnimatePresence>
+                {selectedIds.size > 0 && (
+                  <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-3xl"
+                  >
+                    <div className="bg-slate-900/90 backdrop-blur-md border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-2xl overflow-hidden p-4">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        {/* Left: count + select all */}
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-3 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
+                            <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
+                            </div>
+                            <span className="text-white font-bold text-sm tracking-tight">{selectedIds.size} Selected</span>
+                            <button
+                              onClick={clearSelection}
+                              className="ml-1 p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+                              title="Clear selection"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <button
+                            onClick={handleSelectAll}
+                            className="text-xs text-purple-300 hover:text-white transition-colors font-semibold"
+                          >
+                            {isAllSelected ? 'Deselect all' : `Select all ${filtered.length}`}
+                          </button>
+                        </div>
+
+                        {/* Right: action buttons */}
+                        <div className="flex items-center gap-2">
+                          {bulkActionLoading ? (
+                            <div className="flex items-center gap-3 px-6 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30">
+                              <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                              <span className="text-sm font-bold text-purple-300">Processing...</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5 p-1 bg-white/5 rounded-xl border border-white/5">
+                              {tab !== 'active' && (
+                                <button
+                                  onClick={handleBulkActivate}
+                                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all border border-transparent hover:border-emerald-500/30"
+                                >
+                                  <ToggleRight className="w-4 h-4" />
+                                  <span className="hidden sm:inline">Activate</span>
+                                </button>
+                              )}
+                              {tab !== 'paused' && (
+                                <button
+                                  onClick={handleBulkPause}
+                                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition-all border border-transparent hover:border-amber-500/30"
+                                >
+                                  <ToggleLeft className="w-4 h-4" />
+                                  <span className="hidden sm:inline">Pause</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={handleBulkHide}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-slate-300 hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
+                              >
+                                <EyeOff className="w-4 h-4" />
+                                <span className="hidden sm:inline">Hide</span>
+                              </button>
+                              <button
+                                onClick={handleBulkArchive}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-indigo-300 hover:bg-indigo-500/20 transition-all border border-transparent hover:border-indigo-500/30"
+                              >
+                                <Archive className="w-4 h-4" />
+                                <span className="hidden sm:inline">Archive</span>
+                              </button>
+                              <div className="w-px h-6 bg-white/10 mx-1" />
+                              <button
+                                onClick={() => setShowBulkDeleteConfirm(true)}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition-all shadow-lg shadow-red-500/20"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="hidden sm:inline">Delete</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </AnimatePresence>
