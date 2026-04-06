@@ -192,7 +192,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-4 pb-14 md:pt-6 md:pb-20 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-4 pb-6 md:pt-6 md:pb-10 text-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -262,7 +262,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto mb-0 pb-0"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-0 pb-0"
           >
             {stats.map(({ value, label, icon: Icon }) => (
               <div key={label} className="text-center">
@@ -278,7 +278,7 @@ export default function Home() {
       </section>
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
-      <div>
+      <div className="mt-[-2rem] relative z-20">
 
           {/* ── MARKETPLACE ASSETS ─────────────────────────────────────── */}
           <section className="bg-white mt-0 pt-0 pb-12 px-6">
