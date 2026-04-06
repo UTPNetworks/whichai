@@ -1101,6 +1101,7 @@ export default function MyListingsPage() {
                     </div>
                   </div>
                 </div>
+              </div>
 
               {/* Listing Cards */}
               {loading ? (
