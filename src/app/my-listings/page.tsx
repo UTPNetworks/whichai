@@ -465,7 +465,7 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
 // ── Listing Card ──
 const ListingCard = ({
   listing, onClick, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate,
-  isSelected, onSelect,
+  isSelected, onSelect, index,
 }: {
   listing: Listing;
   onClick: () => void;
@@ -602,7 +602,7 @@ const ListingCard = ({
 // ── Listing Card (Grid View) ──
 const GridListingCard = ({
   listing, onClick, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate,
-  isSelected, onSelect,
+  isSelected, onSelect, index,
 }: {
   listing: Listing;
   onClick: () => void;
