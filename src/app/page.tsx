@@ -166,30 +166,6 @@ export default function Home() {
     { value: "99%", label: "Satisfaction", icon: Star },
   ];
 
-  const steps = [
-    {
-      icon: Upload,
-      title: "List Your Item",
-      desc: "Add a prompt, model, hardware listing, or GPU slot in minutes. We verify all sellers.",
-      color: "text-purple-500 bg-purple-50",
-      num: "01",
-    },
-    {
-      icon: Users,
-      title: "Connect with Buyers",
-      desc: "Reach 15,000+ verified AI developers, students, and startups worldwide.",
-      color: "text-cyan-500 bg-cyan-50",
-      num: "02",
-    },
-    {
-      icon: HandCoins,
-      title: "Get Paid Instantly",
-      desc: "Secure escrow payments. Funds released on delivery. 0% fee on your first 3 sales.",
-      color: "text-emerald-500 bg-emerald-50",
-      num: "03",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
@@ -323,42 +299,6 @@ export default function Home() {
               </motion.div>
             </div>
             <MarketplaceAssetsBar />
-          </section>
-
-
-          {/* ── HOW IT WORKS ───────────────────────────────────────────── */}
-          <section className="bg-white py-16 px-6">
-            <div className="max-w-4xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">How it works</h2>
-                <p className="text-slate-500 text-base">Start buying or selling in under 5 minutes.</p>
-              </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {steps.map((step, i) => (
-                  <motion.div
-                    key={step.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.15 }}
-                    className="text-center"
-                  >
-                    <div className={`w-14 h-14 rounded-2xl ${step.color} flex items-center justify-center mx-auto mb-4`}>
-                      <step.icon className="w-7 h-7" />
-                    </div>
-                    <div className="text-5xl font-black text-slate-100 mb-2 leading-none">{step.num}</div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
           </section>
 
           {/* ── BOTTOM CTA ─────────────────────────────────────────────── */}
