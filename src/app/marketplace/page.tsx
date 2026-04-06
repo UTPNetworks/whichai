@@ -24,7 +24,7 @@ import {
   type MarketListingV3, calculateDistance, MARKETPLACE_CATEGORIES,
 } from '@/lib/data';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase, safeRefreshSession } from '@/lib/supabase';
+import { supabase, safeRefreshSession, directInsert, getAccessToken } from '@/lib/supabase';
 
 type BigTab = 'all' | 'digital-assets' | 'compute-hub' | 'hardware-corner';
 
@@ -178,13 +178,9 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
         status: 'active',
       };
 
-      // Insert with a timeout to prevent infinite hang
-      const insertPromise = supabase.from('user_listings').insert(payload);
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 15000)
-      );
-
-      const { error } = await Promise.race([insertPromise, timeoutPromise]) as any;
+      // Use directInsert which bypasses the GoTrue lock entirely by extracting
+      // the access token once upfront and using a plain fetch() call.
+      const { error } = await directInsert('user_listings', payload as Record<string, unknown>);
       if (error) throw error;
       setPublished(true);
       setTimeout(() => onClose(), 2000);

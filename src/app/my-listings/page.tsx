@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase, safeRefreshSession } from '@/lib/supabase';
+import { supabase, safeRefreshSession, directSelect } from '@/lib/supabase';
 import AIEnrichmentStatus, { EnrichedListing } from '@/components/AIEnrichmentStatus';
 
 interface Listing {
@@ -568,18 +568,13 @@ export default function MyListingsPage() {
     if (!user) return;
     setLoading(true);
     try {
-      // Warm up the Supabase auth session before querying so that the GoTrue
-      // lock is resolved and the JWT is attached to the request. safeRefreshSession
-      // always returns within its timeout (default 3 s) even if the lock is stuck.
-      await safeRefreshSession(3000);
-
-      const fetchPromise = supabase
-        .from('user_listings')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timed out')), 10000));
-      const { data, error } = await Promise.race([fetchPromise, timeout]) as any;
+      // Use directSelect which extracts the auth token once and uses a plain
+      // fetch() — completely bypasses the GoTrue lock that caused timeouts.
+      const { data, error } = await directSelect(
+        'user_listings',
+        { user_id: user.id },
+        { column: 'created_at', ascending: false }
+      );
       if (!error && data) setListings(data as Listing[]);
       else if (error) console.error('Fetch listings error:', error);
     } catch (err) {
