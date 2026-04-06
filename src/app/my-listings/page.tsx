@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase, safeRefreshSession } from '@/lib/supabase';
+import AIEnrichmentStatus, { EnrichedListing } from '@/components/AIEnrichmentStatus';
 
 interface Listing {
   id: string;
@@ -36,6 +37,15 @@ interface Listing {
   location: string | null;
   created_at: string;
   updated_at: string;
+  // AI enrichment fields
+  enrichment_status?: 'pending' | 'processing' | 'complete' | 'failed' | null;
+  enrichment_step?: string | null;
+  ai_generated?: boolean;
+  refined_title?: string | null;
+  refined_description?: string | null;
+  technical_specs?: Record<string, string> | null;
+  ai_compatibility?: string[] | null;
+  suggested_hashtags?: string[] | null;
 }
 
 type Tab = 'active' | 'draft' | 'paused' | 'sold' | 'all';
@@ -363,6 +373,36 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
             </div>
           </div>
 
+          {/* ── AI Enrichment Status panel ── */}
+          {(listing.enrichment_status === 'pending' || listing.enrichment_status === 'processing') && (
+            <AIEnrichmentStatus
+              listingId={listing.id}
+              onComplete={(enriched: EnrichedListing) => {
+                // Auto-fill title + description from Claude when enrichment completes
+                if (enriched.refined_title) setTitle(enriched.refined_title);
+                if (enriched.refined_description) setDescription(enriched.refined_description);
+                if (enriched.suggested_hashtags?.length) setTagsStr(enriched.suggested_hashtags.join(', '));
+              }}
+            />
+          )}
+
+          {/* ── AI-Generated review banner (shown after enrichment, until seller saves) ── */}
+          {listing.ai_generated && listing.enrichment_status === 'complete' && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border border-fuchsia-200 bg-fuchsia-50 px-4 py-3 flex items-start gap-3"
+            >
+              <BadgeCheck className="w-4 h-4 text-fuchsia-500 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-fuchsia-800">AI-Generated content — review before publishing</p>
+                <p className="text-[11px] text-fuchsia-500 mt-0.5">
+                  Claude has filled in the title, description, and tags. Review them above, edit anything you like, then hit <strong>Save Changes</strong> to approve and remove this badge.
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Action buttons */}
           <div className="flex items-center justify-between pt-2">
             <button onClick={() => setShowDeleteConfirm(true)} className="px-4 py-2.5 rounded-xl text-sm font-semibold text-red-500 bg-red-50 hover:bg-red-100 transition-all flex items-center gap-2">
@@ -444,6 +484,16 @@ const ListingCard = ({ listing, onClick, onEdit, onDelete, onBoost, onToggleStat
                   {boostActive && (
                     <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-[9px] font-bold flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" />BOOSTED</span>
                   )}
+                  {(listing.enrichment_status === 'pending' || listing.enrichment_status === 'processing') && (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[9px] font-bold flex items-center gap-0.5 animate-pulse">
+                      <Sparkles className="w-2.5 h-2.5" />AI
+                    </span>
+                  )}
+                  {listing.ai_generated && listing.enrichment_status === 'complete' && (
+                    <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-200 text-[9px] font-bold flex items-center gap-0.5">
+                      <BadgeCheck className="w-2.5 h-2.5" />AI
+                    </span>
+                  )}
                   <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-400 transition-colors shrink-0 opacity-0 group-hover:opacity-100" />
                 </div>
                 <div className="flex items-center gap-2 mb-2">
@@ -518,6 +568,11 @@ export default function MyListingsPage() {
     if (!user) return;
     setLoading(true);
     try {
+      // Warm up the Supabase auth session before querying so that the GoTrue
+      // lock is resolved and the JWT is attached to the request. safeRefreshSession
+      // always returns within its timeout (default 3 s) even if the lock is stuck.
+      await safeRefreshSession(3000);
+
       const fetchPromise = supabase
         .from('user_listings')
         .select('*')
@@ -563,6 +618,8 @@ export default function MyListingsPage() {
         delivery_method: (data as any).delivery_method,
         location: (data as any).location,
         updated_at: new Date().toISOString(),
+        // Seller has reviewed — clear the AI-Generated badge
+        ai_generated: false,
       }).eq('id', id);
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Save timed out. Please try again.')), 15000));
       const { error } = await Promise.race([updatePromise, timeoutPromise]) as any;

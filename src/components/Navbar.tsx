@@ -43,14 +43,16 @@ export default function Navbar() {
     setDropdownOpen(false);
     setMobileOpen(false);
     try {
-      await supabase.auth.signOut();
-      router.refresh();
-      router.push("/");
+      // Race signOut against a 3 s timeout so a stuck GoTrue lock never
+      // prevents the user from being redirected to the home page.
+      const timeout = new Promise<void>((resolve) => setTimeout(resolve, 3000));
+      await Promise.race([supabase.auth.signOut(), timeout]);
     } catch (error) {
       console.error("Error signing out:", error);
-      // Still redirect even if there's an error
-      router.push("/");
     }
+    // Always redirect regardless of whether signOut succeeded or timed out.
+    router.push("/");
+    router.refresh();
   };
 
   const displayName = profile?.first_name || user?.email?.split("@")[0] || "User";
