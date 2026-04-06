@@ -238,7 +238,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
           >
             <Link
               href="/marketplace"
@@ -262,7 +262,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto"
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto mb-0"
           >
             {stats.map(({ value, label, icon: Icon }) => (
               <div key={label} className="text-center">
@@ -281,15 +281,15 @@ export default function Home() {
       <div>
 
           {/* ── MARKETPLACE ASSETS ─────────────────────────────────────── */}
-          <section className="bg-white pt-4 pb-12 px-6">
+          <section className="bg-white pt-0 pb-12 px-6">
             <div className="max-w-5xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-center mb-6"
+                className="text-center mt-0 mb-6"
               >
-                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">
+                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 pt-0 mt-0 mb-2">
                   What can you trade on{" "}
                   <span className="bg-gradient-to-r from-purple-500 to-cyan-500 bg-clip-text text-transparent">
                     WhichAi?
