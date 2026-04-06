@@ -10,7 +10,7 @@ import {
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import CategorySidebar from '@/components/marketplace/CategorySidebar';
-import HeroSearchBar from '@/components/marketplace/HeroSearchBar';
+import HeroSearchBar from '@/components/marketplace/HeroSearchBar'
 import PowerFilterPanel, { FilterState } from '@/components/marketplace/PowerFilterPanel';
 import LocationSearch from '@/components/marketplace/LocationSearch';
 import MapView from '@/components/marketplace/MapView';
@@ -512,7 +512,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-[#f4f0eb]">
-      <div className="relative z-10 bg-[#f4f0eb]/80 backdrop-blur-sm border-b border-gray-200"><Navbar /></div>
+      <div className="relative z-50 bg-[#f4f0eb]/80 backdrop-blur-sm border-b border-gray-200"><Navbar /></div>
             {/* ═══ HERO ═══ */}
       <section className="relative z-10 bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 py-14 md:py-16 overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
