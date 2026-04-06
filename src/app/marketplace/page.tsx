@@ -448,8 +448,8 @@ export default function MarketplacePage() {
   useEffect(() => {
     const fetchUserListings = async () => {
       try {
-        // No auth needed — anyone_read_active_listings RLS policy allows public reads
-        // DO NOT call refreshSession() here — it throws when no session exists and kills the fetch
+        // Warm up the GoTrue auth lock (safe even with no session — uses getSession not refreshSession)
+        await safeRefreshSession(6000);
 
         // 1. Fetch all active listings (with timeout)
         const listingsPromise = supabase
