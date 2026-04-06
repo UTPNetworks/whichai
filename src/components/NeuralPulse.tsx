@@ -55,16 +55,16 @@ export default function NeuralPulse() {
 
   return (
     <div
-      className="flex-1 max-w-xl mx-4 relative border border-indigo-200/60 rounded-xl bg-gradient-to-r from-indigo-50 via-white to-violet-50 overflow-hidden"
+      className="w-full relative border border-indigo-200/60 rounded-xl bg-gradient-to-r from-indigo-50 via-white to-violet-50 overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="px-3 py-1.5 flex items-center justify-between border-b border-indigo-100/50">
+      <div className="px-4 py-1.5 flex items-center justify-between border-b border-indigo-100/50">
         <div className="flex items-center gap-2">
           <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-sm">
             <Zap className="w-2.5 h-2.5 text-white" />
           </div>
-          <span className="text-[10px] font-black text-slate-800 tracking-tight">NeuralPulse</span>
+          <span className="text-[10px] font-black text-slate-800 tracking-tight uppercase">Global Ai Pulse</span>
           <div className="flex items-center gap-1 ml-1">
             <span className="relative flex h-1 w-1">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />

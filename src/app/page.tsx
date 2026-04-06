@@ -192,7 +192,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-10 pb-14 md:pt-14 md:pb-20 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-4 pb-14 md:pt-6 md:pb-20 text-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -281,13 +281,13 @@ export default function Home() {
       <div>
 
           {/* ── MARKETPLACE ASSETS ─────────────────────────────────────── */}
-          <section className="bg-white py-16 px-6">
+          <section className="bg-white pt-4 pb-12 px-6">
             <div className="max-w-5xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-center mb-10"
+                className="text-center mb-6"
               >
                 <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">
                   What can you trade on{" "}
