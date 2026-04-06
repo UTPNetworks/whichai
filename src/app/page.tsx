@@ -301,47 +301,6 @@ export default function Home() {
             <MarketplaceAssetsBar />
           </section>
 
-          {/* ── BOTTOM CTA ─────────────────────────────────────────────── */}
-          <section className="bg-white py-14 px-6 border-t border-gray-100">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="max-w-2xl mx-auto text-center"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-cyan-100 flex items-center justify-center mx-auto mb-4">
-                <Rocket className="w-7 h-7 text-purple-600" />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">
-                Ready to join the AI economy?
-              </h2>
-              <p className="text-slate-500 mb-7 text-base">
-                Whether you&apos;re buying your first prompt or renting out an H100, WhichAi is built for you.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-7">
-                <Link
-                  href="/marketplace"
-                  className="flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-[0_0_30px_rgba(168,85,85,247,0.4)] transition-all"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  Browse Marketplace
-                </Link>
-                <Link
-                  href={user ? "/marketplace" : "/auth/signup"}
-                  className="flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-slate-700 border-2 border-slate-200 hover:border-purple-300 hover:text-purple-600 transition-all"
-                >
-                  <Tag className="w-4 h-4" />
-                  {user ? "List Your Item" : "Sign Up Free"}
-                </Link>
-              </div>
-              <div className="flex items-center justify-center gap-6 text-sm text-slate-400 flex-wrap">
-                <span className="flex items-center gap-1.5"><Shield className="w-4 h-4" /> Escrow Protected</span>
-                <span className="flex items-center gap-1.5"><BadgeCheck className="w-4 h-4" /> Verified Sellers</span>
-                <span className="flex items-center gap-1.5"><Zap className="w-4 h-4" /> Instant Delivery</span>
-              </div>
-            </motion.div>
-          </section>
-
       </div>{/* end main content */}
 
     </div>

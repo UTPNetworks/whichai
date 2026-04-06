@@ -8,6 +8,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
+import NeuralPulse from "./NeuralPulse";
 
 const mockNotifications = [
   { id: 1, text: "ð¥ New deal: OpenAI credits 10% off!", time: "2m ago" },
@@ -75,6 +76,11 @@ export default function Navbar() {
           </span>
         </Link>
       </motion.div>
+
+      {/* Neural Pulse - Desktop only */}
+      <div className="hidden lg:block flex-1 max-w-xl">
+        <NeuralPulse />
+      </div>
 
       {/* Right side auth */}
       <motion.div
