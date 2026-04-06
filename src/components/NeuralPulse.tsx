@@ -53,7 +53,7 @@ export default function NeuralPulse() {
 
   return (
     <div
-      className="w-full relative flex items-center overflow-hidden whitespace-nowrap bg-[#f8f9fc] border border-black/[0.04] rounded-full px-5 py-1.5 flex-[1_1_auto] mx-6 h-[44px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] transition-all"
+      className="w-[90%] mx-auto relative flex items-center overflow-hidden whitespace-nowrap bg-[#f8f9fc] border border-black/[0.04] rounded-full px-5 py-1.5 flex-[1_1_auto] h-[44px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] transition-all"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

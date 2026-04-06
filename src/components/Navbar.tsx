@@ -78,7 +78,7 @@ export default function Navbar() {
       </motion.div>
 
       {/* Neural Pulse - Desktop only */}
-      <div className="hidden lg:block flex-[1_1_auto] min-w-0 mx-5">
+      <div className="hidden lg:block flex-[1_1_auto]">
         <NeuralPulse />
       </div>
 
