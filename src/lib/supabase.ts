@@ -124,3 +124,167 @@ export async function safeRefreshSession(timeoutMs = 6000): Promise<void> {
     // Silently ignore
   }
 }
+
+/**
+ * Direct REST PATCH (update) that bypasses the GoTrue lock.
+ * Pass filters as column→value pairs (all ANDed).
+ */
+export async function directUpdate(
+  table: string,
+  data: Record<string, unknown>,
+  filters: Record<string, unknown>
+): Promise<{ error: Error | null }> {
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const params = new URLSearchParams();
+  for (const [col, val] of Object.entries(filters)) {
+    params.set(col, `eq.${val}`);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?${params}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: new Error(body?.message || `Server error ${res.status}`) };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
+ * Direct REST DELETE that bypasses the GoTrue lock.
+ * Pass filters as column→value pairs (all ANDed).
+ */
+export async function directDelete(
+  table: string,
+  filters: Record<string, unknown>
+): Promise<{ error: Error | null }> {
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const params = new URLSearchParams();
+  for (const [col, val] of Object.entries(filters)) {
+    params.set(col, `eq.${val}`);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?${params}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        Prefer: 'return=minimal',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: new Error(body?.message || `Server error ${res.status}`) };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
+ * Bulk PATCH — updates multiple rows by ID in a single REST call.
+ * Uses Supabase's `id=in.(id1,id2,...)` filter syntax.
+ */
+export async function directUpdateMany(
+  table: string,
+  data: Record<string, unknown>,
+  ids: string[]
+): Promise<{ error: Error | null }> {
+  if (ids.length === 0) return { error: null };
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const params = new URLSearchParams();
+  params.set('id', `in.(${ids.join(',')})`);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?${params}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: new Error(body?.message || `Server error ${res.status}`) };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
+ * Bulk DELETE — removes multiple rows by ID in a single REST call.
+ * Uses Supabase's `id=in.(id1,id2,...)` filter syntax.
+ */
+export async function directDeleteMany(
+  table: string,
+  ids: string[]
+): Promise<{ error: Error | null }> {
+  if (ids.length === 0) return { error: null };
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const params = new URLSearchParams();
+  params.set('id', `in.(${ids.join(',')})`);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}?${params}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        Prefer: 'return=minimal',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: new Error(body?.message || `Server error ${res.status}`) };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}

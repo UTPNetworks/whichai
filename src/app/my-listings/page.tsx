@@ -7,13 +7,16 @@ import {
   TrendingUp, Clock, DollarSign, BarChart3, ArrowUpRight, Search, Filter, ChevronDown,
   MoreHorizontal, X, BadgeCheck, AlertTriangle, Rocket, Star, Copy, ExternalLink,
   Archive, RefreshCw, Tag, Sparkles, Crown, Shield, CheckCircle2, ArrowLeft, ImagePlus,
-  Camera, Upload, Save, ChevronRight, Store, XCircle,
+  Camera, Upload, Save, ChevronRight, Store, XCircle, EyeOff, Check,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase, safeRefreshSession, directSelect } from '@/lib/supabase';
+import {
+  supabase, safeRefreshSession, directSelect, directInsert,
+  directUpdate, directDelete, directUpdateMany, directDeleteMany,
+} from '@/lib/supabase';
 import AIEnrichmentStatus, { EnrichedListing } from '@/components/AIEnrichmentStatus';
 
 interface Listing {
@@ -48,7 +51,7 @@ interface Listing {
   suggested_hashtags?: string[] | null;
 }
 
-type Tab = 'active' | 'draft' | 'paused' | 'sold' | 'all';
+type Tab = 'active' | 'draft' | 'paused' | 'sold' | 'hidden' | 'archived' | 'all';
 type SortBy = 'newest' | 'oldest' | 'price-high' | 'price-low' | 'most-views';
 
 // ── Stats Card ──
@@ -127,8 +130,28 @@ const DeleteConfirm = ({ listing, onClose, onDelete }: { listing: Listing; onClo
         <p className="text-sm text-slate-500 mb-5">&ldquo;{listing.title}&rdquo; will be permanently removed. This action cannot be undone.</p>
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-gray-100 hover:bg-gray-200 transition-all">Keep It</button>
-          <button disabled={deleting} onClick={async () => { setDeleting(true); await onDelete(listing.id); setDeleting(false); onClose(); }} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-all">
+          <button disabled={deleting} onClick={async () => { setDeleting(true); await onDelete(listing.id); setDeleting(false); onClose(); }} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-all disabled:opacity-60">
             {deleting ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// ── Bulk Delete Confirmation ──
+const BulkDeleteConfirm = ({ count, onClose, onDelete }: { count: number; onClose: () => void; onDelete: () => Promise<void> }) => {
+  const [deleting, setDeleting] = useState(false);
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
+        <div className="w-14 h-14 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-4"><Trash2 className="w-6 h-6 text-red-500" /></div>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">Delete {count} Listing{count > 1 ? 's' : ''}?</h3>
+        <p className="text-sm text-slate-500 mb-5">These listings will be permanently removed. This action cannot be undone.</p>
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 bg-gray-100 hover:bg-gray-200 transition-all">Cancel</button>
+          <button disabled={deleting} onClick={async () => { setDeleting(true); await onDelete(); setDeleting(false); onClose(); }} className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-all disabled:opacity-60">
+            {deleting ? 'Deleting...' : `Delete ${count}`}
           </button>
         </div>
       </motion.div>
@@ -165,9 +188,7 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      // Refresh auth session before uploading
       await safeRefreshSession();
-
       const newUrls: string[] = [];
       const errors: string[] = [];
       for (let i = 0; i < files.length; i++) {
@@ -247,7 +268,6 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
                   <p className="text-sm font-medium">No photos yet</p>
                 </div>
               )}
-              {/* Overlay upload button */}
               <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="absolute bottom-3 right-3 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm text-xs font-semibold text-slate-700 shadow-lg hover:bg-white transition-all flex items-center gap-1.5 opacity-0 group-hover:opacity-100">
                 {uploading ? <><div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />Uploading...</> : <><Upload className="w-3.5 h-3.5" />Add Photo</>}
               </button>
@@ -293,6 +313,8 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
                 listing.status === 'active' ? 'bg-emerald-50 text-emerald-700' :
                 listing.status === 'paused' ? 'bg-amber-50 text-amber-700' :
                 listing.status === 'sold' ? 'bg-blue-50 text-blue-700' :
+                listing.status === 'hidden' ? 'bg-slate-100 text-slate-600' :
+                listing.status === 'archived' ? 'bg-indigo-50 text-indigo-700' :
                 'bg-gray-100 text-gray-600'
               }`}>{listing.status.toUpperCase()}</span>
             </div>
@@ -378,7 +400,6 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
             <AIEnrichmentStatus
               listingId={listing.id}
               onComplete={(enriched: EnrichedListing) => {
-                // Auto-fill title + description from Claude when enrichment completes
                 if (enriched.refined_title) setTitle(enriched.refined_title);
                 if (enriched.refined_description) setDescription(enriched.refined_description);
                 if (enriched.suggested_hashtags?.length) setTagsStr(enriched.suggested_hashtags.join(', '));
@@ -386,7 +407,7 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
             />
           )}
 
-          {/* ── AI-Generated review banner (shown after enrichment, until seller saves) ── */}
+          {/* ── AI-Generated review banner ── */}
           {listing.ai_generated && listing.enrichment_status === 'complete' && (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
@@ -431,7 +452,6 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
         </div>
       </div>
 
-      {/* Delete confirmation inline */}
       <AnimatePresence>
         {showDeleteConfirm && (
           <DeleteConfirm listing={listing} onClose={() => setShowDeleteConfirm(false)} onDelete={async (id) => { await onDelete(id); onBack(); }} />
@@ -441,17 +461,30 @@ const ListingDetailView = ({ listing, onBack, onSave, onDelete }: {
   );
 };
 
-// ── Listing Row Card (Clickable) ──
-const ListingCard = ({ listing, onClick, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate }: {
-  listing: Listing; onClick: () => void; onEdit: () => void; onDelete: () => void; onBoost: () => void;
-  onToggleStatus: () => void; onDuplicate: () => void;
+// ── Listing Card ──
+const ListingCard = ({
+  listing, onClick, onEdit, onDelete, onBoost, onToggleStatus, onDuplicate,
+  isSelected, onSelect,
+}: {
+  listing: Listing;
+  onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onBoost: () => void;
+  onToggleStatus: () => void;
+  onDuplicate: () => void;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+
   const statusColors: Record<string, { bg: string; text: string; dot: string }> = {
-    active: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-    paused: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
-    draft: { bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
-    sold: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
+    active:   { bg: 'bg-emerald-50',  text: 'text-emerald-700', dot: 'bg-emerald-500' },
+    paused:   { bg: 'bg-amber-50',    text: 'text-amber-700',   dot: 'bg-amber-500'   },
+    draft:    { bg: 'bg-gray-100',    text: 'text-gray-600',    dot: 'bg-gray-400'    },
+    sold:     { bg: 'bg-blue-50',     text: 'text-blue-700',    dot: 'bg-blue-500'    },
+    hidden:   { bg: 'bg-slate-100',   text: 'text-slate-600',   dot: 'bg-slate-400'   },
+    archived: { bg: 'bg-indigo-50',   text: 'text-indigo-700',  dot: 'bg-indigo-400'  },
   };
   const sc = statusColors[listing.status] || statusColors.draft;
   const catLabel = listing.category?.split(' > ')[0]?.replace(/-/g, ' ') || 'Uncategorized';
@@ -463,18 +496,33 @@ const ListingCard = ({ listing, onClick, onEdit, onDelete, onBoost, onToggleStat
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2, boxShadow: '0 8px 30px rgba(147,51,234,0.08)' }}
-      className="bg-white rounded-xl border border-gray-200 hover:border-purple-300 transition-all group cursor-pointer"
+      className={`bg-white rounded-xl border transition-all group cursor-pointer ${isSelected ? 'border-purple-400 ring-2 ring-purple-200 shadow-md' : 'border-gray-200 hover:border-purple-300'}`}
     >
       <div className="p-4" onClick={onClick}>
         <div className="flex gap-4">
-          {/* Thumbnail */}
-          <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-purple-200 transition-colors">
-            {listing.photo_urls?.length > 0 ? (
-              <img src={listing.photo_urls[0]} alt={listing.title} className="w-full h-full object-cover" />
-            ) : (
-              <Package className="w-8 h-8 text-gray-300" />
-            )}
+          {/* Thumbnail with selection checkbox */}
+          <div className="relative w-24 h-24 shrink-0">
+            <div className="w-full h-full rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center overflow-hidden group-hover:border-purple-200 transition-colors">
+              {listing.photo_urls?.length > 0 ? (
+                <img src={listing.photo_urls[0]} alt={listing.title} className="w-full h-full object-cover" />
+              ) : (
+                <Package className="w-8 h-8 text-gray-300" />
+              )}
+            </div>
+            {/* Selection checkbox — always visible when selected, visible on hover otherwise */}
+            <button
+              onClick={(e) => { e.stopPropagation(); onSelect(listing.id); }}
+              className={`absolute top-1.5 left-1.5 z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
+                isSelected
+                  ? 'bg-purple-500 border-purple-500 opacity-100'
+                  : 'bg-white/85 border-slate-300 opacity-0 group-hover:opacity-100 hover:border-purple-400'
+              }`}
+              title={isSelected ? 'Deselect' : 'Select'}
+            >
+              {isSelected && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+            </button>
           </div>
+
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
@@ -514,14 +562,15 @@ const ListingCard = ({ listing, onClick, onEdit, onDelete, onBoost, onToggleStat
           </div>
         </div>
       </div>
-      {/* Stats bar — click on these doesn't navigate */}
-      <div className="flex items-center justify-between px-4 pb-3 pt-0 border-t border-gray-100 mx-4 mt-0 pt-3" onClick={(e) => e.stopPropagation()}>
+
+      {/* Stats bar */}
+      <div className="flex items-center justify-between px-4 pb-3 border-t border-gray-100 mx-4 pt-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1 text-xs text-slate-500"><Eye className="w-3.5 h-3.5" />{listing.views}</span>
           <span className="flex items-center gap-1 text-xs text-slate-500"><Heart className="w-3.5 h-3.5" />{listing.saves}</span>
           <span className="flex items-center gap-1 text-xs text-slate-500"><MessageSquare className="w-3.5 h-3.5" />{listing.inquiries}</span>
         </div>
-        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1.5">
           <button onClick={onEdit} className="p-2 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-all" title="Edit"><Pencil className="w-4 h-4" /></button>
           <button onClick={onBoost} className="p-2 rounded-lg text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-all" title="Boost"><Rocket className="w-4 h-4" /></button>
           <button onClick={onToggleStatus} className="p-2 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all" title={listing.status === 'active' ? 'Pause' : 'Activate'}>
@@ -562,14 +611,17 @@ export default function MyListingsPage() {
   const [boostingListing, setBoostingListing] = useState<Listing | null>(null);
   const [actionMsg, setActionMsg] = useState('');
 
+  // ── Batch selection state ──
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
   const showAction = (msg: string) => { setActionMsg(msg); setTimeout(() => setActionMsg(''), 3000); };
 
   const fetchListings = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      // Use directSelect which extracts the auth token once and uses a plain
-      // fetch() — completely bypasses the GoTrue lock that caused timeouts.
       const { data, error } = await directSelect(
         'user_listings',
         { user_id: user.id },
@@ -585,24 +637,37 @@ export default function MyListingsPage() {
 
   useEffect(() => { if (user) fetchListings(); }, [user, fetchListings]);
 
-  // ── Actions ──
+  // ── Selection helpers ──
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((l) => l.id)));
+    }
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  // ── Individual action handlers (GoTrue-bypass via direct REST) ──
   const handleDelete = async (id: string) => {
-    try {
-      await safeRefreshSession();
-      const deletePromise = supabase.from('user_listings').delete().eq('id', id);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Delete timed out.')), 15000));
-      const { error } = await Promise.race([deletePromise, timeoutPromise]) as any;
-      if (error) throw error;
-      setListings((prev) => prev.filter((l) => l.id !== id)); showAction('Listing deleted');
-    } catch (err: any) { console.error('Delete error:', err); alert(`Failed to delete: ${err?.message || 'Unknown error'}`); }
+    const { error } = await directDelete('user_listings', { id });
+    if (error) { alert(`Failed to delete: ${error.message}`); return; }
+    setListings((prev) => prev.filter((l) => l.id !== id));
+    showAction('Listing deleted');
   };
 
   const handleEdit = async (id: string, data: Partial<Listing>) => {
-    try {
-      // Refresh auth session first to prevent hanging requests
-      await safeRefreshSession();
-
-      const updatePromise = supabase.from('user_listings').update({
+    const { error } = await directUpdate(
+      'user_listings',
+      {
         title: data.title,
         description: data.description,
         price: data.price,
@@ -613,57 +678,107 @@ export default function MyListingsPage() {
         delivery_method: (data as any).delivery_method,
         location: (data as any).location,
         updated_at: new Date().toISOString(),
-        // Seller has reviewed — clear the AI-Generated badge
         ai_generated: false,
-      }).eq('id', id);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Save timed out. Please try again.')), 15000));
-      const { error } = await Promise.race([updatePromise, timeoutPromise]) as any;
-
-      if (error) throw error;
-      setListings((prev) => prev.map((l) => l.id === id ? { ...l, ...data, updated_at: new Date().toISOString() } : l));
-      setSelectedListing((prev) => prev && prev.id === id ? { ...prev, ...data, updated_at: new Date().toISOString() } : prev);
-      showAction('Listing updated');
-    } catch (err: any) {
-      console.error('Edit error:', err);
-      alert(`Failed to save: ${err?.message || 'Unknown error. Please try again.'}`);
-    }
+      },
+      { id }
+    );
+    if (error) { alert(`Failed to save: ${error.message}`); return; }
+    setListings((prev) => prev.map((l) => l.id === id ? { ...l, ...data, updated_at: new Date().toISOString() } : l));
+    setSelectedListing((prev) => prev && prev.id === id ? { ...prev, ...data, updated_at: new Date().toISOString() } : prev);
+    showAction('Listing updated');
   };
 
   const handleToggleStatus = async (listing: Listing) => {
-    try {
-      await safeRefreshSession();
-      const newStatus = listing.status === 'active' ? 'paused' : 'active';
-      const togglePromise = supabase.from('user_listings').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', listing.id);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Toggle timed out.')), 15000));
-      const { error } = await Promise.race([togglePromise, timeoutPromise]) as any;
-      if (error) throw error;
-      setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, status: newStatus } : l)); showAction(`Listing ${newStatus === 'active' ? 'activated' : 'paused'}`);
-    } catch (err: any) { console.error('Toggle error:', err); alert(`Failed: ${err?.message || 'Unknown error'}`); }
+    const newStatus = listing.status === 'active' ? 'paused' : 'active';
+    const { error } = await directUpdate('user_listings', { status: newStatus, updated_at: new Date().toISOString() }, { id: listing.id });
+    if (error) { alert(`Failed: ${error.message}`); return; }
+    setListings((prev) => prev.map((l) => l.id === listing.id ? { ...l, status: newStatus } : l));
+    showAction(`Listing ${newStatus === 'active' ? 'activated' : 'paused'}`);
   };
 
   const handleBoost = async (id: string, tier: string) => {
-    try {
-      await safeRefreshSession();
-      const durations: Record<string, number> = { basic: 3, premium: 7, mega: 14 };
-      const expires = new Date(Date.now() + (durations[tier] || 3) * 86400000).toISOString();
-      const boostPromise = supabase.from('user_listings').update({ is_boosted: true, boost_tier: tier, boost_expires_at: expires, updated_at: new Date().toISOString() }).eq('id', id);
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Boost timed out.')), 15000));
-      const { error } = await Promise.race([boostPromise, timeoutPromise]) as any;
-      if (error) throw error;
-      setListings((prev) => prev.map((l) => l.id === id ? { ...l, is_boosted: true, boost_tier: tier, boost_expires_at: expires } : l)); showAction(`Listing boosted with ${tier} tier!`);
-    } catch (err: any) { console.error('Boost error:', err); alert(`Failed: ${err?.message || 'Unknown error'}`); }
+    const durations: Record<string, number> = { basic: 3, premium: 7, mega: 14 };
+    const expires = new Date(Date.now() + (durations[tier] || 3) * 86400000).toISOString();
+    const { error } = await directUpdate('user_listings', { is_boosted: true, boost_tier: tier, boost_expires_at: expires, updated_at: new Date().toISOString() }, { id });
+    if (error) { alert(`Failed to boost: ${error.message}`); return; }
+    setListings((prev) => prev.map((l) => l.id === id ? { ...l, is_boosted: true, boost_tier: tier, boost_expires_at: expires } : l));
+    showAction(`Listing boosted with ${tier} tier!`);
     setBoostingListing(null);
   };
 
   const handleDuplicate = async (listing: Listing) => {
     if (!user) return;
-    const { data, error } = await supabase.from('user_listings').insert({
-      user_id: user.id, title: `${listing.title} (Copy)`, description: listing.description,
-      category: listing.category, subcategory: listing.subcategory, price: listing.price,
-      pricing_type: listing.pricing_type, tags: listing.tags, delivery_method: listing.delivery_method,
+    const { error } = await directInsert('user_listings', {
+      user_id: user.id,
+      title: `${listing.title} (Copy)`,
+      description: listing.description,
+      category: listing.category,
+      subcategory: listing.subcategory,
+      price: listing.price,
+      pricing_type: listing.pricing_type,
+      tags: listing.tags,
+      delivery_method: listing.delivery_method,
       status: 'draft',
-    }).select().single();
-    if (!error && data) { setListings((prev) => [data as Listing, ...prev]); showAction('Listing duplicated as draft'); }
+    });
+    if (!error) { await fetchListings(); showAction('Listing duplicated as draft'); }
+    else alert(`Failed to duplicate: ${error.message}`);
+  };
+
+  // ── Bulk action handlers ──
+  const handleBulkPause = async () => {
+    const ids = Array.from(selectedIds);
+    setBulkActionLoading(true);
+    const { error } = await directUpdateMany('user_listings', { status: 'paused', updated_at: new Date().toISOString() }, ids);
+    if (!error) {
+      setListings((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, status: 'paused' } : l));
+      clearSelection();
+      showAction(`${ids.length} listing${ids.length > 1 ? 's' : ''} paused`);
+    } else {
+      alert(`Failed to pause listings: ${error.message}`);
+    }
+    setBulkActionLoading(false);
+  };
+
+  const handleBulkHide = async () => {
+    const ids = Array.from(selectedIds);
+    setBulkActionLoading(true);
+    const { error } = await directUpdateMany('user_listings', { status: 'hidden', updated_at: new Date().toISOString() }, ids);
+    if (!error) {
+      setListings((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, status: 'hidden' } : l));
+      clearSelection();
+      showAction(`${ids.length} listing${ids.length > 1 ? 's' : ''} hidden`);
+    } else {
+      alert(`Failed to hide listings: ${error.message}`);
+    }
+    setBulkActionLoading(false);
+  };
+
+  const handleBulkArchive = async () => {
+    const ids = Array.from(selectedIds);
+    setBulkActionLoading(true);
+    const { error } = await directUpdateMany('user_listings', { status: 'archived', updated_at: new Date().toISOString() }, ids);
+    if (!error) {
+      setListings((prev) => prev.map((l) => selectedIds.has(l.id) ? { ...l, status: 'archived' } : l));
+      clearSelection();
+      showAction(`${ids.length} listing${ids.length > 1 ? 's' : ''} archived`);
+    } else {
+      alert(`Failed to archive listings: ${error.message}`);
+    }
+    setBulkActionLoading(false);
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    setBulkActionLoading(true);
+    const { error } = await directDeleteMany('user_listings', ids);
+    if (!error) {
+      setListings((prev) => prev.filter((l) => !selectedIds.has(l.id)));
+      clearSelection();
+      showAction(`${ids.length} listing${ids.length > 1 ? 's' : ''} deleted`);
+    } else {
+      alert(`Failed to delete listings: ${error.message}`);
+    }
+    setBulkActionLoading(false);
   };
 
   // ── Filtering & Sorting ──
@@ -689,12 +804,16 @@ export default function MyListingsPage() {
   };
 
   const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: 'all', label: 'All', count: listings.length },
-    { id: 'active', label: 'Active', count: stats.active },
-    { id: 'draft', label: 'Drafts', count: listings.filter((l) => l.status === 'draft').length },
-    { id: 'paused', label: 'Paused', count: listings.filter((l) => l.status === 'paused').length },
-    { id: 'sold', label: 'Sold', count: listings.filter((l) => l.status === 'sold').length },
+    { id: 'all',      label: 'All',      count: listings.length },
+    { id: 'active',   label: 'Active',   count: listings.filter((l) => l.status === 'active').length },
+    { id: 'draft',    label: 'Drafts',   count: listings.filter((l) => l.status === 'draft').length },
+    { id: 'paused',   label: 'Paused',   count: listings.filter((l) => l.status === 'paused').length },
+    { id: 'sold',     label: 'Sold',     count: listings.filter((l) => l.status === 'sold').length },
+    { id: 'hidden',   label: 'Hidden',   count: listings.filter((l) => l.status === 'hidden').length },
+    { id: 'archived', label: 'Archived', count: listings.filter((l) => l.status === 'archived').length },
   ];
+
+  const isAllSelected = filtered.length > 0 && selectedIds.size === filtered.length;
 
   if (!user && !authLoading) return (
     <div className="min-h-screen bg-[#f4f0eb]">
@@ -764,25 +883,30 @@ export default function MyListingsPage() {
                 <StatCard icon={DollarSign} label="Revenue" value={`$${stats.totalRevenue.toFixed(2)}`} color="bg-emerald-500" />
               </div>
 
-              {/* Tabs + Search + Sort */}
-              <div className="bg-white rounded-xl border border-gray-200 mb-4">
-                <div className="flex items-center justify-between px-4 pt-3 pb-0 border-b border-gray-100">
-                  <div className="flex gap-0.5">
+              {/* Tabs + Search + Sort + Bulk Toolbar */}
+              <div className="bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden">
+                {/* Tab row */}
+                <div className="flex items-center justify-between px-4 pt-3 pb-0 border-b border-gray-100 overflow-x-auto">
+                  <div className="flex gap-0.5 shrink-0">
                     {tabs.map((t) => (
-                      <button key={t.id} onClick={() => setTab(t.id)} className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg transition-all relative ${tab === t.id ? 'text-purple-700 bg-purple-50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50'}`}>
+                      <button key={t.id} onClick={() => { setTab(t.id); clearSelection(); }} className={`px-3 py-2.5 text-xs font-semibold rounded-t-lg transition-all relative whitespace-nowrap ${tab === t.id ? 'text-purple-700 bg-purple-50' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-50'}`}>
                         {t.label}
-                        <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-500'}`}>{t.count}</span>
+                        {t.count > 0 && (
+                          <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-500'}`}>{t.count}</span>
+                        )}
                         {tab === t.id && <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-500 rounded-full" />}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-3">
+
+                {/* Search + Sort row */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by title or #tag..." className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50/50 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none text-sm" />
                   </div>
-                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm text-slate-600 outline-none focus:border-purple-400">
+                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50/50 text-sm text-slate-600 outline-none focus:border-purple-400 shrink-0">
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
                     <option value="price-high">Price: High to Low</option>
@@ -790,6 +914,91 @@ export default function MyListingsPage() {
                     <option value="most-views">Most Views</option>
                   </select>
                 </div>
+
+                {/* ── Bulk Action Toolbar — slides in when items are selected ── */}
+                <AnimatePresence>
+                  {selectedIds.size > 0 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between px-4 py-2.5 bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900">
+                        {/* Left: count + select all */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                            </div>
+                            <span className="text-white font-bold text-sm">{selectedIds.size} selected</span>
+                          </div>
+                          <button
+                            onClick={handleSelectAll}
+                            className="text-[11px] text-purple-300 hover:text-white transition-colors font-medium underline-offset-2 hover:underline"
+                          >
+                            {isAllSelected ? 'Deselect all' : `Select all ${filtered.length}`}
+                          </button>
+                        </div>
+
+                        {/* Right: action buttons + clear */}
+                        <div className="flex items-center gap-1.5">
+                          {bulkActionLoading ? (
+                            <div className="flex items-center gap-2 px-4 py-1.5">
+                              <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                              <span className="text-xs text-purple-300">Processing...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={handleBulkPause}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 transition-all"
+                                title="Pause selected listings"
+                              >
+                                <ToggleLeft className="w-3.5 h-3.5" />
+                                Pause
+                              </button>
+                              <button
+                                onClick={handleBulkHide}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-500/20 hover:text-slate-200 transition-all"
+                                title="Hide selected listings from marketplace"
+                              >
+                                <EyeOff className="w-3.5 h-3.5" />
+                                Hide
+                              </button>
+                              <button
+                                onClick={handleBulkArchive}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200 transition-all"
+                                title="Archive selected listings"
+                              >
+                                <Archive className="w-3.5 h-3.5" />
+                                Archive
+                              </button>
+                              <div className="w-px h-4 bg-white/10 mx-1" />
+                              <button
+                                onClick={() => setShowBulkDeleteConfirm(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all"
+                                title="Delete selected listings"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Delete
+                              </button>
+                            </>
+                          )}
+                          <div className="w-px h-4 bg-white/10 mx-1" />
+                          <button
+                            onClick={clearSelection}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                            title="Clear selection"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Listing Cards */}
@@ -812,12 +1021,14 @@ export default function MyListingsPage() {
                     <ListingCard
                       key={listing.id}
                       listing={listing}
-                      onClick={() => setSelectedListing(listing)}
-                      onEdit={() => setSelectedListing(listing)}
+                      onClick={() => { clearSelection(); setSelectedListing(listing); }}
+                      onEdit={() => { clearSelection(); setSelectedListing(listing); }}
                       onDelete={() => setDeletingListing(listing)}
                       onBoost={() => setBoostingListing(listing)}
                       onToggleStatus={() => handleToggleStatus(listing)}
                       onDuplicate={() => handleDuplicate(listing)}
+                      isSelected={selectedIds.has(listing.id)}
+                      onSelect={toggleSelect}
                     />
                   ))}
                 </div>
@@ -831,9 +1042,9 @@ export default function MyListingsPage() {
                     <div>
                       <h4 className="text-sm font-bold text-slate-800 mb-1">Seller Tips</h4>
                       <ul className="space-y-1">
+                        <li className="text-xs text-slate-600">Hover over a listing to reveal the checkbox — select multiple to bulk-manage them</li>
                         <li className="text-xs text-slate-600">Click any listing to open the full editor with photo management</li>
                         <li className="text-xs text-slate-600">Add high-quality photos to get 3x more views</li>
-                        <li className="text-xs text-slate-600">Listings with detailed descriptions sell 2x faster</li>
                         <li className="text-xs text-slate-600">Boost your listing to appear at the top of search results</li>
                       </ul>
                     </div>
@@ -849,6 +1060,13 @@ export default function MyListingsPage() {
       <AnimatePresence>
         {deletingListing && <DeleteConfirm listing={deletingListing} onClose={() => setDeletingListing(null)} onDelete={handleDelete} />}
         {boostingListing && <BoostModal listing={boostingListing} onClose={() => setBoostingListing(null)} onBoost={handleBoost} />}
+        {showBulkDeleteConfirm && (
+          <BulkDeleteConfirm
+            count={selectedIds.size}
+            onClose={() => setShowBulkDeleteConfirm(false)}
+            onDelete={handleBulkDelete}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
