@@ -9,15 +9,17 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 /**
- * Safely attempt to refresh the Supabase auth session.
- * Returns within `timeoutMs` no matter what — never hangs.
- * Use this before write operations. Do NOT use before public reads.
+ * Safely warm up the Supabase auth session before write operations.
+ * Uses getSession (read-only, no network call when token is fresh) so the
+ * GoTrue lock is acquired and released quickly. If the lock is already stuck
+ * the call resolves after `timeoutMs` (default 6 s — enough for GoTrue's
+ * own 5 s forced-release to kick in) and execution continues normally.
  */
-export async function safeRefreshSession(timeoutMs = 3000): Promise<void> {
+export async function safeRefreshSession(timeoutMs = 6000): Promise<void> {
   try {
-    const refresh = supabase.auth.refreshSession();
+    const session = supabase.auth.getSession();
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, timeoutMs));
-    await Promise.race([refresh, timeout]);
+    await Promise.race([session, timeout]);
   } catch {
     // Silently ignore — the operation will proceed with whatever session exists
   }

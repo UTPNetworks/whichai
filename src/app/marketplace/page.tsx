@@ -124,22 +124,32 @@ const SellModal = ({ onClose }: { onClose: () => void }) => {
     if (!user) { alert('Please sign in to publish a listing.'); return; }
     setPublishing(true);
     try {
-      // Refresh session before write (with 3s hard timeout — never hangs)
-      await safeRefreshSession();
+      // Warm up auth — give GoTrue up to 6 s to release any stuck lock
+      await safeRefreshSession(6000);
 
-      // Upload photos to Supabase Storage first
+      // Upload photos to Supabase Storage first.
+      // Each upload is raced against a 15 s timeout so a stuck auth lock
+      // can never cause the whole publish to hang indefinitely.
       const photoUrls: string[] = [];
       if (photos.length > 0) {
         for (let i = 0; i < photos.length; i++) {
           const photo = photos[i];
           const ext = photo.file.name.split('.').pop() || 'jpg';
           const path = `listings/${user.id}/${Date.now()}-${i}.${ext}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('listing-photos')
-            .upload(path, photo.file, { upsert: true });
-          if (!uploadError && uploadData) {
-            const { data: urlData } = supabase.storage.from('listing-photos').getPublicUrl(uploadData.path);
-            if (urlData?.publicUrl) photoUrls.push(urlData.publicUrl);
+          try {
+            const uploadPromise = supabase.storage
+              .from('listing-photos')
+              .upload(path, photo.file, { upsert: true });
+            const uploadTimeout = new Promise<{ data: null; error: Error }>((resolve) =>
+              setTimeout(() => resolve({ data: null, error: new Error('Upload timed out') }), 15000)
+            );
+            const { data: uploadData, error: uploadError } = await Promise.race([uploadPromise, uploadTimeout]) as any;
+            if (!uploadError && uploadData) {
+              const { data: urlData } = supabase.storage.from('listing-photos').getPublicUrl(uploadData.path);
+              if (urlData?.publicUrl) photoUrls.push(urlData.publicUrl);
+            }
+          } catch {
+            // Skip failed photo — listing still publishes without it
           }
         }
       }
