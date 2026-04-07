@@ -45,6 +45,7 @@ const hubs = [
     id: "marketplace",
     href: "/marketplace",
     label: "Marketplace",
+    subtitle: "Buy • Sell • Bid",
     icon: ShoppingBag,
     tagline: "Commerce",
     description: "The primary hub for AI commerce. Buy and sell agents, models, and premium prompt packages.",
@@ -56,6 +57,7 @@ const hubs = [
     id: "know-your-ai",
     href: "/know-your-ai",
     label: "Know Your AI",
+    subtitle: "Compare • Source APIs • Claim Perks",
     icon: Brain,
     tagline: "Intelligence",
     description: "Real-time benchmarking and model comparison engine for the latest LLMs.",
@@ -67,6 +69,7 @@ const hubs = [
     id: "learning-hub",
     href: "/learning-hub",
     label: "Learning Hub",
+    subtitle: "Learn • Teach • Build AI",
     icon: BookOpen,
     tagline: "Evolution",
     description: "Master the machine with curated paths, hands-on labs, and certificates.",
@@ -78,6 +81,7 @@ const hubs = [
     id: "ai-forge",
     href: "/ai-task-board",
     label: "AI Forge",
+    subtitle: "Post Bounties • Hunt Tasks",
     icon: Briefcase,
     tagline: "Creation",
     description: "Post bounties and find tasks for the elite global AI developer network.",
@@ -89,6 +93,7 @@ const hubs = [
     id: "prompt-hub",
     href: "/prompt-hub",
     label: "Prompt Hub",
+    subtitle: "Discover • Draft • Engineer",
     icon: MessageSquare,
     tagline: "Linguistics",
     description: "High-precision LLM prompt engineering packages for every major model.",
@@ -100,6 +105,7 @@ const hubs = [
     id: "community",
     href: "/community",
     label: "Community",
+    subtitle: "Build • Connect • Debate",
     icon: Users,
     tagline: "Signal",
     description: "Collaborative building, gossip, and reputation-backed networking.",
@@ -111,6 +117,7 @@ const hubs = [
     id: "compute-exchange",
     href: "/gpurentals",
     label: "GPU Rentals",
+    subtitle: "Rent Compute • Host Nodes",
     icon: Cpu,
     tagline: "Infrastructure",
     description: "Rent H100 clusters or monetize your own hardware nodes via decentralized P2P orchestration.",
@@ -261,9 +268,12 @@ export default function HubPage() {
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] dark:text-white/40 text-slate-500">
                               {hub.tagline}
                             </span>
-                            <h2 className="text-2xl md:text-3xl font-black dark:text-white text-slate-900">
+                            <h2 className="text-2xl md:text-3xl font-black dark:text-white text-slate-900 leading-none">
                               {hub.label}
                             </h2>
+                            <p className="text-xs text-gray-400 font-medium tracking-widest uppercase mt-3 transition-all duration-300 group-hover:text-blue-500 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                              {(hub as any).subtitle}
+                            </p>
                           </div>
                         </div>
                         <p className="text-sm md:text-base dark:text-white/60 text-slate-600 leading-relaxed max-w-md">
