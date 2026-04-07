@@ -201,7 +201,7 @@ export default function HubPage() {
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className="absolute -top-3 -right-3 z-50 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.8)] animate-pulse-slow"
+                      className="absolute top-6 left-1/2 -translate-x-1/2 z-20 bg-blue-600 text-white text-sm font-bold px-4 py-1.5 rounded-full border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.8)] animate-pulse-slow"
                     >
                       {matchCount}
                     </motion.div>
