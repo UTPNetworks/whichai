@@ -21,6 +21,8 @@ const coursesData = [
     thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
     description: "Master the art of communicating with large language models through structured frameworks and advanced heuristics.",
     stats: { students: "12.4k", rating: "4.9", duration: "6h" },
+    externalUrl: "https://example.com/courses/prompt-engineering",
+    pdfUrl: "/syllabus/prompt-engineering.pdf",
     syllabus: [
       { title: "Introduction to LLM Architectures", duration: "45m" },
       { title: "Zero-shot vs. Few-shot Prompting", duration: "1h 15m" },
@@ -37,6 +39,8 @@ const coursesData = [
     thumbnail: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
     description: "Deep dive into A100/H100 orchestration, CUDA kernels, and scaling distributed training clusters.",
     stats: { students: "8.2k", rating: "4.8", duration: "12h" },
+    externalUrl: "https://example.com/courses/gpu-infra",
+    pdfUrl: "/syllabus/gpu-infra.pdf",
     syllabus: [
       { title: "GPU Architecture Fundamentals", duration: "2h" },
       { title: "Kubernetes for AI Workloads", duration: "3h" },
@@ -67,13 +71,15 @@ export default function CoursePage() {
             <ArrowLeft size={16} /> Back to Hub
           </Link>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 text-[11px] font-black uppercase tracking-wider shadow-lg shadow-amber-200/50 cursor-pointer hover:scale-105 transition-all"
-          >
-            <Sparkles size={14} className="fill-current" /> Unlock Pro Membership
-          </motion.div>
+          <Link href="/pro">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 text-[11px] font-black uppercase tracking-wider shadow-lg shadow-amber-200/50 cursor-pointer hover:scale-105 hover:brightness-110 transition-all"
+            >
+              <Sparkles size={14} className="fill-current" /> Unlock Pro Membership
+            </motion.div>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -165,12 +171,21 @@ export default function CoursePage() {
                 />
                 
                 <div className="space-y-3">
-                  <button className="w-full py-4 rounded-2xl bg-slate-900 text-white font-black text-sm hover:bg-black transition-all flex items-center justify-center gap-2 group">
+                  <a 
+                    href={course.externalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-4 rounded-2xl bg-slate-900 text-white font-black text-sm hover:bg-black hover:shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                  >
                     Access External Course <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </button>
-                  <button className="w-full py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 font-black text-sm hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                  </a>
+                  <a 
+                    href={course.pdfUrl}
+                    download
+                    className="w-full py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 font-black text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
                     Download Syllabus PDF <Download size={18} />
-                  </button>
+                  </a>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
@@ -193,9 +208,11 @@ export default function CoursePage() {
                 <p className="text-xs text-slate-400 mb-6 leading-relaxed">
                   Join 50,000+ engineers. Get unlimited access to all masterclasses, private labs, and 1-on-1 mentorship.
                 </p>
-                <button className="w-full py-3 rounded-xl bg-white text-slate-900 font-black text-xs hover:bg-slate-100 transition-all active:scale-95">
-                  Upgrade Now — $29/mo
-                </button>
+                <Link href="/pro" className="block w-full">
+                  <button className="w-full py-3 rounded-xl bg-white text-slate-900 font-black text-xs hover:bg-slate-100 transition-all active:scale-95 cursor-pointer">
+                    Upgrade Now — $29/mo
+                  </button>
+                </Link>
               </div>
             </motion.div>
           </div>
@@ -204,12 +221,21 @@ export default function CoursePage() {
 
       {/* Mobile Sticky Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-slate-200 flex gap-3 lg:hidden z-50">
-        <button className="flex-1 py-4 rounded-2xl bg-slate-900 text-white font-black text-xs hover:bg-black transition-all flex items-center justify-center gap-2">
+        <a 
+          href={course.externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 py-4 rounded-2xl bg-slate-900 text-white font-black text-xs hover:bg-black transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
           Access Course <ExternalLink size={16} />
-        </button>
-        <button className="px-6 py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 font-black text-xs hover:bg-slate-50 transition-all flex items-center justify-center">
+        </a>
+        <a 
+          href={course.pdfUrl}
+          download
+          className="px-6 py-4 rounded-2xl bg-white border border-slate-200 text-slate-900 font-black text-xs hover:bg-slate-50 transition-all flex items-center justify-center cursor-pointer"
+        >
           <Download size={18} />
-        </button>
+        </a>
       </div>
     </div>
   );
