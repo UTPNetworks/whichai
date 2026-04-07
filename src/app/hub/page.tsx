@@ -20,6 +20,7 @@ const SEARCH_CATEGORIES = [
   { id: "ai-forge", label: "AI Forge", icon: Briefcase, href: "/ai-task-board", color: "from-amber-500 to-orange-600", count: "500+", desc: "AI dev tasks & bounties" },
   { id: "prompt-hub", label: "Prompt Hub", icon: MessageSquare, href: "/prompt-hub", color: "from-pink-500 to-rose-600", count: "4,800+", desc: "Buy, sell & share prompts" },
   { id: "community", label: "Community", icon: Users, href: "/community", color: "from-indigo-500 to-violet-600", count: "52K+", desc: "Discuss, learn & connect" },
+  { id: "compute-exchange", label: "Compute Exchange", icon: Cpu, href: "/marketplace?tab=compute-hub", color: "from-slate-800 to-slate-950", count: "1.2K+", desc: "Rent GPUs & host rigs" },
 ];
 
 function UniversalSearchBar({ query, setQuery }: { query: string; setQuery: (q: string) => void }) {
@@ -236,6 +237,29 @@ const hubs = [
     ],
     keywords: { nvidia: 65, gpu: 40, llm: 320, chatgpt: 280, openai: 195, model: 110, agent: 75, discussion: 500, space: 250, thread: 180 },
   },
+  {
+    id: "compute-exchange",
+    href: "/marketplace?tab=compute-hub",
+    label: "Compute & GPU Exchange",
+    tagline: "Infrastructure",
+    description: "The world's first decentralized AI compute marketplace. Rent high-performance H100s, A100s, and RTX clusters, or monetize your own idle hardware by hosting a rig.",
+    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&h=400&fit=crop&q=80",
+    categoryColor: "bg-slate-900/80",
+    tagBg: "bg-cyan-50", tagText: "text-cyan-700",
+    arrowBg: "bg-cyan-50", arrowText: "text-cyan-600",
+    popupBorder: "border-l-cyan-600",
+    popupCountColor: "text-cyan-600",
+    cta: "Exchange Compute",
+    tags: ["Rent GPUs", "Host Your Rig", "Server Credits"],
+    stats: [{ val: "1.2k", label: "nodes" }, { val: "99.9%", label: "uptime" }],
+    details: [
+      { icon: Zap, text: "Instant SSH/Jupyter access" },
+      { icon: Cpu, text: "Multi-cloud & P2P nodes" },
+      { icon: Shield, text: "Secure, encrypted workloads" },
+    ],
+    keywords: { nvidia: 890, gpu: 1560, h100: 420, a100: 580, rtx: 920, cluster: 340, node: 1200, rent: 450, host: 310, compute: 2100 },
+    isLarge: true,
+  },
 ];
 
 // ── Search popup for each tile ─────────────────────────────────────────
@@ -342,19 +366,30 @@ export default function HubPage() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08 + i * 0.08, duration: 0.5, ease: "easeOut" }}
+              className={(hub as any).isLarge ? "col-span-1 md:col-span-3" : ""}
             >
               <Link href={hub.href} className="block group">
-                <div className="relative rounded-2xl overflow-hidden bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.04)] transition-all duration-400 group-hover:-translate-y-1.5 group-hover:scale-[1.01]">
+                <div className={`relative rounded-2xl overflow-hidden bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.03)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.04)] transition-all duration-400 group-hover:-translate-y-1.5 group-hover:scale-[1.005] ${
+                  (hub as any).isLarge ? "bg-gradient-to-r from-slate-950 via-purple-950 to-cyan-950 border-cyan-500/20" : ""
+                }`}>
+                  
+                  {/* High-tech animated glow for large card */}
+                  {(hub as any).isLarge && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-cyan-500/10 to-purple-500/10 animate-gradient-x opacity-40" />
+                      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+                    </div>
+                  )}
 
                   {/* ── Image area ── */}
-                  <div className="relative w-full h-[158px] overflow-hidden">
+                  <div className={`relative w-full overflow-hidden ${(hub as any).isLarge ? "h-[120px] md:h-[180px]" : "h-[158px]"}`}>
                     <img
                       src={hub.image}
                       alt={hub.label}
-                      className="w-full h-full object-cover transition-all duration-600 group-hover:scale-[1.08] group-hover:brightness-105"
+                      className={`w-full h-full object-cover transition-all duration-600 group-hover:scale-[1.08] group-hover:brightness-105 ${(hub as any).isLarge ? "opacity-50 grayscale hover:grayscale-0" : ""}`}
                     />
                     {/* Gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/[0.06] pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/[0.1] pointer-events-none" />
 
                     {/* Category pill */}
                     <span className={`absolute top-2.5 left-2.5 z-10 text-[8.5px] font-bold uppercase tracking-wider px-3 py-1 rounded-full text-white backdrop-blur-xl border border-white/30 ${hub.categoryColor} transition-transform duration-300 group-hover:scale-105`}>
@@ -372,47 +407,75 @@ export default function HubPage() {
 
                     {/* Search popup */}
                     <AnimatePresence>
-                      <TileSearchPopup hub={hub} query={searchQuery} />
+                      <TileSearchPopup hub={hub as any} query={searchQuery} />
                     </AnimatePresence>
                   </div>
 
-                  {/* ── White body ── */}
-                  <div className="p-3.5 pt-3.5">
-                    <h2 className="text-sm font-extrabold text-slate-900 mb-1 tracking-tight group-hover:text-indigo-600 transition-colors">
-                      {hub.label}
-                    </h2>
-                    <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5 line-clamp-2 group-hover:line-clamp-none group-hover:text-slate-600 transition-all">
-                      {hub.description}
-                    </p>
+                  {/* ── White body (or transparent for large) ── */}
+                  <div className={`p-3.5 pt-3.5 ${(hub as any).isLarge ? "bg-white/90 backdrop-blur-sm" : ""}`}>
+                    <div className={(hub as any).isLarge ? "flex flex-col md:flex-row md:items-center justify-between gap-4" : ""}>
+                      <div className="flex-1">
+                        <h2 className={`text-sm font-extrabold mb-1 tracking-tight transition-colors ${(hub as any).isLarge ? "text-slate-900 md:text-lg" : "text-slate-900 group-hover:text-indigo-600"}`}>
+                          {hub.label}
+                        </h2>
+                        <p className={`text-[11px] leading-relaxed mb-2.5 transition-all ${(hub as any).isLarge ? "text-slate-600 md:text-sm md:max-w-2xl" : "text-slate-500 line-clamp-2 group-hover:line-clamp-none group-hover:text-slate-600"}`}>
+                          {hub.description}
+                        </p>
 
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1 mb-2.5">
-                      {hub.tags.map((tag) => (
-                        <span key={tag} className={`text-[9px] font-semibold px-2 py-0.5 rounded-md ${hub.tagBg} ${hub.tagText} transition-transform duration-300 group-hover:-translate-y-px`}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Hover details */}
-                    <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-[120px] group-hover:opacity-100 transition-all duration-400">
-                      <div className="pt-2 border-t border-slate-100 mt-0.5">
-                        {hub.details.map((detail, di) => {
-                          const DetailIcon = detail.icon;
-                          return (
-                            <div key={di} className="flex items-center gap-1.5 mb-1">
-                              <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${hub.tagBg}`}>
-                                <DetailIcon className={`w-2.5 h-2.5 ${hub.tagText}`} />
-                              </div>
-                              <span className="text-[9.5px] text-slate-500">{detail.text}</span>
-                            </div>
-                          );
-                        })}
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1 mb-2.5">
+                          {hub.tags.map((tag) => (
+                            <span key={tag} className={`text-[9px] font-semibold px-2 py-0.5 rounded-md ${hub.tagBg} ${hub.tagText} transition-transform duration-300 group-hover:-translate-y-px`}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
+
+                      {/* CTA for large card desktop */}
+                      {(hub as any).isLarge && (
+                        <div className="hidden md:flex flex-col items-end gap-3">
+                          <div className="flex gap-4">
+                            {hub.details.map((detail, di) => {
+                              const DetailIcon = detail.icon;
+                              return (
+                                <div key={di} className="flex items-center gap-1.5">
+                                  <div className={`w-5 h-5 rounded flex items-center justify-center ${hub.tagBg}`}>
+                                    <DetailIcon className={`w-3 h-3 ${hub.tagText}`} />
+                                  </div>
+                                  <span className="text-[10px] font-semibold text-slate-600">{detail.text}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-black transition-all">
+                            {hub.cta} <ArrowRight size={14} />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    {/* CTA */}
-                    <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
+                    {/* Hover details (hidden for large since they are in the row) */}
+                    {!(hub as any).isLarge && (
+                      <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-[120px] group-hover:opacity-100 transition-all duration-400">
+                        <div className="pt-2 border-t border-slate-100 mt-0.5">
+                          {hub.details.map((detail, di) => {
+                            const DetailIcon = detail.icon;
+                            return (
+                              <div key={di} className="flex items-center gap-1.5 mb-1">
+                                <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${hub.tagBg}`}>
+                                  <DetailIcon className={`w-2.5 h-2.5 ${hub.tagText}`} />
+                                </div>
+                                <span className="text-[9.5px] text-slate-500">{detail.text}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CTA Mobile / Normal */}
+                    <div className={`flex items-center justify-between pt-2.5 border-t border-slate-100 ${(hub as any).isLarge ? "md:hidden" : ""}`}>
                       <span className="text-[11px] font-bold text-slate-600 group-hover:text-indigo-600 transition-colors">{hub.cta}</span>
                       <div className={`w-7 h-7 rounded-full ${hub.arrowBg} flex items-center justify-center transition-all duration-300 group-hover:translate-x-0.5 group-hover:scale-110`}>
                         <ArrowRight className={`w-3.5 h-3.5 ${hub.arrowText}`} />
