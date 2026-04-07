@@ -72,7 +72,7 @@ function CourseTile({ course }: { course: typeof coursesData[0] }) {
   return (
     <Link href={`/course/${course.id}`} className="block h-full">
       <motion.div 
-        whileHover={{ y: -6, shadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+        whileHover={{ y: -6, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
         className="group bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all flex flex-col h-full cursor-pointer hover:border-purple-300"
       >
         {/* Top Half: 16:9 Thumbnail with Hover Zoom */}
