@@ -20,7 +20,7 @@ const SEARCH_CATEGORIES = [
   { id: "ai-forge", label: "AI Forge", icon: Briefcase, href: "/ai-task-board", color: "from-amber-500 to-orange-600", count: "500+", desc: "AI dev tasks & bounties" },
   { id: "prompt-hub", label: "Prompt Hub", icon: MessageSquare, href: "/prompt-hub", color: "from-pink-500 to-rose-600", count: "4,800+", desc: "Buy, sell & share prompts" },
   { id: "community", label: "Community", icon: Users, href: "/community", color: "from-indigo-500 to-violet-600", count: "52K+", desc: "Discuss, learn & connect" },
-  { id: "compute-exchange", label: "Compute Exchange", icon: Cpu, href: "/marketplace?tab=compute-hub", color: "from-slate-800 to-slate-950", count: "1.2K+", desc: "Rent GPUs & host rigs" },
+  { id: "compute-exchange", label: "Compute Exchange", icon: Cpu, href: "/gpurentals", color: "from-slate-800 to-slate-950", count: "1.2K+", desc: "Rent GPUs & host rigs" },
 ];
 
 function UniversalSearchBar({ query, setQuery }: { query: string; setQuery: (q: string) => void }) {
@@ -239,7 +239,7 @@ const hubs = [
   },
   {
     id: "compute-exchange",
-    href: "/marketplace?tab=compute-hub",
+    href: "/gpurentals",
     label: "Compute & GPU Exchange",
     tagline: "Infrastructure",
     description: "The world's first decentralized AI compute marketplace. Rent high-performance H100s, A100s, and RTX clusters, or monetize your own idle hardware by hosting a rig.",
