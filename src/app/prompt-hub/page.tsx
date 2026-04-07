@@ -29,36 +29,44 @@ function CollectionCard({
   const group = CATEGORY_GROUPS.find((g) => g.id === collection.category);
 
   return (
-    <Link href={`/prompt-hub/${collection.slug}`}>
+    <Link href={`/prompt-hub/${collection.slug}`} className="block h-full">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.04, duration: 0.3 }}
-        className="group relative bg-white rounded-2xl border border-gray-200 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-100/40 transition-all duration-300 p-5 flex items-start gap-4 cursor-pointer"
+        transition={{ delay: index * 0.04, duration: 0.4 }}
+        whileHover={{ scale: 1.02 }}
+        className="group relative h-full bg-white rounded-lg border border-gray-200 hover:border-purple-400 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col overflow-hidden cursor-pointer"
       >
-        {/* Emoji icon */}
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-          style={{ background: (group?.color || '#6366f1') + '15' }}
-        >
-          {collection.emoji}
-        </div>
-
-        {/* Text */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-slate-900 text-sm leading-snug mb-1 group-hover:text-violet-700 transition-colors">
-            {collection.title}
-          </h3>
-          <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-2">
-            {collection.description}
-          </p>
-          <span className="text-[11px] font-semibold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-full">
-            {collection.prompts.length} ready-to-use prompts
+        {/* Visual Top Section */}
+        <div className="relative aspect-video h-28 md:h-32 overflow-hidden bg-slate-50 flex items-center justify-center">
+          <div className="text-4xl group-hover:scale-110 transition-transform duration-500">
+            {collection.emoji}
+          </div>
+          <div className="absolute inset-0 bg-black/[0.02] group-hover:bg-transparent transition-colors" />
+          
+          <span className="absolute top-2 left-2 z-10 px-1.5 py-0.5 text-[9px] font-bold rounded bg-purple-50 text-purple-700 uppercase tracking-wider border border-purple-100/50">
+            {group?.label || 'Collection'}
           </span>
         </div>
 
-        {/* Arrow */}
-        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
+        {/* Text Section */}
+        <div className="p-3 flex flex-col h-full">
+          <h3 className="font-bold text-slate-900 text-[13px] mb-0.5 leading-snug group-hover:text-purple-700 transition-colors line-clamp-1">
+            {collection.title}
+          </h3>
+          <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 mb-3">
+            {collection.description}
+          </p>
+          
+          <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
+            <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
+              {collection.prompts.length} Prompts
+            </span>
+            <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:text-purple-500 group-hover:bg-purple-50 transition-all">
+              <ChevronRight size={14} />
+            </div>
+          </div>
+        </div>
       </motion.div>
     </Link>
   );
@@ -258,8 +266,8 @@ export default function PromptHubPage() {
                   </span>
                 </div>
 
-                {/* Collection cards grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Collection cards grid - MATCHING MARKETPLACE */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   {collections.map((collection, i) => (
                     <CollectionCard
                       key={collection.slug}
