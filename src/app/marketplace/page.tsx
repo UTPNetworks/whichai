@@ -517,25 +517,25 @@ export default function MarketplacePage() {
     <div className="min-h-screen bg-[#f4f0eb]">
       <div className="relative z-50 bg-[#f4f0eb]/80 backdrop-blur-sm border-b border-gray-200"><Navbar /></div>
             {/* ═══ HERO ═══ */}
-      <section className="relative z-10 bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 py-10 md:py-12 overflow-hidden">
+      <section className="relative z-10 bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 py-6 md:py-8 overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold mb-2">
                 <Store className="w-3.5 h-3.5" /> World&apos;s First AI Marketplace
               </div>
-              <h1 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">Buy, Sell &amp; Auction<br /><span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">Everything AI</span></h1>
+              <h1 className="text-2xl md:text-3xl font-black text-white mb-1 leading-tight">Buy, Sell &amp; Auction<br /><span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">Everything AI</span></h1>
               <p className="text-white/75 text-sm max-w-lg leading-relaxed">From prompts and agents to GPUs and servers — the eBay + Shopify for AI. Every transaction protected by escrow.</p>
               
-              <div className="flex gap-8 mt-6">
+              <div className="flex gap-6 mt-3">
                 {[{ n: '12,400+', l: 'Listings' }, { n: '6,800+', l: 'Sellers' }, { n: '$2.3M+', l: 'Transacted' }, { n: '4.9★', l: 'Trust Score' }].map((s) => (
-                  <div key={s.l}><div className="text-2xl font-black text-white">{s.n}</div><div className="text-[10px] text-white/55 font-medium uppercase tracking-wide">{s.l}</div></div>
+                  <div key={s.l}><div className="text-xl font-black text-white">{s.n}</div><div className="text-[10px] text-white/55 font-medium uppercase tracking-wide">{s.l}</div></div>
                 ))}
               </div>
 
               {/* Compact Escrow Badge */}
-              <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
+              <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
                 <Shield className="w-4 h-4 text-cyan-300" />
                 <span className="text-xs font-bold text-white/95 tracking-wide">
                   Protected by WhichAI Escrow — <span className="text-cyan-300">0% fee on first 3 sales</span>
@@ -543,7 +543,7 @@ export default function MarketplacePage() {
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <motion.button onClick={() => setShowSellModal(true)} whileHover={{ scale: 1.05, y: -2 }} className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-purple-700 bg-white shadow-lg hover:shadow-xl transition-all">
+              <motion.button onClick={() => setShowSellModal(true)} whileHover={{ scale: 1.05, y: -2 }} className="flex items-center gap-2.5 px-7 py-3 rounded-2xl font-bold text-purple-700 bg-white shadow-lg hover:shadow-xl transition-all">
                 <Plus className="w-5 h-5" /> List Your Item
               </motion.button>
             </div>
@@ -551,11 +551,11 @@ export default function MarketplacePage() {
         </div>
       </section>
             {/* ═══ CATEGORY GRID ═══ */}
-      <section className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-4">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Browse Categories</h3>
+      <section className="max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-2">
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Browse Categories</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {MARKETPLACE_CATEGORIES.map((cat) => (
-            <motion.button key={cat.id} whileHover={{ y: -1, scale: 1.01 }} onClick={() => setActiveCategory2(cat.id)} className={`flex items-center gap-2 px-3 py-2 rounded-lg border bg-white text-left transition-all ${activeCategory2 === cat.id ? 'border-purple-400 bg-purple-50/60 shadow-sm' : 'border-gray-200 hover:border-purple-200'}`}>
+            <motion.button key={cat.id} whileHover={{ y: -1, scale: 1.01 }} onClick={() => setActiveCategory2(cat.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-white text-left transition-all ${activeCategory2 === cat.id ? 'border-purple-400 bg-purple-50/60 shadow-sm' : 'border-gray-200 hover:border-purple-200'}`}>
               <span className="w-7 h-7 rounded-md flex items-center justify-center text-base flex-shrink-0" style={{ background: cat.color }}>{cat.emoji}</span>
               <div className="min-w-0"><div className="text-[10.5px] font-bold text-slate-800 truncate">{cat.label}</div><div className="text-[9px] text-slate-400">{cat.count.toLocaleString()}</div></div>
             </motion.button>
@@ -563,13 +563,13 @@ export default function MarketplacePage() {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-3">
         <main className="min-w-0">
           {/* ── UNIFIED TOOLBAR ── */}
-          <div className="mb-6 space-y-4">
-            <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+          <div className="mb-3 space-y-2">
+            <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
               {/* Search + Filter Toggle */}
-              <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm focus-within:border-purple-400 transition-all">
+              <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1 shadow-sm focus-within:border-purple-400 transition-all">
                 <div className="pl-3 text-slate-400"><SearchIcon size={18} /></div>
                 <input
                   type="text"
@@ -589,7 +589,7 @@ export default function MarketplacePage() {
               </div>
 
               {/* Location Tools Consolidated */}
-              <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
                 <div className="flex items-center gap-2 px-2">
                   <MapPin size={14} className="text-slate-400" />
                   <input
@@ -637,17 +637,11 @@ export default function MarketplacePage() {
             </AnimatePresence>
           </div>
 
-          <div className="mb-6 flex gap-3">
-            <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowMap(!showMap)} className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${ showMap ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`}>
-              📍 {showMap ? 'Hide' : 'Show'} Map
-            </motion.button>
-          </div>
-          {showMap && userLocation && (<MapView listings={filteredListings} userLocation={userLocation} radiusMiles={searchRadius} />)}
           <ComputeHeatmap />
           {filteredListings.filter((l) => l.techSpecs?.gpuType).length > 0 && (<CompatibilityChecker listing={filteredListings.find((l) => l.techSpecs?.gpuType)!} />)}
           
           {/* ── VIEW MODE TOGGLE ── */}
-          <div className="mb-8 flex justify-center">
+          <div className="mb-4 flex justify-center">
             <div className="relative p-1 bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl shadow-xl flex items-center gap-1">
               <motion.div
                 className="absolute h-[calc(100%-8px)] rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shadow-purple-500/20"
@@ -673,9 +667,9 @@ export default function MarketplacePage() {
             </div>
           </div>
 
-          <motion.section className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <Sparkles size={24} className="text-purple-500" />
+          <motion.section className="mb-6">
+            <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Sparkles size={20} className="text-purple-500" />
               {viewMode === 'listings' ? 'Marketplace Listings' : 'Live Auctions'}
             </h2>
             <AnimatePresence mode="wait">
@@ -685,7 +679,7 @@ export default function MarketplacePage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                className="grid grid-cols-1 md:grid-cols-4 gap-3"
               >
                 {viewMode === 'listings' ? (
                   filteredListings.map((listing, idx) => (<ListingCardV3 key={listing.id} listing={listing} index={idx} onCompare={handleCompare} />))
@@ -697,8 +691,8 @@ export default function MarketplacePage() {
               </motion.div>
             </AnimatePresence>
             {filteredListings.length === 0 && (
-              <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-200">
-                <SearchIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <div className="text-center py-8 bg-gray-50 rounded-2xl border border-gray-200">
+                <SearchIcon className="w-10 h-10 text-gray-400 mx-auto mb-4" />
                 <p className="text-slate-700 font-medium">No {viewMode} found.</p>
                 <p className="text-slate-500 text-sm mt-1">Try a different search or category.</p>
               </div>
