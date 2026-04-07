@@ -22,6 +22,9 @@ import {
   MessageSquare,
   Sparkles,
   Zap,
+  Globe,
+  Layers,
+  User,
 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
@@ -591,19 +594,4 @@ function NewSpaceModal({ isOpen, onClose, onSubmit }: any) {
   );
 }
 
-// CheckCircle placeholder fix
-function CheckCircle({ size, className }: { size: number, className: string }) {
-  return <CheckCircle2 size={size} className={className} />;
-}
-function CheckCircle2({ size, className }: { size: number, className: string }) {
-  return <Check size={size} className={className} />;
-}
-function User({ size, className }: { size: number, className?: string }) {
-  return <Users size={size} className={className} />;
-}
-function Layers({ size, className }: { size: number, className?: string }) {
-  return <LayersIcon size={size} className={className} />;
-}
-function LayersIcon({ size, className }: { size: number, className?: string }) {
-  return <TrendingUp size={size} className={className} />; // Fallback icon for Layers
-}
+
