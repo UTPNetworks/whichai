@@ -6,7 +6,7 @@ import {
   Store, Upload, Code2, Eye, Mic, Image, Globe, Zap, BadgeCheck, ChevronRight,
   Brain, Monitor, X, Sparkles, Loader2, Tag, ShoppingBag, Search as SearchIcon,
   Key, MessageSquare, Cpu, Shield, Clock, Package, Download, Gavel, MessageCircle,
-  Plus, MapPin,
+  Plus, MapPin, Filter,
 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar'
