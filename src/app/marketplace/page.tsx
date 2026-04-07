@@ -17,7 +17,6 @@ import LocationSearch from '@/components/marketplace/LocationSearch';
 import MapView from '@/components/marketplace/MapView';
 import ListingCardV3 from '@/components/marketplace/ListingCardV3';
 import AuctionCard from '@/components/marketplace/AuctionCard';
-import ComputeHeatmap from '@/components/marketplace/ComputeHeatmap';
 import CompatibilityChecker from '@/components/marketplace/CompatibilityChecker';
 import {
   allListingsV3, getListingsByCategory, type MarketplaceCategory,
@@ -484,7 +483,15 @@ export default function MarketplacePage() {
     });
     // When user is actively searching, skip category filters (like eBay/Amazon behavior)
     if (!searchQuery) {
-      if (activeCategory2) { filtered = filtered.filter((l) => l.bigCategory === activeCategory2); } else if (bigTab !== 'all') { filtered = filtered.filter((l) => l.bigCategory === bigTab); }
+      if (activeCategory2) {
+        filtered = filtered.filter((l) => 
+          l.bigCategory === activeCategory2 || 
+          l.subcategory.toLowerCase().includes(activeCategory2.toLowerCase()) ||
+          l.tags.some(t => t.toLowerCase().includes(activeCategory2.toLowerCase()))
+        );
+      } else if (bigTab !== 'all') {
+        filtered = filtered.filter((l) => l.bigCategory === bigTab);
+      }
     }
     if (userLocation) { filtered = filtered.filter((listing) => { if (!listing.location) return true; const dist = calculateDistance(userLocation.lat, userLocation.lng, listing.location.lat, listing.location.lng); return dist <= searchRadius; }); }
     if (!searchQuery) { filtered = filtered.filter((l) => l.price >= filters.priceRange[0] && l.price <= filters.priceRange[1]); }
@@ -555,9 +562,17 @@ export default function MarketplacePage() {
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Browse Categories</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {MARKETPLACE_CATEGORIES.map((cat) => (
-            <motion.button key={cat.id} whileHover={{ y: -1, scale: 1.01 }} onClick={() => setActiveCategory2(cat.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-white text-left transition-all ${activeCategory2 === cat.id ? 'border-purple-400 bg-purple-50/60 shadow-sm' : 'border-gray-200 hover:border-purple-200'}`}>
-              <span className="w-7 h-7 rounded-md flex items-center justify-center text-base flex-shrink-0" style={{ background: cat.color }}>{cat.emoji}</span>
-              <div className="min-w-0"><div className="text-[10.5px] font-bold text-slate-800 truncate">{cat.label}</div><div className="text-[9px] text-slate-400">{cat.count.toLocaleString()}</div></div>
+            <motion.button 
+              key={cat.id} 
+              whileHover={{ y: -1, scale: 1.01 }} 
+              onClick={() => setActiveCategory2(activeCategory2 === cat.id ? '' : cat.id)} 
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-left transition-all ${activeCategory2 === cat.id ? 'border-purple-600 bg-purple-600 text-white shadow-md' : 'border-gray-200 bg-white text-slate-800 hover:border-purple-200'}`}
+            >
+              <span className={`w-7 h-7 rounded-md flex items-center justify-center text-base flex-shrink-0 ${activeCategory2 === cat.id ? 'bg-white/20' : ''}`} style={activeCategory2 === cat.id ? {} : { background: cat.color }}>{cat.emoji}</span>
+              <div className="min-w-0">
+                <div className={`text-[10.5px] font-bold truncate ${activeCategory2 === cat.id ? 'text-white' : 'text-slate-800'}`}>{cat.label}</div>
+                <div className={`text-[9px] ${activeCategory2 === cat.id ? 'text-white/70' : 'text-slate-400'}`}>{cat.count.toLocaleString()}</div>
+              </div>
             </motion.button>
           ))}
         </div>
@@ -576,6 +591,12 @@ export default function MarketplacePage() {
                   placeholder="Search prompts, GPUs, models..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      // Active search logic - already reactive but explicit Enter confirms
+                      console.log('Searching for:', searchQuery);
+                    }
+                  }}
                   className="flex-1 bg-transparent py-2 text-sm outline-none text-slate-800 placeholder:text-slate-400"
                 />
                 <button
@@ -637,7 +658,6 @@ export default function MarketplacePage() {
             </AnimatePresence>
           </div>
 
-          <ComputeHeatmap />
           {filteredListings.filter((l) => l.techSpecs?.gpuType).length > 0 && (<CompatibilityChecker listing={filteredListings.find((l) => l.techSpecs?.gpuType)!} />)}
           
           {/* ── VIEW MODE TOGGLE ── */}
