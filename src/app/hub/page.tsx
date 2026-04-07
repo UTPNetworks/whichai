@@ -166,17 +166,17 @@ export default function HubPage() {
             Access the <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">Nexus</span>
           </motion.h1>
           
-          {/* ── 2. Omni-Search Bar ── */}
-          <div className="relative w-full max-w-2xl mx-auto z-50 group">
-            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
-              <Search size={20} />
+          {/* ── 2. Omni-Search Bar (Structural Fix) ── */}
+          <div className="relative w-full max-w-2xl mx-auto my-8">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+              <Search size={24} strokeWidth={2.5} />
             </div>
             <input
               type="text"
+              placeholder="Search the Nexus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Query the platform..."
-              className="w-full max-w-2xl mx-auto bg-white/80 backdrop-blur-md border border-gray-300 rounded-full px-6 py-4 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-md"
+              className="w-full bg-white backdrop-blur-md border-2 border-gray-200 rounded-full py-4 pl-16 pr-6 text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
             />
           </div>
         </div>
