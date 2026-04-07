@@ -75,12 +75,18 @@ function CollectionCard({
 // ── Main Page ────────────────────────────────────────────────────
 export default function PromptHubPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
 
-  // Filter collections by search
+  // Filter collections by search and category
   const filteredGroups = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
 
     return CATEGORY_GROUPS.map((group) => {
+      // If a category filter is active, skip groups that don't match
+      if (activeCategory !== 'All' && group.label !== activeCategory) {
+        return { group, collections: [] };
+      }
+
       const collections = getCollectionsByCategory(group.id);
 
       if (!q) return { group, collections };
@@ -97,7 +103,7 @@ export default function PromptHubPage() {
       );
       return { group, collections: filtered };
     }).filter((entry) => entry.collections.length > 0);
-  }, [searchQuery]);
+  }, [searchQuery, activeCategory]);
 
   const totalCollections = filteredGroups.reduce(
     (sum, entry) => sum + entry.collections.length,
@@ -216,6 +222,40 @@ export default function PromptHubPage() {
 
       {/* ── Main Content: Category sections ────────────────── */}
       <main className="max-w-6xl mx-auto px-6 py-10">
+        {/* Category Filter Bar */}
+        <div className="mb-10 relative">
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
+            <button
+              onClick={() => setActiveCategory('All')}
+              className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${
+                activeCategory === 'All'
+                  ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              All Categories
+            </button>
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+            {CATEGORY_GROUPS.map((group) => (
+              <button
+                key={group.id}
+                onClick={() => setActiveCategory(group.label)}
+                className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                  activeCategory === group.label
+                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 ring-2 ring-violet-100 ring-offset-1'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:border-violet-200 hover:text-violet-600'
+                }`}
+              >
+                <div 
+                  className={`w-1.5 h-1.5 rounded-full ${activeCategory === group.label ? 'bg-white' : ''}`} 
+                  style={{ background: activeCategory === group.label ? 'white' : group.color }} 
+                />
+                {group.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Results count */}
         {searchQuery && (
           <div className="flex items-center justify-between mb-6">
