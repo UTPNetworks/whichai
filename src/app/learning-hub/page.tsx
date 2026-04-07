@@ -72,11 +72,11 @@ function CourseTile({ course }: { course: typeof coursesData[0] }) {
   return (
     <Link href={`/course/${course.id}`} className="block h-full">
       <motion.div 
-        whileHover={{ y: -6, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
-        className="group bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all flex flex-col h-full cursor-pointer hover:border-purple-300"
+        whileHover={{ y: -4, boxShadow: "0 12px 20px -5px rgb(0 0 0 / 0.1)" }}
+        className="group bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm transition-all flex flex-col h-full cursor-pointer hover:border-purple-300"
       >
-        {/* Top Half: 16:9 Thumbnail with Hover Zoom */}
-        <div className="relative aspect-video overflow-hidden">
+        {/* Top Half: 16:9 Thumbnail with Hover Zoom - REDUCED HEIGHT */}
+        <div className="relative aspect-video h-28 md:h-32 overflow-hidden">
           <img 
             src={course.thumbnail} 
             alt={course.title}
@@ -85,37 +85,37 @@ function CourseTile({ course }: { course: typeof coursesData[0] }) {
           <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
         </div>
 
-        {/* Bottom Half: Content */}
-        <div className="p-5 flex-1 flex flex-col">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold uppercase tracking-wider">
+        {/* Bottom Half: Content - TIGHTER PADDING */}
+        <div className="p-3 flex-1 flex flex-col">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[9px] font-bold uppercase tracking-wider">
               {course.category}
             </span>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+            <span className="text-slate-400 text-[9px] font-bold uppercase tracking-widest truncate">
               {course.source}
             </span>
           </div>
 
-          <h3 className="text-lg font-black text-slate-900 leading-tight mb-2 group-hover:text-purple-600 transition-colors">
+          <h3 className="text-sm font-bold text-slate-900 leading-tight mb-1.5 group-hover:text-purple-600 transition-colors line-clamp-2">
             {course.title}
           </h3>
           
-          <p className="text-sm text-slate-600 line-clamp-2 mb-4 leading-relaxed">
+          <p className="text-[11px] text-slate-500 line-clamp-2 mb-3 leading-snug">
             {course.description}
           </p>
 
-          <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
-                <Users size={12} /> {course.stats.students}
+          <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5 text-[10px] font-bold text-slate-400">
+                <Users size={10} /> {course.stats.students}
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
-                <Star size={12} className="fill-current" /> {course.stats.rating}
+              <div className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
+                <Star size={10} className="fill-current" /> {course.stats.rating}
               </div>
             </div>
             
-            <div className="inline-flex items-center gap-1.5 text-purple-600 text-xs font-black group-hover:gap-2.5 transition-all">
-              Start Learning <ArrowRight size={14} />
+            <div className="inline-flex items-center gap-1 text-purple-600 text-[10px] font-black group-hover:gap-1.5 transition-all">
+              Start <ArrowRight size={12} />
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function LearningHubPage() {
         <Navbar />
       </div>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-[1600px] mx-auto px-6 py-12">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
@@ -165,8 +165,8 @@ export default function LearningHubPage() {
               transition={{ delay: 0.2 }}
               className="text-lg text-slate-600 leading-relaxed"
             >
-              Structured syllabuses from the world&apos;s leading institutions and researchers. 
-              Master everything from basic prompting to decentralized GPU orchestration.
+              Structured syllabuses from the world&apos;s leading institutions. 
+              Master everything from basic prompting to GPU orchestration.
             </motion.p>
           </div>
 
@@ -187,8 +187,8 @@ export default function LearningHubPage() {
           </motion.div>
         </div>
 
-        {/* Course Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Course Grid - DENSE LAYOUT */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-5">
           {filteredCourses.map((course, i) => (
             <CourseTile key={course.id} course={course} />
           ))}
