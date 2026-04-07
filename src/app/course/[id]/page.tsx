@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { 
   ArrowLeft, BookOpen, Clock, Users, Star, 
   CheckCircle2, FileText, Globe, GraduationCap, ChevronRight,
-  Award
+  Award, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -50,7 +50,9 @@ const coursesData = [
 
 export default function CoursePage() {
   const params = useParams();
-  const id = params?.id;
+  const id = params?.id as string;
+  
+  // Safety check for course lookup
   const course = coursesData.find(c => c.id === id) || coursesData[0];
 
   return (
