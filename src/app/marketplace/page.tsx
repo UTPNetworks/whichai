@@ -624,31 +624,34 @@ export default function MarketplacePage() {
 
               {/* Location Tools Consolidated */}
               <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm">
-                <input
-                  type="text"
-                  placeholder="Zip Code"
-                  value={filters.zipCode}
-                  onChange={(e) => setFilters({...filters, zipCode: e.target.value})}
-                  className="w-24 bg-slate-50 border border-gray-100 py-2 px-3 rounded-lg text-sm outline-none focus:border-purple-300"
-                />
+                <div className="flex items-center gap-2 px-2">
+                  <MapPin size={14} className="text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Zip Code"
+                    value={filters.zipCode}
+                    onChange={(e) => setFilters({...filters, zipCode: e.target.value})}
+                    className="w-20 bg-transparent py-2 text-sm outline-none text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
                 <button
                   onClick={handleUseLocation}
                   disabled={locLoading}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-gray-100 text-slate-600 hover:bg-slate-100 transition-all text-sm font-bold disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-gray-100 text-slate-600 hover:bg-slate-100 transition-all text-[11px] font-bold disabled:opacity-50"
                 >
-                  {locLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
-                  <span className="hidden sm:inline">Use My Location</span>
+                  {locLoading ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                  <span>Use My Location</span>
                 </button>
                 <div className="h-6 w-px bg-gray-200 mx-1" />
                 <select
                   value={searchRadius}
                   onChange={(e) => setSearchRadius(Number(e.target.value))}
-                  className="bg-slate-50 border border-gray-100 py-2 px-3 rounded-lg text-sm outline-none text-slate-600 font-bold focus:border-purple-300"
+                  className="bg-slate-50 border border-gray-100 py-2 px-3 rounded-lg text-xs outline-none text-slate-600 font-bold focus:border-purple-300"
                 >
-                  <option value={25}>25 miles</option>
-                  <option value={50}>50 miles</option>
-                  <option value={100}>100 miles</option>
-                  <option value={250}>250 miles</option>
+                  <option value={25}>25 mi</option>
+                  <option value={50}>50 mi</option>
+                  <option value={100}>100 mi</option>
+                  <option value={250}>250 mi</option>
                   <option value={500}>Nationwide</option>
                 </select>
               </div>
