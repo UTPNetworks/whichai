@@ -174,70 +174,76 @@ export default function HubPage() {
             const isHovered = hoveredId === hub.id;
             
             return (
-              <motion.div
-                key={hub.id}
+              <Link 
+                key={hub.id} 
+                href={hub.href}
+                className={`relative flex-1 hover:flex-[4] transition-all duration-500 ease-out group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl pointer-events-auto z-20 ${colorGlows[hub.color]}`}
                 onMouseEnter={() => setHoveredId(hub.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                className={`relative flex-1 hover:flex-[4] transition-all duration-500 ease-out group cursor-pointer overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-2xl ${colorGlows[hub.color]}`}
               >
-                <Link href={hub.href} className="absolute inset-0 z-10" />
-                
-                {/* Background Image with Overlay */}
-                <div className="absolute inset-0 z-0">
-                  <img
-                    src={hub.image}
-                    alt={hub.label}
-                    className={`w-full h-full object-cover transition-all duration-700 ${isHovered ? "opacity-40 scale-110" : "opacity-10 grayscale group-hover:opacity-20"}`}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                </div>
-
-                <div className="relative h-full z-20 flex flex-col p-6 overflow-hidden">
-                  
-                  {/* Compressed State: Icon & Vertical Text */}
-                  <div className={`absolute inset-0 flex flex-col items-center pt-10 transition-opacity duration-300 ${isHovered ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
-                    <Icon className={`w-8 h-8 mb-8 transition-transform duration-500 group-hover:scale-110 ${iconColors[hub.color]}`} />
-                    <span className="text-white/30 font-black text-sm uppercase tracking-[0.3em] vertical-text">
-                      {hub.label}
-                    </span>
+                <motion.div
+                  className="h-full w-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                >
+                  {/* Background Image with Overlay */}
+                  <div className="absolute inset-0 z-0">
+                    <img
+                      src={hub.image}
+                      alt={hub.label}
+                      className={`w-full h-full object-cover transition-all duration-700 ${isHovered ? "opacity-40 scale-110" : "opacity-10 grayscale group-hover:opacity-20"}`}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                   </div>
 
-                  {/* Expanded State Content */}
-                  <div className={`h-full flex flex-col justify-between transition-all duration-500 delay-100 ${isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"}`}>
-                    <div>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 ${iconColors[hub.color]}`}>
-                          <Icon size={24} />
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
-                            {hub.tagline}
-                          </span>
-                          <h2 className="text-2xl md:text-3xl font-black text-white">
-                            {hub.label}
-                          </h2>
-                        </div>
-                      </div>
-                      <p className="text-sm md:text-base text-white/60 leading-relaxed max-w-md">
-                        {hub.description}
-                      </p>
+                  <div className="relative h-full z-20 flex flex-col p-6 overflow-hidden pointer-events-none">
+                    
+                    {/* Compressed State: Icon & Vertical Text */}
+                    <div className={`absolute inset-0 flex flex-col items-center pt-10 transition-opacity duration-300 ${isHovered ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
+                      <Icon className={`w-8 h-8 mb-8 transition-transform duration-500 group-hover:scale-110 ${iconColors[hub.color]}`} />
+                      <span className="text-white/30 font-black text-sm uppercase tracking-[0.3em] vertical-text">
+                        {hub.label}
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-xs font-bold text-white/40 uppercase tracking-widest">
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${hub.id === 'compute-exchange' ? 'bg-cyan-400' : 'bg-purple-400'}`} />
-                          Live Hub
+                    {/* Expanded State Content */}
+                    <div className={`h-full flex flex-col justify-between transition-all duration-500 delay-100 ${isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"}`}>
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 ${iconColors[hub.color]}`}>
+                            <Icon size={24} />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+                              {hub.tagline}
+                            </span>
+                            <h2 className="text-2xl md:text-3xl font-black text-white">
+                              {hub.label}
+                            </h2>
+                          </div>
                         </div>
-                        <span>Protocol v4.2</span>
+                        <p className="text-sm md:text-base text-white/60 leading-relaxed max-w-md">
+                          {hub.description}
+                        </p>
                       </div>
-                      <div className="w-12 h-12 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all hover:bg-white hover:text-black">
-                        <ArrowRight size={24} />
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-xs font-bold text-white/40 uppercase tracking-widest">
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${hub.id === 'compute-exchange' ? 'bg-cyan-400' : 'bg-purple-400'}`} />
+                            Live Hub
+                          </div>
+                          <span>Protocol v4.2</span>
+                        </div>
+                        <div className="w-12 h-12 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white transition-all hover:bg-white hover:text-black pointer-events-auto">
+                          <ArrowRight size={24} />
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </Link>
             );
           })}
         </div>
