@@ -18,12 +18,12 @@ function UniversalSearchBar({ query, setQuery }: { query: string; setQuery: (q: 
 
   return (
     <div className="relative w-full max-w-[600px] mx-auto z-50">
-      <div className={`relative flex items-center rounded-2xl border transition-all duration-500 backdrop-blur-xl ${
+      <div className={`relative flex items-center rounded-2xl border-2 transition-all duration-500 backdrop-blur-2xl ${
         focused 
-          ? "bg-white/10 border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.2)]" 
-          : "bg-white/5 border-white/10 hover:bg-white/10"
+          ? "bg-white/15 border-purple-500/60 shadow-[0_0_40px_rgba(168,85,247,0.25)] scale-[1.01]" 
+          : "bg-white/10 border-white/20 hover:border-white/30 hover:bg-white/15"
       }`}>
-        <Search className={`absolute left-5 w-5 h-5 transition-colors duration-500 ${focused ? "text-purple-400" : "text-white/40"}`} />
+        <Search className={`absolute left-5 w-5 h-5 transition-colors duration-500 ${focused ? "text-purple-400" : "text-white/60"}`} />
         <input
           ref={inputRef}
           type="text"
@@ -32,7 +32,7 @@ function UniversalSearchBar({ query, setQuery }: { query: string; setQuery: (q: 
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
           placeholder="Search the nexus..."
-          className="w-full pl-14 pr-6 py-4 bg-transparent text-base text-white placeholder:text-white/30 outline-none rounded-2xl"
+          className="w-full pl-14 pr-6 py-4 bg-transparent text-base text-white placeholder:text-white/50 outline-none rounded-2xl"
         />
       </div>
     </div>
