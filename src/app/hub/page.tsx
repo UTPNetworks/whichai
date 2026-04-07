@@ -11,34 +11,6 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 
-// ── Universal Search Bar (Futuristic) ──────────────────────────
-function UniversalSearchBar({ query, setQuery }: { query: string; setQuery: (q: string) => void }) {
-  const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  return (
-    <div className="relative w-full max-w-[600px] mx-auto z-50">
-      <div className={`relative flex items-center rounded-2xl border-2 transition-all duration-500 backdrop-blur-2xl ${
-        focused 
-          ? "bg-white/15 border-purple-500/60 shadow-[0_0_40px_rgba(168,85,247,0.25)] scale-[1.01]" 
-          : "bg-white/10 border-white/20 hover:border-white/30 hover:bg-white/15"
-      }`}>
-        <Search className={`absolute left-5 w-5 h-5 transition-colors duration-500 ${focused ? "text-purple-400" : "text-white/60"}`} />
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-          placeholder="Search the nexus..."
-          className="w-full pl-14 pr-6 py-4 bg-transparent text-base text-white placeholder:text-white/50 outline-none rounded-2xl"
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Accordion Data ────────────────────────────────────────────────
 const hubs = [
   {
@@ -147,29 +119,24 @@ const iconColors: Record<string, string> = {
   blue: "text-blue-400",
 };
 
-const badgeColors: Record<string, string> = {
-  purple: "bg-purple-500 shadow-purple-500/50",
-  cyan: "bg-cyan-500 shadow-cyan-500/50",
-  emerald: "bg-emerald-500 shadow-emerald-500/50",
-  amber: "bg-amber-500 shadow-amber-500/50",
-  pink: "bg-pink-500 shadow-pink-500/50",
-  indigo: "bg-indigo-500 shadow-indigo-500/50",
-  blue: "bg-blue-500 shadow-blue-500/50",
-};
-
 export default function HubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [categoryMatches, setCategoryMatches] = useState<Record<string, number>>({});
 
-  // Mock search engine: returns a random but deterministic count based on query length and hub keywords
-  const getMatchCount = useCallback((query: string, hubKeywords: string[]) => {
-    if (!query.trim()) return 0;
-    const q = query.toLowerCase();
-    const hasKeyword = hubKeywords.some(k => k.includes(q) || q.includes(k));
-    if (!hasKeyword) return 0;
-    // Deterministic mock count
-    return (q.length * 7) + (hubKeywords.length * 3);
-  }, []);
+  // Mock Telemetry Logic: Simulates real-time search indexing across categories
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const mockResults: Record<string, number> = {};
+      hubs.forEach(hub => {
+        const count = Math.floor(Math.random() * 45) + 1;
+        mockResults[hub.label] = count;
+      });
+      setCategoryMatches(mockResults);
+    } else {
+      setCategoryMatches({});
+    }
+  }, [searchQuery]);
 
   return (
     <div className="h-screen bg-transparent selection:bg-purple-500/30 overflow-hidden flex flex-col">
@@ -194,11 +161,24 @@ export default function HubPage() {
           <motion.h1 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-black tracking-tightest mb-4 dark:text-white text-slate-900"
+            className="text-3xl md:text-5xl font-black tracking-tightest mb-6 dark:text-white text-slate-900"
           >
             Access the <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-indigo-400 bg-clip-text text-transparent">Nexus</span>
           </motion.h1>
-          <UniversalSearchBar query={searchQuery} setQuery={setSearchQuery} />
+          
+          {/* ── 2. Omni-Search Bar ── */}
+          <div className="relative w-full max-w-2xl mx-auto z-50 group">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+              <Search size={20} />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Query the platform..."
+              className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-full pl-14 pr-6 py-4 text-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+            />
+          </div>
         </div>
 
         {/* ── 2. Expanding Horizontal Accordion ── */}
@@ -206,7 +186,7 @@ export default function HubPage() {
           {hubs.map((hub, i) => {
             const Icon = hub.icon;
             const isHovered = hoveredId === hub.id;
-            const matchCount = getMatchCount(searchQuery, hub.keywords);
+            const matchCount = categoryMatches[hub.label] || 0;
             
             return (
               <Link 
@@ -216,17 +196,16 @@ export default function HubPage() {
                 onMouseEnter={() => setHoveredId(hub.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
-                {/* Search Result Badge */}
+                {/* ── 3. Telemetry Badge ── */}
                 <AnimatePresence>
                   {matchCount > 0 && (
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
-                      className={`absolute -top-1 -right-1 md:top-4 md:right-4 z-50 px-2 py-1 rounded-full text-[10px] font-black text-white shadow-lg flex items-center gap-1.5 ${badgeColors[hub.color]}`}
+                      className="absolute -top-3 -right-3 z-50 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.8)] animate-pulse-slow"
                     >
-                      <Zap size={10} className="fill-current" />
-                      {matchCount} results
+                      {matchCount}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -252,16 +231,18 @@ export default function HubPage() {
                     {/* Compressed State: Icon & Vertical Text */}
                     <div className={`absolute inset-0 flex flex-col items-center pt-10 transition-opacity duration-300 ${isHovered ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
                       <Icon className={`w-8 h-8 mb-8 transition-transform duration-500 group-hover:scale-110 ${iconColors[hub.color]}`} />
-                      <span className="dark:text-white/30 text-slate-400 font-black text-sm uppercase tracking-[0.3em] vertical-text">
-                        {hub.label}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="dark:text-white/30 text-slate-400 font-black text-sm uppercase tracking-[0.3em] vertical-text">
+                          {hub.label}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Expanded State Content */}
                     <div className={`h-full flex flex-col justify-between transition-all duration-500 delay-100 ${isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"}`}>
                       <div>
                         <div className="flex items-center gap-3 mb-4">
-                          <div className={`p-3 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 ${iconColors[hub.color]}`}>
+                          <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 ${iconColors[hub.color]}`}>
                             <Icon size={24} />
                           </div>
                           <div>
@@ -271,6 +252,7 @@ export default function HubPage() {
                             <h2 className="text-2xl md:text-3xl font-black dark:text-white text-slate-900 leading-none">
                               {hub.label}
                             </h2>
+                            {/* PRESERVED SUBTITLE */}
                             <p className="text-xs text-gray-400 font-medium tracking-widest uppercase mt-3 transition-all duration-300 group-hover:text-blue-500 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                               {(hub as any).subtitle}
                             </p>
@@ -332,6 +314,13 @@ export default function HubPage() {
         }
         .tracking-tightest {
           letter-spacing: -0.05em;
+        }
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        .animate-pulse-slow {
+          animation: pulse-slow 3s ease-in-out infinite;
         }
       `}</style>
     </div>
