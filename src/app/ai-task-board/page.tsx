@@ -279,96 +279,80 @@ export default function AITaskBoardPage() {
           ))}
         </div>
 
-        {/* Task Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Task Cards Grid - HIGH DENSITY */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((task, i) => (
-            <motion.div
-              key={task.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.35 }}
-              className="bg-white rounded-2xl border border-gray-200 hover:border-amber-300 hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden group"
-            >
-              {/* Card Header */}
-              <div className="p-5 flex-1">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[task.category] || "bg-gray-100 text-gray-600"}`}>
-                        {task.category}
-                      </span>
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${urgencyColors[task.urgency]}`}>
-                        {task.urgency === "high" ? "🔴 Urgent" : task.urgency === "medium" ? "🟡 Active" : "🟢 Relaxed"}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-amber-700 transition-colors">
-                      {task.title}
-                    </h3>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
-                  {task.description}
-                </p>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {task.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-medium">
-                      <Tag className="w-2.5 h-2.5" />
-                      {tag}
+            <Link key={task.id} href={`/task/${task.id}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.35 }}
+                className="bg-white h-full rounded-xl border border-gray-200 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-purple-500/30 flex flex-col overflow-hidden group"
+              >
+                {/* Card Header - COMPACT */}
+                <div className="p-4 flex-1">
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${categoryColors[task.category] || "bg-gray-100 text-gray-600"}`}>
+                      {task.category}
                     </span>
-                  ))}
-                  {task.tags.length > 3 && (
-                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">+{task.tags.length - 3}</span>
-                  )}
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${urgencyColors[task.urgency]}`}>
+                      {task.urgency === "high" ? "🔴 Urgent" : task.urgency === "medium" ? "🟡 Active" : "🟢 Relaxed"}
+                    </span>
+                  </div>
+                  
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight mb-1.5 line-clamp-1 group-hover:text-purple-600 transition-colors">
+                    {task.title}
+                  </h3>
+
+                  <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-2 mb-3">
+                    {task.description}
+                  </p>
+
+                  {/* Tech Tags - SCALED DOWN */}
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {task.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 bg-slate-50 text-slate-500 border border-slate-100 rounded-md font-bold uppercase tracking-tighter">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Poster info - COMPACT */}
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-50">
+                    <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-[9px] font-black shrink-0 border border-slate-200">
+                      {task.poster.name[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold text-slate-700 truncate">
+                        {task.poster.name}
+                      </p>
+                    </div>
+                    <div className="text-[9px] font-bold text-slate-400 shrink-0">
+                      {task.postedAgo}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Poster info */}
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                    {task.poster.name[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-700 truncate">
-                      {task.poster.name}
-                      {task.poster.verified && <span className="ml-1 text-cyan-500">✓</span>}
-                    </p>
-                    <p className="text-[10px] text-slate-400">{task.poster.tasks} tasks posted • ⭐ {task.poster.rating}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] text-slate-400 shrink-0">
-                    <Clock className="w-3 h-3" />
-                    {task.postedAgo}
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Footer */}
-              <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                {/* Card Footer - PINNED BOTTOM */}
+                <div className="px-4 py-2.5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-1">
-                    <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-sm font-black text-slate-900">
+                    <DollarSign className="w-3 h-3 text-emerald-600" />
+                    <span className="text-[13px] font-black text-slate-900">
                       {task.budgetType === "fixed"
                         ? `$${task.budget.toLocaleString()}`
                         : `$${task.budget}/hr`}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-slate-400">
-                    <Clock className="w-3 h-3" />
-                    {task.deadline}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-slate-400">
-                    <Users className="w-3 h-3" />
-                    {task.bids} bids
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                      <Users size={10} />
+                      {task.bids}
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
-                <button className="flex items-center gap-1 text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors group/btn">
-                  Apply
-                  <ChevronRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
-                </button>
-              </div>
-            </motion.div>
+              </motion.div>
+            </Link>
           ))}
         </div>
 
