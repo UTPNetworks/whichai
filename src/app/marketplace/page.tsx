@@ -22,6 +22,7 @@ import CompatibilityChecker from '@/components/marketplace/CompatibilityChecker'
 import {
   allListingsV3, getListingsByCategory, type MarketplaceCategory,
   type MarketListingV3, calculateDistance, MARKETPLACE_CATEGORIES,
+  type AIProduct, getAllProducts,
 } from '@/lib/data';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase, safeRefreshSession, directInsert, getAccessToken } from '@/lib/supabase';
@@ -398,6 +399,8 @@ export default function MarketplacePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [locLoading, setLocLoading] = useState(false);
   const [userListings, setUserListings] = useState<MarketListingV3[]>([]);
+  const [products, setProducts] = useState<AIProduct[]>([]);
+  const [loadingTools, setLoadingTools] = useState(false);
 
   const handleUseLocation = () => {
     setLocLoading(true);
