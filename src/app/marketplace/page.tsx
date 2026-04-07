@@ -3,9 +3,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Store, Upload, Code2, Eye, Mic, Image, Globe, Zap, BadgeCheck, ChevronRight,
-  Brain, Monitor, X, Sparkles, Loader2, Tag, ShoppingBag, Search as SearchIcon,
-  Key, MessageSquare, Cpu, Shield, Clock, Package, Download, Gavel, MessageCircle,
+  Store, Upload, Code2, Eye, Zap, BadgeCheck, ChevronRight,
+  X, Sparkles, Loader2, Tag, ShoppingBag, Search as SearchIcon,
+  Shield, Clock, Package,
   Plus, MapPin, Filter,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -20,53 +20,14 @@ import AuctionCard from '@/components/marketplace/AuctionCard';
 import ComputeHeatmap from '@/components/marketplace/ComputeHeatmap';
 import CompatibilityChecker from '@/components/marketplace/CompatibilityChecker';
 import {
-  getAllProducts, marketplaceDeals, marketplaceCategories, getDiscountPct,
-  allListingsV3, getListingsByCategory, type AIProduct, type MarketplaceCategory,
+  allListingsV3, getListingsByCategory, type MarketplaceCategory,
   type MarketListingV3, calculateDistance, MARKETPLACE_CATEGORIES,
 } from '@/lib/data';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase, safeRefreshSession, directInsert, getAccessToken } from '@/lib/supabase';
 
 type BigTab = 'all' | 'digital-assets' | 'compute-hub' | 'hardware-corner';
-
-const DealCard = ({ deal, index }: { deal: typeof marketplaceDeals[0]; index: number }) => {
-  const discountPct = getDiscountPct(deal.original_price, deal.discounted_price);
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="p-5 rounded-xl bg-white border border-gray-200 hover:border-purple-300 transition-all group">
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{deal.provider}</span>
-        {deal.badge && (<span className={`px-2 py-1 rounded-full text-xs font-semibold bg-gradient-to-r text-white ${{ 'Hot Deal': 'from-red-500 to-orange-500', 'Popular': 'from-purple-500 to-pink-500', 'New': 'from-cyan-500 to-blue-500', 'Student Special': 'from-violet-500 to-purple-500', 'Best Value': 'from-emerald-500 to-green-500', 'Team Deal': 'from-blue-500 to-indigo-500', 'Limited': 'from-amber-500 to-yellow-500', 'Budget Pick': 'from-teal-500 to-cyan-500' }[deal.badge] || ''}`}>{deal.badge}</span>)}
-      </div>
-      <h3 className="font-bold text-slate-900 mb-1 text-sm line-clamp-1">{deal.name}</h3>
-      <p className="text-xs text-slate-500 mb-3 line-clamp-2">{deal.description}</p>
-      <div className="flex items-baseline gap-2 mb-3">
-        <span className="text-lg font-bold text-slate-900">${deal.discounted_price.toFixed(2)}</span>
-        <span className="text-xs text-slate-400 line-through">${deal.original_price.toFixed(2)}</span>
-        <span className="text-xs font-semibold text-green-600 ml-auto">Save {discountPct}%</span>
-      </div>
-      <p className="text-xs text-slate-400 mb-3">{deal.unit}</p>
-      <button className="w-full px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all">Claim Deal</button>
-    </motion.div>
-  );
-};
-
-const ToolCard = ({ product, index }: { product: AIProduct; index: number }) => {
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="p-5 rounded-xl bg-white border border-gray-200 hover:border-purple-300 transition-all group">
-      <div className="flex items-start gap-3 mb-3">
-        {product.logo_url ? (<img src={product.logo_url} alt={product.name} className="w-10 h-10 rounded" />) : (<div className="w-10 h-10 rounded bg-gradient-to-br from-purple-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">{product.name.charAt(0)}</div>)}
-        <div><h3 className="font-bold text-slate-900 text-sm">{product.name}</h3><p className="text-xs text-slate-500">{product.provider}</p></div>
-      </div>
-      <p className="text-xs text-slate-600 mb-3 line-clamp-2">{product.description}</p>
-      <div className="flex flex-wrap gap-1 mb-3">
-        {product.features.vision && <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">Vision</span>}
-        {product.features.voice && <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">Voice</span>}
-        {product.features.image_gen && <span className="px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 text-xs font-medium">Image</span>}
-      </div>
-      <Link href={`/product/${product.slug}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-900 text-xs font-semibold hover:bg-slate-200 transition-all">View <ChevronRight size={14} /></Link>
-    </motion.div>
-  );
-};
+type ViewMode = 'listings' | 'auctions';
 
 // ── Category / subcategory structure for listing ──────────────
 const LISTING_CATEGORIES = [
@@ -414,19 +375,16 @@ function supabaseRowToListing(row: any): MarketListingV3 {
 
 export default function MarketplacePage() {
   const { user } = useAuth();
-  const [products, setProducts] = useState<AIProduct[]>([]);
-  const [loadingTools, setLoadingTools] = useState(true);
   const [showSellModal, setShowSellModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bigTab, setBigTab] = useState<BigTab>('all');
-  const [activeCategory, setActiveCategory] = useState<MarketplaceCategory | null>(null);
-  const [toolFilter, setToolFilter] = useState('all');
   const [activeCategory2, setActiveCategory2] = useState('');
   const [activeSub, setActiveSub] = useState('');
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState(500);
+  const [viewMode, setViewMode] = useState<ViewMode>('listings');
   const [filters, setFilters] = useState<FilterState>({
     sortBy: 'trending',
     priceRange: [0, 10000],
@@ -530,6 +488,14 @@ export default function MarketplacePage() {
     if (filters.vramMin > 0) { filtered = filtered.filter((l) => { if (!l.techSpecs?.vram) return false; return l.techSpecs.vram >= filters.vramMin; }); }
     if (filters.frameworks.length > 0) { filtered = filtered.filter((l) => { if (!l.techSpecs?.framework) return false; return filters.frameworks.some((fw) => l.techSpecs?.framework?.includes(fw)); }); }
     filtered = filtered.filter((l) => l.seller.rating >= filters.minRating);
+
+    // Filter by View Mode (Listings vs Auctions)
+    if (viewMode === 'listings') {
+      filtered = filtered.filter(l => l.unit !== 'auction');
+    } else {
+      filtered = filtered.filter(l => l.unit === 'auction' || l.unit === 'negotiable' || l.price === 0);
+    }
+
     const sorted = [...filtered].sort((a, b) => {
       if (filters.sortBy === 'price-asc') return a.price - b.price;
       if (filters.sortBy === 'price-desc') return b.price - a.price;
@@ -542,9 +508,6 @@ export default function MarketplacePage() {
   };
 
   const filteredListings = getFilteredListings();
-  const filteredDeals = activeCategory ? marketplaceDeals.filter((d) => d.category === activeCategory) : marketplaceDeals;
-  const sortedDeals = [...filteredDeals].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
-  const filteredTools = toolFilter === 'all' ? products : products.filter((p) => { if (toolFilter === 'voice') return p.features.voice === true; if (toolFilter === 'vision') return p.features.vision === true; return p.category === toolFilter; });
   const handleCompare = (id: string) => { setCompareIds((prev) => { if (prev.includes(id)) { return prev.filter((cid) => cid !== id); } return prev.length < 3 ? [...prev, id] : prev; }); };
 
   return (
@@ -586,12 +549,12 @@ export default function MarketplacePage() {
       </section>
             {/* ═══ CATEGORY GRID ═══ */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-4">
-        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Browse Categories</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2.5">Browse Categories</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
           {MARKETPLACE_CATEGORIES.map((cat) => (
-            <motion.button key={cat.id} whileHover={{ y: -2, scale: 1.02 }} onClick={() => setActiveCategory2(cat.id)} className={`flex items-center gap-2.5 px-3.5 py-3 rounded-xl border-[1.5px] bg-white text-left transition-all ${activeCategory2 === cat.id ? 'border-purple-400 bg-purple-50/60 shadow-sm' : 'border-gray-200 hover:border-purple-200'}`}>
-              <span className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: cat.color }}>{cat.emoji}</span>
-              <div className="min-w-0"><div className="text-[11.5px] font-bold text-slate-800 truncate">{cat.label}</div><div className="text-[10px] text-slate-400">{cat.count.toLocaleString()} listings</div></div>
+            <motion.button key={cat.id} whileHover={{ y: -1, scale: 1.01 }} onClick={() => setActiveCategory2(cat.id)} className={`flex items-center gap-2 px-3 py-2 rounded-lg border bg-white text-left transition-all ${activeCategory2 === cat.id ? 'border-purple-400 bg-purple-50/60 shadow-sm' : 'border-gray-200 hover:border-purple-200'}`}>
+              <span className="w-7 h-7 rounded-md flex items-center justify-center text-base flex-shrink-0" style={{ background: cat.color }}>{cat.emoji}</span>
+              <div className="min-w-0"><div className="text-[10.5px] font-bold text-slate-800 truncate">{cat.label}</div><div className="text-[9px] text-slate-400">{cat.count.toLocaleString()}</div></div>
             </motion.button>
           ))}
         </div>
@@ -679,123 +642,66 @@ export default function MarketplacePage() {
           {showMap && userLocation && (<MapView listings={filteredListings} userLocation={userLocation} radiusMiles={searchRadius} />)}
           <ComputeHeatmap />
           {filteredListings.filter((l) => l.techSpecs?.gpuType).length > 0 && (<CompatibilityChecker listing={filteredListings.find((l) => l.techSpecs?.gpuType)!} />)}
+          
+          {/* ── VIEW MODE TOGGLE ── */}
+          <div className="mb-8 flex justify-center">
+            <div className="relative p-1 bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl shadow-xl flex items-center gap-1">
+              <motion.div
+                className="absolute h-[calc(100%-8px)] rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shadow-purple-500/20"
+                initial={false}
+                animate={{
+                  x: viewMode === 'listings' ? 0 : 136,
+                  width: viewMode === 'listings' ? 132 : 132,
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+              <button
+                onClick={() => setViewMode('listings')}
+                className={`relative z-10 px-8 py-2.5 rounded-xl text-sm font-bold transition-colors duration-200 w-[132px] ${viewMode === 'listings' ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Listings
+              </button>
+              <button
+                onClick={() => setViewMode('auctions')}
+                className={`relative z-10 px-8 py-2.5 rounded-xl text-sm font-bold transition-colors duration-200 w-[132px] ${viewMode === 'auctions' ? 'text-white' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Auctions
+              </button>
+            </div>
+          </div>
+
           <motion.section className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2"><Sparkles size={24} className="text-purple-500" /> Marketplace Listings</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <Sparkles size={24} className="text-purple-500" />
+              {viewMode === 'listings' ? 'Marketplace Listings' : 'Live Auctions'}
+            </h2>
             <AnimatePresence mode="wait">
-              <motion.div key={bigTab + searchQuery + JSON.stringify(filters)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredListings.map((listing, idx) => (<ListingCardV3 key={listing.id} listing={listing} index={idx} onCompare={handleCompare} />))}
+              <motion.div
+                key={viewMode + searchQuery + JSON.stringify(filters)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              >
+                {viewMode === 'listings' ? (
+                  filteredListings.map((listing, idx) => (<ListingCardV3 key={listing.id} listing={listing} index={idx} onCompare={handleCompare} />))
+                ) : (
+                  filteredListings.map((listing, idx) => (
+                    <AuctionCard key={listing.id} listing={listing} index={idx} />
+                  ))
+                )}
               </motion.div>
             </AnimatePresence>
             {filteredListings.length === 0 && (
               <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-200">
                 <SearchIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-slate-700 font-medium">No listings found.</p>
+                <p className="text-slate-700 font-medium">No {viewMode} found.</p>
                 <p className="text-slate-500 text-sm mt-1">Try a different search or category.</p>
               </div>
             )}
           </motion.section>
 
-          {/* ═══ LIVE AUCTIONS ═══ */}
-          {filteredListings.filter((l) => l.pricingType === 'auction').length > 0 && (
-            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2"><Gavel size={22} className="text-amber-500" /> Live Auctions</h2>
-                <span className="text-xs font-semibold text-amber-600">View All Auctions →</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredListings.filter((l) => l.pricingType === 'auction').map((listing, idx) => (
-                  <AuctionCard key={listing.id} listing={listing} index={idx} />
-                ))}
-              </div>
-            </motion.section>
-          )}
-
-          {/* ═══ OFFER & NEGOTIATION FLOW ═══ */}
-          <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-12 rounded-2xl bg-gradient-to-br from-fuchsia-50 to-purple-50 border border-purple-200 p-6 md:p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><MessageCircle size={20} className="text-purple-500" /> Offer &amp; Negotiation</h2>
-              <span className="text-xs font-semibold text-purple-600 bg-white px-3 py-1.5 rounded-lg border border-purple-200">⏱️ Offers expire in 48 hours</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { icon: '💰', title: 'Make an Offer', desc: 'Click "Make Offer" on any negotiable listing and name your price', bg: 'bg-purple-50' },
-                { icon: '🔔', title: 'Seller Reviews', desc: 'Seller can accept, reject, or counter your offer within 48 hours', bg: 'bg-amber-50' },
-                { icon: '💬', title: 'Chat & Negotiate', desc: 'Real-time chat between buyer and seller to finalize terms', bg: 'bg-emerald-50' },
-                { icon: '🛡️', title: 'Escrow Payment', desc: 'Payment held securely until buyer confirms delivery', bg: 'bg-green-50' },
-              ].map((step, idx) => (
-                <motion.div key={step.title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} className="bg-white rounded-xl p-5 border border-gray-100 text-center">
-                  <div className={`w-12 h-12 rounded-full ${step.bg} flex items-center justify-center text-xl mx-auto mb-3`}>{step.icon}</div>
-                  <h4 className="text-sm font-bold text-slate-900 mb-1">{step.title}</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-
-          {/* ═══ DELIVERY OPTIONS ═══ */}
-          <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-5 flex items-center gap-2"><Package size={22} className="text-blue-500" /> Delivery Options</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2"><Package size={18} className="text-purple-500" /> Physical Shipping</h3>
-                <p className="text-xs text-slate-500 mb-4">Integrated with ShipStation for auto-calculated rates, label generation, and real-time tracking.</p>
-                <div className="space-y-2.5">
-                  {['Seller enters weight & dimensions', 'Shipping cost auto-calculated at checkout', 'Label generated, tracking shared with buyer', 'Buyer confirms receipt → funds released'].map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50">
-                      <span className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                      <span className="text-xs font-medium text-slate-700">{s}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-base font-bold text-slate-900 mb-1 flex items-center gap-2"><Download size={18} className="text-cyan-500" /> Digital Delivery</h3>
-                <p className="text-xs text-slate-500 mb-4">Instant download after payment clears via secure signed URLs. License keys auto-generated.</p>
-                <div className="space-y-2.5">
-                  {['Payment clears instantly via Stripe', 'Secure signed URL generated (24hr expiry)', 'License key / API token delivered to dashboard', 'Transfer instructions provided if applicable'].map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-50">
-                      <span className="w-6 h-6 rounded-full bg-cyan-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                      <span className="text-xs font-medium text-slate-700">{s}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {(bigTab === 'all' || bigTab === 'digital-assets') && (
-            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-12">
-              <div className="flex items-center gap-2 mb-5"><Sparkles className="w-5 h-5 text-purple-500" /><h2 className="text-2xl font-bold text-slate-900">AI Tools Directory</h2></div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {[{value:'all',label:'â¨ All Tools'},{value:'code',label:'ð» Code'},{value:'vision',label:'ðï¸ Vision'},{value:'voice',label:'ð¤ Voice'},{value:'image',label:'ð¼ï¸ Image Gen'},{value:'chatbot',label:'ð¬ Chat'},{value:'multimodal',label:'â¡ Multimodal'}].map(({ value, label }) => (
-                  <motion.button key={value} onClick={() => setToolFilter(value)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${ toolFilter === value ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`} whileHover={{ scale: 1.05 }}>{label}</motion.button>
-                ))}
-              </div>
-              {loadingTools ? (<div className="flex items-center justify-center py-16"><Loader2 className="w-7 h-7 animate-spin text-purple-500" /></div>) : (
-                <AnimatePresence mode="wait"><motion.div key={toolFilter} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{filteredTools.map((product, i) => (<ToolCard key={product.id} product={product} index={i} />))}</motion.div></AnimatePresence>
-              )}
-            </motion.section>
-          )}
-          {(bigTab === 'all' || bigTab === 'compute-hub') && (
-            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-12">
-              <div className="flex items-center gap-2 mb-4"><Tag className="w-5 h-5 text-cyan-500" /><h2 className="text-2xl font-bold text-slate-900">Exclusive Deals</h2></div>
-              <p className="text-slate-500 text-sm mb-5">Discounted API tokens, subscriptions, and GPU rentals â curated for developers, researchers, and teams.</p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <motion.button onClick={() => setActiveCategory(null)} className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${ activeCategory === null ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`} whileHover={{ scale: 1.05 }}>All Deals</motion.button>
-                {marketplaceCategories.map((cat) => (<motion.button key={cat.value} onClick={() => setActiveCategory(cat.value)} className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${ activeCategory === cat.value ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`} whileHover={{ scale: 1.05 }}>{cat.label}</motion.button>))}
-              </div>
-              <AnimatePresence mode="wait"><motion.div key={activeCategory || 'all'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">{sortedDeals.map((deal, i) => (<DealCard key={deal.id} deal={deal} index={i} />))}</motion.div></AnimatePresence>
-            </motion.section>
-          )}
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="mt-12 mb-12 text-center">
-            <div className="inline-block p-[2px] rounded-2xl bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500">
-              <div className="bg-white rounded-2xl px-8 py-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-1">Have something to sell?</h3>
-                <p className="text-sm text-slate-500 mb-4">Join 6,800+ sellers on the world&apos;s first AI marketplace. Protected by WhichAI Escrow—free to list, 0% fee on your first 3 sales.</p>
-                <motion.button onClick={() => setShowSellModal(true)} whileHover={{ scale: 1.05 }} className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all"><Upload className="w-4 h-4" /> List Your Item Free</motion.button>
-              </div>
-            </div>
-          </motion.div>
         </main>
       </div>
       {compareIds.length > 0 && (
