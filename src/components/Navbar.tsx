@@ -78,7 +78,7 @@ export default function Navbar() {
       </motion.div>
 
       {/* Neural Pulse - Desktop only */}
-      <div className="hidden lg:block flex-[1_1_auto]">
+      <div className="hidden lg:block flex-1 max-w-xl">
         <NeuralPulse />
       </div>
 
@@ -87,7 +87,7 @@ export default function Navbar() {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="hidden md:flex items-center gap-3 flex-shrink-0"
+        className="hidden md:flex items-center gap-3"
       >
         {user ? (
           <>
