@@ -289,7 +289,7 @@ function FeedTab({ threads, upvotedThreads, onToggleUpvote, onToggleSave, savedT
         ))}
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         {threads.map((thread: any) => (
           <ThreadCard key={thread.id} thread={thread} isUpvoted={upvotedThreads.has(thread.id)} onToggleUpvote={onToggleUpvote} isSaved={savedThreads.has(thread.id)} onToggleSave={onToggleSave} />
         ))}
@@ -301,44 +301,55 @@ function FeedTab({ threads, upvotedThreads, onToggleUpvote, onToggleSave, savedT
 function ThreadCard({ thread, isUpvoted, onToggleUpvote, isSaved, onToggleSave }: any) {
   const typeConfig = TYPE_CONFIG[thread.type];
   return (
-    <motion.div whileHover={{ y: -2 }} className="bg-white rounded-xl border border-slate-200 hover:border-violet-300 transition-all shadow-sm flex flex-col md:flex-row group">
-      {/* Upvote column refined */}
-      <div className="hidden md:flex flex-col items-center gap-1 p-4 bg-slate-50/50 border-r border-slate-100 w-16 group-hover:bg-violet-50/30 transition-colors">
-        <button onClick={() => onToggleUpvote(thread.id)} className={`p-1.5 rounded-lg transition-all ${isUpvoted ? 'text-violet-600 scale-110' : 'text-slate-400 hover:text-violet-500'}`}>
-          <TrendingUp size={18} />
-        </button>
-        <span className="text-sm font-black text-slate-700">{thread.upvotes}</span>
-        <button className="p-1.5 text-slate-300 hover:text-slate-500 transition-colors">
-          <TrendingUp size={18} className="rotate-180" />
-        </button>
-      </div>
-
-      <div className="p-5 flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-wider">{thread.spaceId.replace('-', ' ')}</span>
-          <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider text-white" style={{ backgroundColor: typeConfig.color }}>{typeConfig.label}</span>
-          {thread.hot && <span className="flex items-center gap-1 text-[9px] font-black text-orange-600 uppercase"><Flame size={10} /> Hot</span>}
-        </div>
-
-        <Link href={`/community/thread/${thread.id}`}>
-          <h3 className="text-base font-bold text-slate-900 group-hover:text-violet-600 transition-colors mb-2 line-clamp-2">{thread.title}</h3>
-        </Link>
-
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-xs shrink-0">{thread.author.avatar}</div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-black text-slate-800 leading-none">{thread.author.username}</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{thread.time}</span>
-            </div>
+    <motion.div whileHover={{ y: -2, scale: 1.02 }} className="h-full">
+      <div className="h-full bg-white rounded-lg border border-slate-200 hover:border-purple-400 transition-all shadow-sm flex flex-col overflow-hidden group cursor-pointer">
+        <div className="p-3 flex flex-col h-full">
+          {/* Header Badges */}
+          <div className="flex gap-1.5 mb-1.5 flex-wrap">
+            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">{thread.spaceId.replace('-', ' ')}</span>
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white" style={{ backgroundColor: typeConfig.color }}>{typeConfig.label}</span>
+            {thread.hot && <span className="flex items-center gap-1 text-[10px] font-bold text-orange-600 uppercase"><Flame size={10} /> Hot</span>}
           </div>
 
-          <div className="flex items-center gap-4 text-slate-400">
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase"><MessageCircle size={14} /> {thread.replyCount}</div>
-            <div className="flex items-center gap-1 text-[10px] font-bold uppercase"><Eye size={14} /> {thread.views}</div>
-            <button onClick={() => onToggleSave(thread.id)} className={`transition-colors ${isSaved ? 'text-red-500' : 'hover:text-red-400'}`}>
-              <Heart size={16} fill={isSaved ? 'currentColor' : 'none'} />
-            </button>
+          <Link href={`/community/thread/${thread.id}`} className="block">
+            <h3 className="text-[13px] font-bold text-slate-900 group-hover:text-violet-600 transition-colors mb-1 line-clamp-2">{thread.title}</h3>
+          </Link>
+
+          {/* Author info refined to match Marketplace "Seller" row style */}
+          <div className="flex items-center gap-1.5 mb-2 text-[10px]">
+            <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[9px] shrink-0 border border-slate-200">
+              {thread.author.avatar}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-slate-700 truncate font-semibold">{thread.author.username}</p>
+            </div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase">{thread.time}</span>
+          </div>
+
+          <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={(e) => { e.preventDefault(); onToggleUpvote(thread.id); }} 
+                className={`flex items-center gap-1 text-[11px] font-black transition-all ${isUpvoted ? 'text-violet-600' : 'text-slate-400 hover:text-violet-500'}`}
+              >
+                <TrendingUp size={14} />
+                {thread.upvotes}
+              </button>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                <MessageCircle size={12} />
+                {thread.replyCount}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => { e.preventDefault(); onToggleSave(thread.id); }}
+                className={`transition-colors ${isSaved ? 'text-red-500' : 'text-slate-300 hover:text-red-400'}`}
+              >
+                <Heart size={14} fill={isSaved ? 'currentColor' : 'none'} />
+              </button>
+              <ChevronRight size={14} className="text-slate-300 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all" />
+            </div>
           </div>
         </div>
       </div>
