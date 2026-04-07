@@ -50,6 +50,7 @@ const hubs = [
     description: "The primary hub for AI commerce. Buy and sell agents, models, and premium prompt packages.",
     image: "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=800&q=80",
     color: "purple",
+    keywords: ["buy", "sell", "agent", "model", "prompt", "escrow", "commerce", "shop"],
   },
   {
     id: "know-your-ai",
@@ -60,6 +61,7 @@ const hubs = [
     description: "Real-time benchmarking and model comparison engine for the latest LLMs.",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&q=80",
     color: "cyan",
+    keywords: ["compare", "benchmark", "score", "llm", "claude", "gpt", "gemini", "research"],
   },
   {
     id: "learning-hub",
@@ -70,6 +72,7 @@ const hubs = [
     description: "Master the machine with curated paths, hands-on labs, and certificates.",
     image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&q=80",
     color: "emerald",
+    keywords: ["course", "learn", "lab", "certificate", "guide", "tutorial", "masterclass"],
   },
   {
     id: "ai-forge",
@@ -80,6 +83,7 @@ const hubs = [
     description: "Post bounties and find tasks for the elite global AI developer network.",
     image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80",
     color: "amber",
+    keywords: ["task", "bounty", "build", "developer", "hire", "work", "forge"],
   },
   {
     id: "prompt-hub",
@@ -90,6 +94,7 @@ const hubs = [
     description: "High-precision LLM prompt engineering packages for every major model.",
     image: "https://images.unsplash.com/photo-1655720828018-edd2daec9349?w=600&q=80",
     color: "pink",
+    keywords: ["prompt", "package", "template", "engineering", "chatgpt", "midjourney"],
   },
   {
     id: "community",
@@ -100,16 +105,18 @@ const hubs = [
     description: "Collaborative building, gossip, and reputation-backed networking.",
     image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80",
     color: "indigo",
+    keywords: ["chat", "forum", "discuss", "network", "builder", "signal", "reputation"],
   },
   {
     id: "compute-exchange",
     href: "/gpurentals",
-    label: "Compute Exchange",
+    label: "GPU Rentals",
     icon: Cpu,
     tagline: "Infrastructure",
     description: "Rent H100 clusters or monetize your own hardware nodes via decentralized P2P orchestration.",
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&q=80",
     color: "blue",
+    keywords: ["gpu", "rent", "h100", "a100", "4090", "node", "compute", "mining", "hardware", "nvidia"],
   },
 ];
 
@@ -133,9 +140,29 @@ const iconColors: Record<string, string> = {
   blue: "text-blue-400",
 };
 
+const badgeColors: Record<string, string> = {
+  purple: "bg-purple-500 shadow-purple-500/50",
+  cyan: "bg-cyan-500 shadow-cyan-500/50",
+  emerald: "bg-emerald-500 shadow-emerald-500/50",
+  amber: "bg-amber-500 shadow-amber-500/50",
+  pink: "bg-pink-500 shadow-pink-500/50",
+  indigo: "bg-indigo-500 shadow-indigo-500/50",
+  blue: "bg-blue-500 shadow-blue-500/50",
+};
+
 export default function HubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  // Mock search engine: returns a random but deterministic count based on query length and hub keywords
+  const getMatchCount = useCallback((query: string, hubKeywords: string[]) => {
+    if (!query.trim()) return 0;
+    const q = query.toLowerCase();
+    const hasKeyword = hubKeywords.some(k => k.includes(q) || q.includes(k));
+    if (!hasKeyword) return 0;
+    // Deterministic mock count
+    return (q.length * 7) + (hubKeywords.length * 3);
+  }, []);
 
   return (
     <div className="h-screen bg-transparent selection:bg-purple-500/30 overflow-hidden flex flex-col">
@@ -172,6 +199,7 @@ export default function HubPage() {
           {hubs.map((hub, i) => {
             const Icon = hub.icon;
             const isHovered = hoveredId === hub.id;
+            const matchCount = getMatchCount(searchQuery, hub.keywords);
             
             return (
               <Link 
@@ -181,6 +209,21 @@ export default function HubPage() {
                 onMouseEnter={() => setHoveredId(hub.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
+                {/* Search Result Badge */}
+                <AnimatePresence>
+                  {matchCount > 0 && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className={`absolute -top-1 -right-1 md:top-4 md:right-4 z-50 px-2 py-1 rounded-full text-[10px] font-black text-white shadow-lg flex items-center gap-1.5 ${badgeColors[hub.color]}`}
+                    >
+                      <Zap size={10} className="fill-current" />
+                      {matchCount} results
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <motion.div
                   className="h-full w-full"
                   initial={{ opacity: 0 }}
