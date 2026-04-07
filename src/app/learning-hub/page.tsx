@@ -70,58 +70,57 @@ const coursesData = [
 // ── 3. The Tile Design (Creative Direction) ───────────────────
 function CourseTile({ course }: { course: typeof coursesData[0] }) {
   return (
-    <motion.div 
-      whileHover={{ y: -4 }}
-      className="group bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full"
-    >
-      {/* Top Half: 16:9 Thumbnail with Hover Zoom */}
-      <div className="relative aspect-video overflow-hidden">
-        <img 
-          src={course.thumbnail} 
-          alt={course.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
-      </div>
-
-      {/* Bottom Half: Content */}
-      <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold uppercase tracking-wider">
-            {course.category}
-          </span>
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-            {course.source}
-          </span>
+    <Link href={`/course/${course.id}`} className="block h-full">
+      <motion.div 
+        whileHover={{ y: -6, shadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+        className="group bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-all flex flex-col h-full cursor-pointer hover:border-purple-300"
+      >
+        {/* Top Half: 16:9 Thumbnail with Hover Zoom */}
+        <div className="relative aspect-video overflow-hidden">
+          <img 
+            src={course.thumbnail} 
+            alt={course.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
         </div>
 
-        <h3 className="text-lg font-black text-slate-900 leading-tight mb-2 group-hover:text-purple-600 transition-colors">
-          {course.title}
-        </h3>
-        
-        <p className="text-sm text-slate-600 line-clamp-2 mb-4 leading-relaxed">
-          {course.description}
-        </p>
+        {/* Bottom Half: Content */}
+        <div className="p-5 flex-1 flex flex-col">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold uppercase tracking-wider">
+              {course.category}
+            </span>
+            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+              {course.source}
+            </span>
+          </div>
 
-        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
-              <Users size={12} /> {course.stats.students}
+          <h3 className="text-lg font-black text-slate-900 leading-tight mb-2 group-hover:text-purple-600 transition-colors">
+            {course.title}
+          </h3>
+          
+          <p className="text-sm text-slate-600 line-clamp-2 mb-4 leading-relaxed">
+            {course.description}
+          </p>
+
+          <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
+                <Users size={12} /> {course.stats.students}
+              </div>
+              <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                <Star size={12} className="fill-current" /> {course.stats.rating}
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
-              <Star size={12} className="fill-current" /> {course.stats.rating}
+            
+            <div className="inline-flex items-center gap-1.5 text-purple-600 text-xs font-black group-hover:gap-2.5 transition-all">
+              Start Learning <ArrowRight size={14} />
             </div>
           </div>
-          
-          <Link 
-            href={`/course/${course.id}`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-black transition-all active:scale-95 shadow-sm"
-          >
-            Start Learning <ArrowRight size={14} />
-          </Link>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 }
 
