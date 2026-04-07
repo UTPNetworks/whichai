@@ -6,7 +6,8 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { 
   ArrowLeft, BookOpen, Clock, Users, Star, 
-  CheckCircle2, FileText, Globe, GraduationCap, ChevronRight 
+  CheckCircle2, FileText, Globe, GraduationCap, ChevronRight,
+  Award
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
