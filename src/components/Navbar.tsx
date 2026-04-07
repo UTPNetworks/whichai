@@ -68,6 +68,7 @@ export default function Navbar() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
+        className="flex-shrink-0"
       >
         <Link href="/" className="flex items-center gap-2">
           <Image src="/whichai_icon_nav.svg" alt="WhichAi logo" width={32} height={29} priority />
@@ -78,7 +79,7 @@ export default function Navbar() {
       </motion.div>
 
       {/* Neural Pulse - Desktop only */}
-      <div className="hidden lg:block flex-1 max-w-xl">
+      <div className="hidden lg:block flex-1 max-w-5xl min-w-0 mx-4">
         <NeuralPulse />
       </div>
 
@@ -87,7 +88,7 @@ export default function Navbar() {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="hidden md:flex items-center gap-3"
+        className="hidden md:flex items-center gap-3 flex-shrink-0"
       >
         {user ? (
           <>
