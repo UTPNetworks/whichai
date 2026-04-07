@@ -524,7 +524,7 @@ export default function MarketplacePage() {
     <div className="min-h-screen bg-[#f4f0eb]">
       <div className="relative z-50 bg-[#f4f0eb]/80 backdrop-blur-sm border-b border-gray-200"><Navbar /></div>
             {/* ═══ HERO ═══ */}
-      <section className="relative z-10 bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 py-14 md:py-16 overflow-hidden">
+      <section className="relative z-10 bg-gradient-to-br from-violet-600 via-purple-600 to-cyan-500 py-10 md:py-12 overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
@@ -532,12 +532,21 @@ export default function MarketplacePage() {
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold mb-4">
                 <Store className="w-3.5 h-3.5" /> World&apos;s First AI Marketplace
               </div>
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-3 leading-tight">Buy, Sell &amp; Auction<br /><span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">Everything AI</span></h1>
+              <h1 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">Buy, Sell &amp; Auction<br /><span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">Everything AI</span></h1>
               <p className="text-white/75 text-sm max-w-lg leading-relaxed">From prompts and agents to GPUs and servers — the eBay + Shopify for AI. Every transaction protected by escrow.</p>
+              
               <div className="flex gap-8 mt-6">
                 {[{ n: '12,400+', l: 'Listings' }, { n: '6,800+', l: 'Sellers' }, { n: '$2.3M+', l: 'Transacted' }, { n: '4.9★', l: 'Trust Score' }].map((s) => (
                   <div key={s.l}><div className="text-2xl font-black text-white">{s.n}</div><div className="text-[10px] text-white/55 font-medium uppercase tracking-wide">{s.l}</div></div>
                 ))}
+              </div>
+
+              {/* Compact Escrow Badge */}
+              <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg">
+                <Shield className="w-4 h-4 text-cyan-300" />
+                <span className="text-xs font-bold text-white/95 tracking-wide">
+                  Protected by WhichAI Escrow — <span className="text-cyan-300">0% fee on first 3 sales</span>
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
@@ -563,14 +572,6 @@ export default function MarketplacePage() {
           ))}
         </div>
       </section>
-
-      {/* ═══ ESCROW TRUST BAR ═══ */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 pb-4">
-        <div className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
-          <Shield className="w-6 h-6 text-emerald-600 flex-shrink-0" />
-          <div><p className="text-sm font-bold text-emerald-800">Protected by WhichAI Escrow</p><p className="text-xs text-emerald-600">Every transaction is held securely until the buyer confirms delivery. 0% seller fee on your first 3 sales.</p></div>
-        </div>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <main className="min-w-0">
