@@ -176,7 +176,7 @@ export default function HubPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Query the platform..."
-              className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-full pl-14 pr-6 py-4 text-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-[0_0_15px_rgba(0,0,0,0.2)]"
+              className="w-full max-w-2xl mx-auto bg-white/80 backdrop-blur-md border border-gray-300 rounded-full px-6 py-4 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-md"
             />
           </div>
         </div>
