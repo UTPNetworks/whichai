@@ -2,38 +2,34 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Cpu, Zap, Activity } from 'lucide-react';
 
 interface RegionData {
   name: string;
   availability: number;
   gpuCount: number;
   pricePerHour: number;
+  status: 'optimal' | 'busy' | 'critical';
 }
 
-const regions: RegionData[] = [
-  { name: 'US-West', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'US-East', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'EU-West', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'EU-East', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'Asia-SE', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'Asia-E', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'AU', availability: 0, gpuCount: 0, pricePerHour: 0 },
-  { name: 'ME', availability: 0, gpuCount: 0, pricePerHour: 0 },
-];
+const regions: string[] = ['US-West', 'US-East', 'EU-West', 'EU-East', 'Asia-SE', 'Asia-E', 'AU', 'ME'];
 
 export default function ComputeHeatmap() {
-  const [data, setData] = useState<RegionData[]>(regions);
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [data, setData] = useState<RegionData[]>([]);
 
   useEffect(() => {
     const updateData = () => {
       setData(
-        regions.map((region) => ({
-          ...region,
-          availability: Math.random() * 100,
-          gpuCount: Math.floor(Math.random() * 50) + 10,
-          pricePerHour: Math.random() * 3 + 1,
-        }))
+        regions.map((name) => {
+          const availability = Math.random() * 100;
+          return {
+            name,
+            availability,
+            gpuCount: Math.floor(Math.random() * 50) + 10,
+            pricePerHour: Math.random() * 3 + 1,
+            status: availability > 70 ? 'optimal' : availability > 30 ? 'busy' : 'critical',
+          };
+        })
       );
     };
 
@@ -42,57 +38,70 @@ export default function ComputeHeatmap() {
     return () => clearInterval(timer);
   }, []);
 
-  const getColor = (availability: number) => {
-    if (availability > 70) return 'from-green-50 to-emerald-50';
-    if (availability > 40) return 'from-yellow-50 to-amber-50';
-    return 'from-red-50 to-rose-50';
+  const getStatusColor = (status: RegionData['status']) => {
+    if (status === 'optimal') return 'text-emerald-500';
+    if (status === 'busy') return 'text-amber-500';
+    return 'text-rose-500';
   };
 
-  const getBorderColor = (availability: number) => {
-    if (availability > 70) return 'border-green-300 hover:border-green-500';
-    if (availability > 40) return 'border-yellow-300 hover:border-yellow-500';
-    return 'border-red-300 hover:border-red-500';
+  const getStatusBg = (status: RegionData['status']) => {
+    if (status === 'optimal') return 'bg-emerald-500';
+    if (status === 'busy') return 'bg-amber-500';
+    return 'bg-rose-500';
   };
 
   return (
-    <div className="w-full mb-6">
-      <h3 className="text-slate-900 font-semibold mb-4">🌍 Global GPU Availability</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="w-full mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <Activity size={16} className="text-purple-500" />
+          Global GPU Availability
+        </h3>
+        <div className="flex gap-3">
+          {['optimal', 'busy', 'critical'].map((s) => (
+            <div key={s} className="flex items-center gap-1.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${getStatusBg(s as any)}`} />
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         {data.map((region, idx) => (
           <motion.div
             key={region.name}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
-            onMouseEnter={() => setHoveredRegion(region.name)}
-            onMouseLeave={() => setHoveredRegion(null)}
-            className={`p-4 rounded-lg border transition-all cursor-pointer bg-gradient-to-br ${getColor(region.availability)} ${getBorderColor(region.availability)}`}
-            whileHover={{ scale: 1.05 }}
+            className="flex-shrink-0 w-40 p-3 rounded-xl bg-white/40 backdrop-blur-md border border-white/60 shadow-sm hover:shadow-md transition-all group cursor-pointer"
           >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-slate-800">{region.name}</span>
+              <Cpu size={12} className="text-slate-400 group-hover:text-purple-500 transition-colors" />
+            </div>
+            
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-800">{region.name}</p>
-              <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex items-end justify-between">
+                <span className={`text-lg font-black leading-none ${getStatusColor(region.status)}`}>
+                  {region.availability.toFixed(0)}%
+                </span>
+                <span className="text-[10px] font-bold text-slate-400">${region.pricePerHour.toFixed(2)}/hr</span>
+              </div>
+
+              <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${region.availability}%` }}
-                  transition={{ duration: 0.5 }}
-                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                  className={`h-full ${getStatusBg(region.status)}`}
                 />
               </div>
-              <div className="text-xs text-slate-600">
-                <p>{region.availability.toFixed(0)}% Available</p>
-                <p>{region.gpuCount} GPUs</p>
+
+              <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase">
+                <span>{region.gpuCount} Nodes</span>
+                <Zap size={10} className={region.availability > 50 ? 'text-amber-400' : 'text-slate-300'} />
               </div>
             </div>
-            {hoveredRegion === region.name && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute mt-2 px-3 py-2 bg-slate-900 rounded text-xs text-white whitespace-nowrap pointer-events-none"
-              >
-                ${region.pricePerHour.toFixed(2)}/hr
-              </motion.div>
-            )}
           </motion.div>
         ))}
       </div>

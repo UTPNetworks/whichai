@@ -6,6 +6,7 @@ import {
   Store, Upload, Code2, Eye, Mic, Image, Globe, Zap, BadgeCheck, ChevronRight,
   Brain, Monitor, X, Sparkles, Loader2, Tag, ShoppingBag, Search as SearchIcon,
   Key, MessageSquare, Cpu, Shield, Clock, Package, Download, Gavel, MessageCircle,
+  Plus, MapPin,
 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar'
@@ -426,8 +427,34 @@ export default function MarketplacePage() {
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState(500);
-  const [filters, setFilters] = useState<FilterState>({ sortBy: 'trending', priceRange: [0, 10000], minRating: 0, vramMin: 0, frameworks: [], subcategories: [], maxDistance: 500 });
+  const [filters, setFilters] = useState<FilterState>({
+    sortBy: 'trending',
+    priceRange: [0, 10000],
+    minRating: 0,
+    vramMin: 0,
+    frameworks: [],
+    subcategories: [],
+    maxDistance: 500,
+    zipCode: '',
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
   const [userListings, setUserListings] = useState<MarketListingV3[]>([]);
+
+  const handleUseLocation = () => {
+    setLocLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        setLocLoading(false);
+      },
+      () => {
+        alert('Could not get your location');
+        setLocLoading(false);
+      }
+    );
+  };
 
   // Fetch AI tools directory
   useEffect(() => {
@@ -550,11 +577,8 @@ export default function MarketplacePage() {
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <motion.button onClick={() => setShowSellModal(true)} whileHover={{ scale: 1.05, y: -2 }} className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-purple-700 bg-white shadow-lg hover:shadow-xl transition-all">
-                <Package className="w-4 h-4" /> List Your Item
-              </motion.button>
-              <motion.button whileHover={{ scale: 1.05, y: -2 }} className="flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-white bg-white/12 backdrop-blur-sm border border-white/25 hover:bg-white/20 transition-all">
-                <SearchIcon className="w-4 h-4" /> Browse
+              <motion.button onClick={() => setShowSellModal(true)} whileHover={{ scale: 1.05, y: -2 }} className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl font-bold text-purple-700 bg-white shadow-lg hover:shadow-xl transition-all">
+                <Plus className="w-5 h-5" /> List Your Item
               </motion.button>
             </div>
           </div>
@@ -575,12 +599,78 @@ export default function MarketplacePage() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
         <main className="min-w-0">
-          <HeroSearchBar value={searchQuery} onChange={setSearchQuery} onFilterToggle={() => {}} filterCount={filters.frameworks.length + (filters.maxDistance < 500 ? 1 : 0)} />
-          <PowerFilterPanel filters={filters} onFiltersChange={setFilters} listingCount={filteredListings.length} />
-          <LocationSearch onLocationChange={(coords) => { if (coords) { setUserLocation({ lat: coords.lat, lng: coords.lng }); } else { setUserLocation(null); } }} onRadiusChange={setSearchRadius} radius={searchRadius} />
+          {/* ── UNIFIED TOOLBAR ── */}
+          <div className="mb-6 space-y-4">
+            <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+              {/* Search + Filter Toggle */}
+              <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm focus-within:border-purple-400 transition-all">
+                <div className="pl-3 text-slate-400"><SearchIcon size={18} /></div>
+                <input
+                  type="text"
+                  placeholder="Search prompts, GPUs, models..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent py-2 text-sm outline-none text-slate-800 placeholder:text-slate-400"
+                />
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    showFilters ? 'bg-purple-100 text-purple-700' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <Filter size={16} /> Filters
+                </button>
+              </div>
+
+              {/* Location Tools Consolidated */}
+              <div className="flex flex-wrap items-center gap-2 bg-white border border-gray-200 rounded-xl p-1.5 shadow-sm">
+                <input
+                  type="text"
+                  placeholder="Zip Code"
+                  value={filters.zipCode}
+                  onChange={(e) => setFilters({...filters, zipCode: e.target.value})}
+                  className="w-24 bg-slate-50 border border-gray-100 py-2 px-3 rounded-lg text-sm outline-none focus:border-purple-300"
+                />
+                <button
+                  onClick={handleUseLocation}
+                  disabled={locLoading}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 border border-gray-100 text-slate-600 hover:bg-slate-100 transition-all text-sm font-bold disabled:opacity-50"
+                >
+                  {locLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
+                  <span className="hidden sm:inline">Use My Location</span>
+                </button>
+                <div className="h-6 w-px bg-gray-200 mx-1" />
+                <select
+                  value={searchRadius}
+                  onChange={(e) => setSearchRadius(Number(e.target.value))}
+                  className="bg-slate-50 border border-gray-100 py-2 px-3 rounded-lg text-sm outline-none text-slate-600 font-bold focus:border-purple-300"
+                >
+                  <option value={25}>25 miles</option>
+                  <option value={50}>50 miles</option>
+                  <option value={100}>100 miles</option>
+                  <option value={250}>250 miles</option>
+                  <option value={500}>Nationwide</option>
+                </select>
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <PowerFilterPanel filters={filters} onFiltersChange={setFilters} listingCount={filteredListings.length} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <div className="mb-6 flex gap-3">
             <motion.button whileHover={{ scale: 1.05 }} onClick={() => setShowMap(!showMap)} className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${ showMap ? 'bg-purple-100 border border-purple-300 text-purple-700' : 'bg-gray-100 border border-gray-200 text-gray-600 hover:bg-gray-200' }`}>
-              ð {showMap ? 'Hide' : 'Show'} Map
+              📍 {showMap ? 'Hide' : 'Show'} Map
             </motion.button>
           </div>
           {showMap && userLocation && (<MapView listings={filteredListings} userLocation={userLocation} radiusMiles={searchRadius} />)}

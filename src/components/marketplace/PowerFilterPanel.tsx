@@ -12,6 +12,7 @@ export interface FilterState {
   frameworks: string[];
   subcategories: string[];
   maxDistance: number;
+  zipCode?: string;
 }
 
 interface PowerFilterPanelProps {
