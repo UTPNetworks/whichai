@@ -12,6 +12,10 @@ export interface Profile {
   bio: string | null;
   avatar_url: string | null;
   preferred_categories: string[] | null;
+  onboarding_completed: boolean;
+  terms_accepted: boolean;
+  date_of_birth: string | null;
+  gender: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,7 +50,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback?next=/hub`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/complete-signup`,
     },
   });
   return { data, error };
@@ -85,7 +89,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Pick<Profile, 'first_name' | 'last_name' | 'phone' | 'tier' | 'bio' | 'avatar_url' | 'preferred_categories'>>
+  updates: Partial<Pick<Profile, 'first_name' | 'last_name' | 'phone' | 'tier' | 'bio' | 'avatar_url' | 'preferred_categories' | 'onboarding_completed' | 'terms_accepted' | 'date_of_birth' | 'gender'>>
 ) {
   const { data, error } = await supabase
     .from('profiles')
