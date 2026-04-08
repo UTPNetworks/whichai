@@ -229,10 +229,21 @@ export default function HubPage() {
                     {/* Compressed State: Icon & Vertical Text */}
                     <div className={`absolute inset-0 flex flex-col items-center pt-10 transition-opacity duration-300 ${isHovered ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
                       <Icon className={`w-8 h-8 mb-8 transition-transform duration-500 group-hover:scale-110 ${iconColors[hub.color]}`} />
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="dark:text-white/30 text-slate-400 font-black text-sm uppercase tracking-[0.3em] vertical-text">
-                          {hub.label}
-                        </span>
+                      <div className="flex flex-col items-center">
+                        {hub.label.split(/(\s+)/).map((segment, si) =>
+                          segment.trim() === "" ? (
+                            <div key={si} className="h-4" />
+                          ) : (
+                            segment.split("").map((letter, li) => (
+                              <span
+                                key={`${si}-${li}`}
+                                className="dark:text-white/30 text-slate-400 font-black text-[11px] uppercase leading-[1.4] select-none"
+                              >
+                                {letter}
+                              </span>
+                            ))
+                          )
+                        )}
                       </div>
                     </div>
 
