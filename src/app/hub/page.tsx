@@ -167,14 +167,14 @@ export default function HubPage() {
           </motion.h1>
           
           {/* ── 2. Omni-Search Bar (Flexbox Pill Rewrite) ── */}
-          <div className="flex items-center w-full max-w-md mx-auto my-8 bg-white backdrop-blur-md border-2 border-gray-200 rounded-full px-6 py-3 shadow-md focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+          <div className="flex items-center w-full max-w-md mx-auto my-8 bg-white dark:bg-white/5 backdrop-blur-md border-2 border-gray-200 dark:border-white/10 rounded-full px-6 py-3 shadow-md focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
             <Search size={24} strokeWidth={2.5} className="text-blue-500 mr-4 shrink-0" />
             <input
               type="text"
               placeholder="Search the Nexus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-lg text-gray-900 placeholder-gray-400 focus:outline-none"
+              className="w-full bg-transparent text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
             />
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function HubPage() {
                     <div className={`h-full flex flex-col justify-between transition-all duration-500 delay-100 ${isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"}`}>
                       <div>
                         <div className="flex items-center gap-3 mb-4">
-                          <div className={`p-3 rounded-2xl bg-white/5 border border-white/10 ${iconColors[hub.color]}`}>
+                          <div className={`p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 ${iconColors[hub.color]}`}>
                             <Icon size={24} />
                           </div>
                           <div>
@@ -251,7 +251,7 @@ export default function HubPage() {
                               {hub.label}
                             </h2>
                             {/* PRESERVED SUBTITLE */}
-                            <p className="text-xs text-gray-400 font-medium tracking-widest uppercase mt-3 transition-all duration-300 group-hover:text-blue-500 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                            <p className="text-xs text-gray-400 dark:text-gray-500 font-medium tracking-widest uppercase mt-3 transition-all duration-300 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                               {(hub as any).subtitle}
                             </p>
                           </div>
