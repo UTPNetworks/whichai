@@ -24,7 +24,7 @@ import {
   type AIProduct, getAllProducts,
 } from '@/lib/data';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase, safeRefreshSession, directInsert, getAccessToken } from '@/lib/supabase';
+import { supabase, safeRefreshSession, directInsert, directSelect, getAccessToken } from '@/lib/supabase';
 
 type BigTab = 'all' | 'digital-assets' | 'compute-hub' | 'hardware-corner';
 type ViewMode = 'listings' | 'auctions';
@@ -431,35 +431,27 @@ export default function MarketplacePage() {
   useEffect(() => {
     const fetchUserListings = async () => {
       try {
-        // Warm up the GoTrue auth lock (safe even with no session — uses getSession not refreshSession)
-        await safeRefreshSession(6000);
-
-        // 1. Fetch all active listings (with timeout)
-        const listingsPromise = supabase
-          .from('user_listings')
-          .select('*')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false });
-        const timeout1 = new Promise((_, reject) => setTimeout(() => reject(new Error('Listings fetch timed out')), 10000));
-        const { data: listings, error } = await Promise.race([listingsPromise, timeout1]) as any;
+        // Use directSelect to bypass GoTrue lock contention — raw REST call
+        // that extracts the access token once and uses plain fetch().
+        const { data: listings, error } = await directSelect(
+          'user_listings',
+          { status: 'active' },
+          { column: 'created_at', ascending: false }
+        );
 
         if (error) { console.error('Error fetching user listings:', error); return; }
         if (!listings || listings.length === 0) { setUserListings([]); return; }
 
-        // 2. Fetch seller profiles (public read — no auth needed)
-        const userIds = [...new Set(listings.map((l: any) => l.user_id))];
-        const profilesPromise = supabase
-          .from('profiles')
-          .select('id, first_name, last_name, email')
-          .in('id', userIds);
-        const timeout2 = new Promise((resolve) => setTimeout(() => resolve({ data: null }), 5000));
-        const { data: profiles } = await Promise.race([profilesPromise, timeout2]) as any;
+        // 2. Fetch seller profiles via directSelect (also bypasses GoTrue lock)
+        const userIds = [...new Set((listings as any[]).map((l: any) => l.user_id))];
+        const { data: profiles } = await directSelect('profiles', {}, undefined, 5000);
+        const relevantProfiles = (profiles as any[] || []).filter((p: any) => userIds.includes(p.id));
 
         const profileMap = new Map<string, any>();
-        (profiles || []).forEach((p: any) => profileMap.set(p.id, p));
+        relevantProfiles.forEach((p: any) => profileMap.set(p.id, p));
 
         // 3. Convert to MarketplaceListing format
-        const converted = listings.map((row: any) => {
+        const converted = (listings as any[]).map((row: any) => {
           const profile = profileMap.get(row.user_id);
           const sellerName = profile
             ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email?.split('@')[0] || 'WhichAI Seller'

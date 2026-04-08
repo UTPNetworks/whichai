@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/lib/supabase';
+import { supabase, directSelect } from '@/lib/supabase';
 import { allListingsV3, MarketListingV3 } from '@/lib/data';
 
 function supabaseRowToListing(row: any, sellerName: string): MarketListingV3 {
@@ -162,17 +162,18 @@ function ListingDetailContent() {
     if (listingId.startsWith('user-')) {
       const dbId = listingId.replace('user-', '');
       try {
-        const fetchPromise = supabase.from('user_listings').select('*').eq('id', dbId).single();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timed out')), 10000));
-        const { data: row, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+        // Use directSelect to bypass GoTrue lock contention
+        const { data: rows, error } = await directSelect('user_listings', { id: dbId });
+        const row = rows && rows.length > 0 ? rows[0] as any : null;
         if (!error && row) {
           setSupabaseData(row);
-          const profilePromise = supabase.from('profiles').select('id, first_name, last_name, email').eq('id', row.user_id).single();
-          const { data: profile } = await Promise.race([profilePromise, new Promise((resolve) => setTimeout(() => resolve({ data: null }), 5000))]) as any;
+          const { data: profileRows } = await directSelect('profiles', { id: row.user_id }, undefined, 5000);
+          const profile = profileRows && profileRows.length > 0 ? profileRows[0] as any : null;
           const sellerName = profile
             ? [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email?.split('@')[0] || 'WhichAI Seller'
             : 'WhichAI Seller';
           setListing(supabaseRowToListing(row, sellerName));
+          // Fire-and-forget view increment (still fine via supabase client)
           supabase.from('user_listings').update({ views: (row.views || 0) + 1 }).eq('id', dbId).then(() => {});
         }
       } catch (err) {
