@@ -768,30 +768,21 @@ export default function ProfilePage() {
                       </button>
                     </div>
 
-                    {/* MFA */}
+                    {/* MFA & Passkeys */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                      <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="w-5 h-5 text-slate-400" />
-                        <h2 className="text-lg font-bold text-slate-900">Multi-Factor Authentication</h2>
+                        <h2 className="text-lg font-bold text-slate-900">Multi-Factor Authentication &amp; Passkeys</h2>
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-gray-100">
-                        <div>
-                          <p className="font-medium text-slate-800 text-sm">Authenticator App (TOTP)</p>
-                          <p className="text-xs text-slate-400 mt-0.5">Use Google Authenticator, Authy, or any TOTP app</p>
-                        </div>
-                        <button
-                          onClick={() => setMfaEnabled(!mfaEnabled)}
-                          className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${mfaEnabled ? "bg-gradient-to-r from-cyan-500 to-purple-500" : "bg-slate-200"}`}
-                        >
-                          <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${mfaEnabled ? "left-6" : "left-0.5"}`} />
-                        </button>
-                      </div>
-                      {mfaEnabled && (
-                        <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                          <p className="text-sm text-amber-700">MFA setup wizard is coming soon. We'll notify you when it's ready.</p>
-                        </div>
-                      )}
+                      <p className="text-sm text-slate-500 mb-4 ml-7">
+                        Set up authenticator apps, passkeys, and manage your security options.
+                      </p>
+                      <a
+                        href="/settings/security"
+                        className="ml-7 inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-slate-200 text-slate-700 text-sm font-semibold hover:border-purple-300 hover:text-purple-600 transition-all"
+                      >
+                        Manage Security Settings
+                      </a>
                     </div>
 
                     {/* Account info */}

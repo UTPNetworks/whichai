@@ -46,9 +46,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      // After Google authenticates, Supabase sends the user to /auth/callback
-      // The `next` param tells our callback handler where to redirect after session exchange
-      redirectTo: `${window.location.origin}/auth/callback?next=/welcome`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/hub`,
     },
   });
   return { data, error };
@@ -95,5 +93,90 @@ export async function updateProfile(
     .eq('id', userId)
     .select()
     .single();
+  return { data, error };
+}
+
+// ══════════════════════════════════════════════════════════════
+// MFA (TOTP) helpers
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Check the user's current MFA assurance level.
+ * Returns { currentLevel, nextLevel } where levels are 'aal1' or 'aal2'.
+ * If nextLevel > currentLevel, the user needs to complete an MFA challenge.
+ */
+export async function getMfaAssuranceLevel() {
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  return { data, error };
+}
+
+/**
+ * List all enrolled MFA factors for the current user.
+ */
+export async function listMfaFactors() {
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  return { data, error };
+}
+
+/**
+ * Enroll a new TOTP factor. Returns a QR code URI + secret for the user to scan.
+ */
+export async function enrollTotp(friendlyName?: string) {
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'totp',
+    ...(friendlyName ? { friendlyName } : {}),
+  });
+  return { data, error };
+}
+
+/**
+ * Create a challenge for an existing factor, then verify it with the TOTP code.
+ */
+export async function verifyTotp(factorId: string, code: string) {
+  // Step 1: create the challenge
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+    factorId,
+  });
+  if (challengeError) return { data: null, error: challengeError };
+
+  // Step 2: verify with the 6-digit code
+  const { data, error } = await supabase.auth.mfa.verify({
+    factorId,
+    challengeId: challenge.id,
+    code,
+  });
+  return { data, error };
+}
+
+/**
+ * Unenroll (remove) an MFA factor.
+ */
+export async function unenrollMfaFactor(factorId: string) {
+  const { data, error } = await supabase.auth.mfa.unenroll({ factorId });
+  return { data, error };
+}
+
+// ══════════════════════════════════════════════════════════════
+// Passkey (WebAuthn) helpers
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Check if the current browser supports WebAuthn / passkeys.
+ */
+export function isPasskeySupported(): boolean {
+  return typeof window !== 'undefined' &&
+    !!window.PublicKeyCredential &&
+    typeof window.PublicKeyCredential === 'function';
+}
+
+/**
+ * Enroll a new passkey (WebAuthn) factor for the current user.
+ * The browser will prompt for biometric / security key.
+ */
+export async function enrollPasskey(friendlyName?: string) {
+  const { data, error } = await supabase.auth.mfa.enroll({
+    factorType: 'webauthn' as any,
+    ...(friendlyName ? { friendlyName } : {}),
+  });
   return { data, error };
 }
