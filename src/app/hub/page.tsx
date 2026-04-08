@@ -194,6 +194,7 @@ export default function HubPage() {
                 onMouseEnter={() => setHoveredId(hub.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
+<<<<<<< Updated upstream
                 {/* ── 3. Telemetry Badge ── */}
                 <AnimatePresence>
                   {matchCount > 0 && (
@@ -207,6 +208,24 @@ export default function HubPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+=======
+                <Link href={hub.href} className="block h-full group">
+                  <div
+                    className="relative rounded-3xl overflow-hidden cursor-pointer h-full transition-all duration-500 bg-white/10 backdrop-blur-md border border-white/20 hover:shadow-[0_0_20px_5px_var(--hub-glow-color)]"
+                    style={{
+                      boxShadow: `0 4px 20px -2px ${hub.glow}, 0 2px 8px -2px rgba(0,0,0,0.1)`,
+                      '--hub-glow-color': `${hub.glow}60`,
+                    } as React.CSSProperties}
+                  >
+                    {/* Animated gradient background */}
+                    <div
+                      className="absolute inset-0 transition-all duration-700"
+                      style={{
+                        background: `linear-gradient(160deg, ${hub.g1} 0%, ${hub.g2} 55%, ${hub.g3} 100%)`,
+                        backgroundSize: "200% 200%",
+                      }}
+                    />
+>>>>>>> Stashed changes
 
                 <motion.div
                   className="h-full w-full"
