@@ -167,14 +167,14 @@ export default function HubPage() {
           </motion.h1>
           
           {/* ── 2. Omni-Search Bar (Flexbox Pill Rewrite) ── */}
-          <div className="flex items-center w-full max-w-md mx-auto my-8 bg-gray-50/50 dark:bg-white/5 backdrop-blur-md border-2 border-gray-200/50 dark:border-white/10 rounded-full px-6 py-3 shadow-md focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+          <div className="flex items-center w-full max-w-md mx-auto my-8 bg-gray-50/50 dark:bg-gray-900/80 backdrop-blur-md border-2 border-gray-200/50 dark:border-gray-700 rounded-full px-6 py-3 shadow-md focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
             <Search size={24} strokeWidth={2.5} className="text-blue-500 mr-4 shrink-0" />
             <input
               type="text"
               placeholder="Search the Nexus..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none"
+              className="w-full bg-transparent text-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none"
             />
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function HubPage() {
               <Link 
                 key={hub.id} 
                 href={hub.href}
-                className={`relative flex-1 hover:flex-[4] transition-all duration-500 ease-out group cursor-pointer overflow-hidden rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 backdrop-blur-2xl shadow-sm dark:shadow-none pointer-events-auto z-20 ${colorGlows[hub.color]}`}
+                className={`relative flex-1 hover:flex-[4] transition-all duration-500 ease-out group cursor-pointer overflow-hidden rounded-[2rem] border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 dark:hover:bg-white/10 backdrop-blur-2xl shadow-sm dark:shadow-none pointer-events-auto z-20 ${colorGlows[hub.color]}`}
                 onMouseEnter={() => setHoveredId(hub.id)}
                 onMouseLeave={() => setHoveredId(null)}
               >
