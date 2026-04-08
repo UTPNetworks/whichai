@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase-server';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -11,12 +12,12 @@ export async function GET(request: Request) {
   }
 
   if (code) {
-    // Forward to the client-side confirm page so the session is properly
-    // persisted in the browser (server-side exchange does not set cookies).
-    const confirmUrl = new URL(`${origin}/auth/confirm`);
-    confirmUrl.searchParams.set('code', code);
-    confirmUrl.searchParams.set('next', next);
-    return NextResponse.redirect(confirmUrl.toString());
+    const supabase = await createClient();
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (!exchangeError) {
+      return NextResponse.redirect(`${origin}${next}`);
+    }
   }
 
   return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_error`);
