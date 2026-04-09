@@ -5,8 +5,7 @@ import { cookies } from 'next/headers'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // if "next" is in param, use it as the redirect destination
-  const next = searchParams.get('next') ?? '/'
+  const next = searchParams.get('next') ?? '/hub'
 
   if (code) {
     const cookieStore = await cookies()
@@ -31,18 +30,34 @@ export async function GET(request: Request) {
         },
       }
     )
-    
+
     // Exchange the code for a session
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
-    if (!error) {
-      // Successful exchange, redirect to the 'next' route or home
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (!error && data?.session?.user) {
+      const user = data.session.user
+
+      // Check if the user has completed onboarding
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile || profile.onboarding_completed === false) {
+        // New user or incomplete onboarding → send to onboarding wizard
+        return NextResponse.redirect(`${origin}/auth/onboarding`)
+      }
+
+      // Returning user with completed onboarding → go to destination
       return NextResponse.redirect(`${origin}${next}`)
-    } else {
+    }
+
+    if (error) {
       console.error('Supabase Auth Exchange Error:', error.message)
     }
   }
 
   // Fallback if no code is present or exchange fails
-  return NextResponse.redirect(`${origin}/?error=auth_exchange_failed`)
+  return NextResponse.redirect(`${origin}/auth/login?error=auth_exchange_failed`)
 }
