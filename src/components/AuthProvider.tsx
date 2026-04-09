@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { getProfile, type Profile } from "@/lib/auth";
@@ -34,7 +35,12 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+// Routes where onboarding redirect should NOT apply
+const ONBOARDING_BYPASS_PREFIXES = ['/auth/', '/api/'];
+
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,6 +113,22 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       refreshMfa();
     }
   }, [user, refreshMfa]);
+
+  // ── Onboarding guard ──────────────────────────────────────────
+  // If a logged-in user hasn't completed onboarding, redirect them
+  // back to the onboarding wizard (unless they're already on an auth page).
+  useEffect(() => {
+    if (loading || !user || !profile) return;
+
+    const isBypassRoute = ONBOARDING_BYPASS_PREFIXES.some((prefix) =>
+      pathname.startsWith(prefix)
+    );
+    if (isBypassRoute) return;
+
+    if (profile.onboarding_completed === false) {
+      router.replace('/auth/onboarding');
+    }
+  }, [loading, user, profile, pathname, router]);
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, refreshProfile, mfaLevel, hasMfaEnrolled, refreshMfa }}>

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Routes that require authentication
-const authRequired = ['/dashboard', '/my-listings', '/settings'];
+const authRequired = ['/dashboard', '/my-listings', '/settings', '/hub', '/profile'];
 
 // Routes that require MFA (aal2) in addition to authentication
 // These are sensitive routes involving money or account changes
@@ -38,5 +38,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/my-listings/:path*', '/settings/:path*'],
+  matcher: ['/dashboard/:path*', '/my-listings/:path*', '/settings/:path*', '/hub/:path*', '/profile/:path*'],
 };
