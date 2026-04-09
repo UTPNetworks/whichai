@@ -9,8 +9,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { updateProfile } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import { directUpsert } from "@/lib/supabase";
 
 // ── AI preference categories (equivalent to genre selection) ──
 const AI_CATEGORIES = [
@@ -119,12 +118,30 @@ export default function OnboardingPage() {
   };
 
   // ── Final save ──
+  // NOTE: We use directUpsert (raw REST) instead of supabase.from().update()
+  // to bypass the GoTrue lock contention bug, which causes the Supabase JS
+  // client to hang indefinitely during auth-intensive flows like OAuth
+  // callback + profile write. This is the same pattern we use elsewhere
+  // (marketplace listings) to avoid the "Creating account..." stuck state.
   const handleComplete = async () => {
     if (!user) return;
     setSaving(true);
 
     try {
-      const { error } = await updateProfile(user.id, {
+      const firstName =
+        user.user_metadata?.first_name ||
+        user.user_metadata?.given_name ||
+        displayName.split(" ")[0] ||
+        null;
+      const lastName =
+        user.user_metadata?.last_name ||
+        user.user_metadata?.family_name ||
+        displayName.split(" ").slice(1).join(" ") ||
+        null;
+
+      const { error } = await directUpsert("profiles", {
+        id: user.id,
+        email: user.email,
         username,
         date_of_birth: dob,
         gender,
@@ -132,10 +149,10 @@ export default function OnboardingPage() {
         notifications_enabled: notifications,
         terms_accepted: termsAccepted,
         onboarding_completed: true,
-        avatar_url: avatarUrl || undefined,
-        first_name: user.user_metadata?.first_name || user.user_metadata?.given_name || displayName.split(" ")[0] || null,
-        last_name: user.user_metadata?.last_name || user.user_metadata?.family_name || displayName.split(" ").slice(1).join(" ") || null,
-      } as any);
+        avatar_url: avatarUrl || null,
+        first_name: firstName,
+        last_name: lastName,
+      });
 
       if (error) {
         console.error("Onboarding save error:", error);
@@ -143,7 +160,18 @@ export default function OnboardingPage() {
         return;
       }
 
-      await refreshProfile();
+      // Best-effort profile refresh — don't block the UI on this since it
+      // goes through the Supabase JS client and may be slow. Use a short
+      // timeout so we redirect even if refresh hangs.
+      try {
+        await Promise.race([
+          refreshProfile(),
+          new Promise((resolve) => setTimeout(resolve, 1500)),
+        ]);
+      } catch {
+        // Ignore — we'll refresh on next page load
+      }
+
       setShowWelcome(true);
 
       // Show welcome animation then redirect

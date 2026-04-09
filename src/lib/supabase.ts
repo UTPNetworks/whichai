@@ -126,6 +126,45 @@ export async function safeRefreshSession(timeoutMs = 6000): Promise<void> {
 }
 
 /**
+ * Direct REST UPSERT (insert-or-update) that bypasses the GoTrue lock.
+ * Uses Supabase's `Prefer: resolution=merge-duplicates` header — rows with a
+ * matching primary key are updated, otherwise a new row is inserted.
+ * The `data` payload MUST include the primary key column (e.g. `id`).
+ */
+export async function directUpsert(
+  table: string,
+  data: Record<string, unknown>
+): Promise<{ error: Error | null }> {
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal,resolution=merge-duplicates',
+      },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: new Error(body?.message || `Server error ${res.status}`) };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
  * Direct REST PATCH (update) that bypasses the GoTrue lock.
  * Pass filters as column→value pairs (all ANDed).
  */
