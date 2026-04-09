@@ -5,6 +5,7 @@ export interface Profile {
   id: string;
   first_name: string | null;
   last_name: string | null;
+  username: string | null;
   email: string | null;
   phone: string | null;
   tier: 'Free' | 'Student' | 'Pro';
@@ -12,6 +13,8 @@ export interface Profile {
   bio: string | null;
   avatar_url: string | null;
   preferred_categories: string[] | null;
+  ai_preferences: string[] | null;
+  notifications_enabled: boolean;
   onboarding_completed: boolean;
   terms_accepted: boolean;
   date_of_birth: string | null;
@@ -89,7 +92,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 
 export async function updateProfile(
   userId: string,
-  updates: Partial<Pick<Profile, 'first_name' | 'last_name' | 'phone' | 'tier' | 'bio' | 'avatar_url' | 'preferred_categories' | 'onboarding_completed' | 'terms_accepted' | 'date_of_birth' | 'gender'>>
+  updates: Partial<Pick<Profile, 'first_name' | 'last_name' | 'username' | 'phone' | 'tier' | 'bio' | 'avatar_url' | 'preferred_categories' | 'ai_preferences' | 'notifications_enabled' | 'onboarding_completed' | 'terms_accepted' | 'date_of_birth' | 'gender'>>
 ) {
   const { data, error } = await supabase
     .from('profiles')
