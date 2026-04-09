@@ -1,4 +1,10 @@
-import { supabase } from './supabase';
+import {
+  supabase,
+  directMfaChallenge,
+  directMfaVerify,
+  directMfaListFactors,
+  directMfaUnenroll,
+} from './supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
 export interface Profile {
@@ -119,10 +125,36 @@ export async function getMfaAssuranceLevel() {
 
 /**
  * List all enrolled MFA factors for the current user.
+ *
+ * Uses a direct REST call to `/auth/v1/user` to bypass the Supabase JS
+ * client's GoTrue lock, which can hang during auth-intensive flows.
+ * Shapes the result to match what `supabase.auth.mfa.listFactors()` returns
+ * so callers don't need to change (`data.totp`, `data.phone`).
  */
 export async function listMfaFactors() {
-  const { data, error } = await supabase.auth.mfa.listFactors();
-  return { data, error };
+  const { data, error } = await directMfaListFactors();
+  if (error || !data) return { data: null, error };
+
+  const totp = data
+    .filter((f) => f.factor_type === 'totp')
+    .map((f) => ({
+      id: f.id,
+      friendly_name: f.friendly_name,
+      status: f.status,
+      created_at: f.created_at,
+      factor_type: 'totp',
+    }));
+  const phone = data
+    .filter((f) => f.factor_type === 'phone')
+    .map((f) => ({
+      id: f.id,
+      friendly_name: f.friendly_name,
+      status: f.status,
+      created_at: f.created_at,
+      factor_type: 'phone',
+    }));
+
+  return { data: { all: data, totp, phone }, error: null };
 }
 
 /**
@@ -138,29 +170,33 @@ export async function enrollTotp(friendlyName?: string) {
 
 /**
  * Create a challenge for an existing factor, then verify it with the TOTP code.
+ *
+ * Uses direct REST calls to the Supabase Auth API to bypass the JS client's
+ * GoTrue lock, which hangs during post-OAuth / auth-intensive flows (same
+ * root cause as the stuck onboarding button and stuck listing writes).
  */
 export async function verifyTotp(factorId: string, code: string) {
   // Step 1: create the challenge
-  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
-    factorId,
-  });
-  if (challengeError) return { data: null, error: challengeError };
+  const { data: challenge, error: challengeError } = await directMfaChallenge(factorId);
+  if (challengeError || !challenge) {
+    return { data: null, error: challengeError || new Error('Failed to create challenge') };
+  }
 
   // Step 2: verify with the 6-digit code
-  const { data, error } = await supabase.auth.mfa.verify({
-    factorId,
-    challengeId: challenge.id,
-    code,
-  });
-  return { data, error };
+  const { error } = await directMfaVerify(factorId, challenge.id, code);
+  if (error) return { data: null, error };
+
+  return { data: { factorId }, error: null };
 }
 
 /**
  * Unenroll (remove) an MFA factor.
+ *
+ * Uses direct REST to bypass the GoTrue lock.
  */
 export async function unenrollMfaFactor(factorId: string) {
-  const { data, error } = await supabase.auth.mfa.unenroll({ factorId });
-  return { data, error };
+  const { error } = await directMfaUnenroll(factorId);
+  return { data: error ? null : { factorId }, error };
 }
 
 // ══════════════════════════════════════════════════════════════

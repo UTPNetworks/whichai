@@ -247,6 +247,157 @@ export async function directDelete(
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// MFA helpers that bypass the GoTrue lock.
+// These hit the Supabase Auth REST API (/auth/v1/factors/...) directly
+// instead of going through supabase.auth.mfa.*, which acquires an
+// internal lock that hangs during post-OAuth / auth-intensive flows.
+// ══════════════════════════════════════════════════════════════
+
+/**
+ * Create a verification challenge for an existing MFA factor.
+ * Returns { id } where id is the challenge_id to pass to directMfaVerify.
+ */
+export async function directMfaChallenge(
+  factorId: string
+): Promise<{ data: { id: string } | null; error: Error | null }> {
+  const token = await getAccessToken();
+  if (!token) return { data: null, error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/factors/${factorId}/challenge`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: '{}',
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { data: null, error: new Error(body?.msg || body?.message || `Server error ${res.status}`) };
+    }
+    return { data: { id: body.id }, error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { data: null, error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
+ * Verify a TOTP code against a pending challenge. On success, the response
+ * contains new session tokens; we don't need to persist them here — the
+ * factor transitions from 'unverified' to 'verified' server-side, which is
+ * all we need for enrollment to succeed.
+ */
+export async function directMfaVerify(
+  factorId: string,
+  challengeId: string,
+  code: string
+): Promise<{ error: Error | null }> {
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/factors/${factorId}/verify`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ challenge_id: challengeId, code }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: new Error(body?.msg || body?.message || 'Invalid code. Try again.') };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
+ * List the current user's MFA factors via the auth REST API.
+ * Returns the raw list of factors (all statuses). Callers can filter by
+ * `status === 'verified'` and `factor_type` as needed.
+ */
+export async function directMfaListFactors(): Promise<{
+  data: Array<{ id: string; factor_type: string; friendly_name?: string; status: string; created_at: string }> | null;
+  error: Error | null;
+}> {
+  const token = await getAccessToken();
+  if (!token) return { data: null, error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    // `/auth/v1/factors` is not a documented public endpoint — factors come
+    // back inside the user object at `/auth/v1/user`. Hit that instead.
+    const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { data: null, error: new Error(body?.msg || body?.message || `Server error ${res.status}`) };
+    }
+    const factors = Array.isArray(body?.factors) ? body.factors : [];
+    return { data: factors, error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { data: null, error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
+ * Unenroll (delete) an MFA factor via direct REST.
+ */
+export async function directMfaUnenroll(
+  factorId: string
+): Promise<{ error: Error | null }> {
+  const token = await getAccessToken();
+  if (!token) return { error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/factors/${factorId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      return { error: new Error(body?.msg || body?.message || `Server error ${res.status}`) };
+    }
+    return { error: null };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { error: new Error(err?.message || 'Request failed') };
+  }
+}
+
 /**
  * Bulk PATCH — updates multiple rows by ID in a single REST call.
  * Uses Supabase's `id=in.(id1,id2,...)` filter syntax.
