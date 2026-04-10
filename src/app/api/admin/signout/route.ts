@@ -18,6 +18,7 @@ async function doSignout() {
   const res = NextResponse.redirect(new URL('/admin/login', 'https://placeholder'), { status: 303 });
   res.cookies.set('admin_stepup', '', { maxAge: 0, path: '/' });
   res.cookies.set('admin_impersonating', '', { maxAge: 0, path: '/' });
+  res.cookies.set('admin_mfa_ok', '', { maxAge: 0, path: '/' });
   return res;
 }
 
@@ -27,6 +28,7 @@ function relativeRedirect(path: string) {
   const res = new NextResponse(null, { status: 303, headers: { Location: path } });
   res.cookies.set('admin_stepup', '', { maxAge: 0, path: '/' });
   res.cookies.set('admin_impersonating', '', { maxAge: 0, path: '/' });
+  res.cookies.set('admin_mfa_ok', '', { maxAge: 0, path: '/' });
   return res;
 }
 

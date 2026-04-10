@@ -9,11 +9,94 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 /**
- * Get the current access token with a hard timeout.
- * Bypasses GoTrue lock contention by racing getSession against a timer.
- * Returns null if no session or if the call times out.
+ * Parse the Supabase session cookie directly from `document.cookie` without
+ * going through the SDK.
+ *
+ * Why: `supabase.auth.getSession()` can hang on the GoTrue internal lock
+ * during auth-intensive flows (post-OAuth, after a fresh sign-in, during MFA
+ * enrollment). The entire `direct*` helper family exists to sidestep that
+ * lock, but they all funneled back through `getSession()` to fetch the
+ * access token, reintroducing the very hang we were trying to avoid.
+ *
+ * Supabase SSR writes the session under `sb-<projectRef>-auth-token`, either
+ * as a single cookie or chunked (`.0`, `.1`, ...) when the value exceeds the
+ * browser's per-cookie byte limit. The payload is JSON, optionally prefixed
+ * with `base64-` and base64 encoded.
  */
-export async function getAccessToken(timeoutMs = 8000): Promise<string | null> {
+function readSessionCookie(): { access_token?: string; refresh_token?: string } | null {
+  if (typeof document === 'undefined') return null;
+  const refMatch = supabaseUrl.match(/\/\/([^.]+)\./);
+  const ref = refMatch?.[1];
+  if (!ref) return null;
+  const baseName = `sb-${ref}-auth-token`;
+
+  const pairs = document.cookie.split(';').map((c) => c.trim());
+  const asMap = new Map<string, string>();
+  for (const p of pairs) {
+    const eq = p.indexOf('=');
+    if (eq <= 0) continue;
+    asMap.set(p.slice(0, eq), p.slice(eq + 1));
+  }
+
+  // Try unchunked form first.
+  let raw = asMap.get(baseName);
+  if (!raw) {
+    // Chunked form — collect every `baseName.N` suffix in ascending order.
+    const chunks: Array<[number, string]> = [];
+    for (const [name, value] of asMap.entries()) {
+      if (!name.startsWith(`${baseName}.`)) continue;
+      const idx = Number(name.slice(baseName.length + 1));
+      if (!Number.isFinite(idx)) continue;
+      chunks.push([idx, value]);
+    }
+    if (chunks.length === 0) return null;
+    chunks.sort((a, b) => a[0] - b[0]);
+    raw = chunks.map(([, v]) => v).join('');
+  }
+
+  try {
+    raw = decodeURIComponent(raw);
+  } catch {
+    /* keep as-is */
+  }
+
+  // Supabase prefixes base64-encoded cookies with `base64-`.
+  if (raw.startsWith('base64-')) {
+    try {
+      raw = atob(raw.slice('base64-'.length));
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      return {
+        access_token: typeof parsed.access_token === 'string' ? parsed.access_token : undefined,
+        refresh_token: typeof parsed.refresh_token === 'string' ? parsed.refresh_token : undefined,
+      };
+    }
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+
+/**
+ * Get the current access token without touching the SDK (and therefore
+ * without risk of hanging on the GoTrue internal lock). Reads the SSR
+ * session cookie directly and returns the access_token field.
+ *
+ * Falls back to `supabase.auth.getSession()` with a hard timeout only if
+ * the cookie can't be parsed, which should only happen in unusual states.
+ */
+export async function getAccessToken(timeoutMs = 4000): Promise<string | null> {
+  // Fast path: read the cookie directly. Synchronous and lock-free.
+  const fromCookie = readSessionCookie();
+  if (fromCookie?.access_token) return fromCookie.access_token;
+
+  // Slow path: try the SDK once with a hard timeout so we never wedge.
   try {
     const sessionPromise = supabase.auth.getSession();
     const timeoutPromise = new Promise<null>((resolve) =>
@@ -21,7 +104,7 @@ export async function getAccessToken(timeoutMs = 8000): Promise<string | null> {
     );
     const result = await Promise.race([sessionPromise, timeoutPromise]);
     if (!result) return null;
-    return (result as any).data?.session?.access_token ?? null;
+    return (result as { data?: { session?: { access_token?: string } } }).data?.session?.access_token ?? null;
   } catch {
     return null;
   }

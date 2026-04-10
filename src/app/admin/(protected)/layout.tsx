@@ -17,22 +17,28 @@ export default async function AdminProtectedLayout({
     redirect('/admin/login');
   }
 
-  // Enforce MFA (aal2) for every admin page. If the admin is only at
-  // aal1 we bounce them through the MFA gate. If they have no TOTP
-  // factor enrolled at all, /admin/setup-mfa force-enrolls them before
-  // granting access to the console.
-  if (admin.aal !== 'aal2') {
+  // Read cookies once — we use two: admin_stepup for per-action step-up
+  // verification, and admin_mfa_ok as a medium-lived "this session passed
+  // MFA" marker that survives Supabase access-token refreshes (which
+  // silently downgrade aal2 → aal1 and would otherwise bounce the admin
+  // back to the MFA gate every ~hour).
+  const cookieStore = await cookies();
+  const stepUpRaw = cookieStore.get('admin_stepup')?.value;
+  const stepUpExpiresAt = stepUpRaw ? parseInt(stepUpRaw, 10) || 0 : 0;
+  const mfaOkRaw = cookieStore.get('admin_mfa_ok')?.value;
+  const mfaOkExpiresAt = mfaOkRaw ? parseInt(mfaOkRaw, 10) || 0 : 0;
+  const mfaOkValid = mfaOkExpiresAt > Date.now();
+
+  // Enforce MFA for every admin page. Either the live session claim is
+  // already aal2, OR we have a valid admin_mfa_ok cookie stamped from a
+  // recent successful TOTP verify. If neither, bounce through the MFA
+  // gate (if a factor exists) or force enrollment.
+  if (admin.aal !== 'aal2' && !mfaOkValid) {
     if (admin.hasMfaFactor) {
       redirect('/auth/mfa-verify?next=/admin');
     }
     redirect('/admin/setup-mfa');
   }
-
-  // Read current step-up expiry so the client-side provider can
-  // initialize its countdown without an extra round-trip.
-  const cookieStore = await cookies();
-  const stepUpRaw = cookieStore.get('admin_stepup')?.value;
-  const stepUpExpiresAt = stepUpRaw ? parseInt(stepUpRaw, 10) || 0 : 0;
 
   return (
     <AdminSessionProvider initialStepUpExpiresAt={stepUpExpiresAt}>
