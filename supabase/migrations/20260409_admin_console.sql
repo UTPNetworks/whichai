@@ -266,7 +266,7 @@ do $$
 declare
   me uuid;
 begin
-  select id into me from auth.users where email = 'sanjsaini1992@gmail.com' limit 1;
+  select id into me from auth.users where email = 'admin.bhuvi@gmail.com' limit 1;
   if me is not null then
     insert into public.admins (user_id, role, notes)
     values (me, 'owner', 'Primary owner — seeded by 20260409_admin_console.sql')
