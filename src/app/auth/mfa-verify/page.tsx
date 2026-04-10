@@ -5,7 +5,7 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, FormEvent } from "react";
-import { listMfaFactors, verifyTotp } from "@/lib/auth";
+import { listMfaFactors, verifyTotp, getMfaAssuranceLevel } from "@/lib/auth";
 
 // Honor the `next` query param so /auth/login?next=/admin → MFA → /admin
 function getSafeNext(fallback = "/hub"): string {
@@ -28,19 +28,50 @@ export default function MfaVerifyPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Find the user's TOTP factor
-    listMfaFactors().then(({ data }) => {
-      if (data?.totp && data.totp.length > 0) {
-        // Use the first verified TOTP factor
-        const verified = data.totp.find((f: any) => f.status === 'verified');
+    (async () => {
+      try {
+        // If the session is already aal2 (e.g. we just enrolled and the
+        // verify call elevated the session), skip the challenge entirely.
+        const { data: aalData } = await getMfaAssuranceLevel();
+        if (aalData?.currentLevel === 'aal2') {
+          window.location.replace(getSafeNext());
+          return;
+        }
+
+        const { data, error: listErr } = await listMfaFactors();
+        if (listErr) {
+          setError(
+            'Unable to load MFA factors. Please sign out and sign back in, then try again.'
+          );
+          setLoading(false);
+          return;
+        }
+
+        const verified = data?.totp?.find((f: { status: string }) => f.status === 'verified');
         if (verified) {
           setFactorId(verified.id);
-        } else if (data.totp.length > 0) {
+        } else if (data?.totp?.length) {
+          // Fall back to any unverified factor so enrollment can finish.
           setFactorId(data.totp[0].id);
+        } else {
+          // No factors at all — bounce to setup, preserving the original next.
+          const nextParam = encodeURIComponent(getSafeNext());
+          const setupUrl =
+            typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+              ? `/admin/setup-mfa?next=${nextParam}`
+              : `/settings/security?next=${nextParam}`;
+          window.location.replace(setupUrl);
+          return;
         }
+      } catch (err) {
+        setError(
+          (err as Error)?.message ||
+            'Unable to load MFA factors. Please sign out and sign back in, then try again.'
+        );
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    })();
   }, []);
 
   const handleSubmit = async (e: FormEvent) => {

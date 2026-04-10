@@ -290,10 +290,14 @@ export async function directMfaChallenge(
 }
 
 /**
- * Verify a TOTP code against a pending challenge. On success, the response
- * contains new session tokens; we don't need to persist them here — the
- * factor transitions from 'unverified' to 'verified' server-side, which is
- * all we need for enrollment to succeed.
+ * Verify a TOTP code against a pending challenge.
+ *
+ * On success, Supabase returns a fresh session (access_token + refresh_token)
+ * that reflects the user's new AAL. For enrollment this elevates status
+ * from unverified → verified; for sign-in challenges it elevates the session
+ * from aal1 → aal2. We MUST persist these tokens back into the browser
+ * client — otherwise server-side cookies still carry the old aal1 JWT and
+ * the (protected) admin layout will keep bouncing the user into a loop.
  */
 export async function directMfaVerify(
   factorId: string,
@@ -321,6 +325,21 @@ export async function directMfaVerify(
     if (!res.ok) {
       return { error: new Error(body?.msg || body?.message || 'Invalid code. Try again.') };
     }
+
+    // Persist the freshly issued session so subsequent server requests
+    // see the elevated AAL via the sb-*-auth-token cookie.
+    if (body?.access_token && body?.refresh_token) {
+      try {
+        await supabase.auth.setSession({
+          access_token: body.access_token,
+          refresh_token: body.refresh_token,
+        });
+      } catch (err) {
+        // Non-fatal — but log it. The user might need to refresh manually.
+        console.error('[directMfaVerify] failed to persist new session:', err);
+      }
+    }
+
     return { error: null };
   } catch (err: any) {
     clearTimeout(timer);
