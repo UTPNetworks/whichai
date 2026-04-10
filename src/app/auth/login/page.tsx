@@ -9,6 +9,22 @@ import { useState, FormEvent } from "react";
 import { signIn, signInWithGoogle, getMfaAssuranceLevel, isPasskeySupported } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
+// Read the `next` query param and only accept a safe internal path.
+// Prevents open-redirect abuse (e.g. ?next=https://evil.example.com or
+// ?next=//evil.example.com) while still letting deep links like /admin
+// or /listings/new work.
+function getSafeNext(fallback = "/hub"): string {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = new URLSearchParams(window.location.search).get("next");
+    if (!raw) return fallback;
+    if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+    return raw;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -39,14 +55,18 @@ export default function LoginPage() {
 
       // Check if user has MFA enabled and needs to verify
       const { data: mfaData } = await getMfaAssuranceLevel();
+      const safeNext = getSafeNext();
       if (mfaData && mfaData.nextLevel === 'aal2' && mfaData.currentLevel === 'aal1') {
-        // User has MFA enrolled but hasn't verified yet this session
-        window.location.replace("/auth/mfa-verify");
+        // User has MFA enrolled but hasn't verified yet this session —
+        // carry `next` through so we land on the intended page after TOTP.
+        window.location.replace(
+          `/auth/mfa-verify?next=${encodeURIComponent(safeNext)}`
+        );
         return;
       }
 
-      // No MFA required — go to hub
-      window.location.replace("/hub");
+      // No MFA required — honor `next` (e.g. /admin) with safe fallback
+      window.location.replace(safeNext);
     } catch {
       setServerError("Something went wrong. Please try again.");
       setSubmitting(false);
@@ -92,7 +112,7 @@ export default function LoginPage() {
         setPasskeyLoading(false);
         return;
       }
-      window.location.replace("/hub");
+      window.location.replace(getSafeNext());
     } catch {
       setServerError("Passkey sign-in failed. Try another method.");
       setPasskeyLoading(false);

@@ -7,6 +7,19 @@ import Link from "next/link";
 import { useState, useEffect, FormEvent } from "react";
 import { listMfaFactors, verifyTotp } from "@/lib/auth";
 
+// Honor the `next` query param so /auth/login?next=/admin → MFA → /admin
+function getSafeNext(fallback = "/hub"): string {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = new URLSearchParams(window.location.search).get("next");
+    if (!raw) return fallback;
+    if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+    return raw;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function MfaVerifyPage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -52,8 +65,8 @@ export default function MfaVerifyPage() {
         setSubmitting(false);
         return;
       }
-      // MFA verified — redirect to hub
-      window.location.replace("/hub");
+      // MFA verified — honor ?next= (e.g. /admin) with safe fallback to /hub
+      window.location.replace(getSafeNext());
     } catch {
       setError("Verification failed. Please try again.");
       setSubmitting(false);
