@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   MoreVertical, Shield, EyeOff, Ghost, Trash2, RefreshCw, UserCog, Check,
 } from "lucide-react";
+import { useAdminFetch } from "../../_components/AdminSessionProvider";
 
 interface AdminUser {
   user_id: string;
@@ -29,6 +30,7 @@ export default function UsersTable({ users }: { users: AdminUser[] }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const router = useRouter();
+  const adminFetch = useAdminFetch();
 
   const act = async (
     url: string,
@@ -38,12 +40,12 @@ export default function UsersTable({ users }: { users: AdminUser[] }) {
     setBusyId(body.user_id as string);
     setOpenRow(null);
     try {
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Action failed");
       setToast({ msg: successMsg, ok: true });
       router.refresh();

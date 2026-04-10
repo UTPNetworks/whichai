@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { getAdminIdentity } from '@/lib/admin';
 import AdminSidebar from './_components/AdminSidebar';
+import AdminSessionProvider from './_components/AdminSessionProvider';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,15 +17,34 @@ export default async function AdminProtectedLayout({
     redirect('/admin/login');
   }
 
+  // Enforce MFA (aal2) for every admin page. If the admin is only at
+  // aal1 we bounce them through the MFA gate. If they have no TOTP
+  // factor enrolled at all, /admin/setup-mfa force-enrolls them before
+  // granting access to the console.
+  if (admin.aal !== 'aal2') {
+    if (admin.hasMfaFactor) {
+      redirect('/auth/mfa-verify?next=/admin');
+    }
+    redirect('/admin/setup-mfa');
+  }
+
+  // Read current step-up expiry so the client-side provider can
+  // initialize its countdown without an extra round-trip.
+  const cookieStore = await cookies();
+  const stepUpRaw = cookieStore.get('admin_stepup')?.value;
+  const stepUpExpiresAt = stepUpRaw ? parseInt(stepUpRaw, 10) || 0 : 0;
+
   return (
-    <div className="min-h-screen flex bg-[#0a0a14] text-slate-200">
-      <AdminSidebar adminEmail={admin.email} adminRole={admin.role} />
-      <main className="flex-1 ml-64 min-h-screen">
-        {/* Impersonation banner hook — if an `admin_impersonating` cookie is set */}
-        <ImpersonationBanner />
-        <div className="p-8 max-w-7xl">{children}</div>
-      </main>
-    </div>
+    <AdminSessionProvider initialStepUpExpiresAt={stepUpExpiresAt}>
+      <div className="min-h-screen flex bg-[#0a0a14] text-slate-200">
+        <AdminSidebar adminEmail={admin.email} adminRole={admin.role} />
+        <main className="flex-1 ml-64 min-h-screen">
+          {/* Impersonation banner hook — if `admin_impersonating` cookie set */}
+          <ImpersonationBanner />
+          <div className="p-8 max-w-7xl">{children}</div>
+        </main>
+      </div>
+    </AdminSessionProvider>
   );
 }
 

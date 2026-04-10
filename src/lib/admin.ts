@@ -36,20 +36,44 @@ export interface AdminIdentity {
   userId: string;
   email: string;
   role: AdminRole;
-  aal: string | null;
+  /** 'aal1' (password only) or 'aal2' (password + MFA verified this session) */
+  aal: 'aal1' | 'aal2' | null;
+  /** True if this user already has a verified TOTP factor enrolled. */
+  hasMfaFactor: boolean;
 }
 
 /**
  * Resolve the current admin from the request cookies.
  * Returns null if the caller is not signed in or not in the admins table.
+ *
+ * Detects MFA assurance level correctly:
+ *   - aal1 = signed in with password only
+ *   - aal2 = password + MFA challenge verified in the current session
  */
 export async function getAdminIdentity(): Promise<AdminIdentity | null> {
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: session } = await supabase.auth.getSession();
-  const aal = (session?.session as unknown as { aal?: string })?.aal || null;
+  // Determine the user's current assurance level. Supabase exposes this
+  // via mfa.getAuthenticatorAssuranceLevel() — currentLevel reflects the
+  // level of the live session.
+  let aal: 'aal1' | 'aal2' | null = null;
+  try {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    aal = (aalData?.currentLevel as 'aal1' | 'aal2' | undefined) || null;
+  } catch {
+    aal = null;
+  }
+
+  // Does the user have any verified TOTP factor?
+  let hasMfaFactor = false;
+  try {
+    const { data: factors } = await supabase.auth.mfa.listFactors();
+    hasMfaFactor = !!factors?.totp?.some((f) => f.status === 'verified');
+  } catch {
+    hasMfaFactor = false;
+  }
 
   const admin = createAdminClient();
   const { data: adminRow, error } = await admin
@@ -65,6 +89,7 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
     email: user.email || '',
     role: adminRow.role as AdminRole,
     aal,
+    hasMfaFactor,
   };
 }
 

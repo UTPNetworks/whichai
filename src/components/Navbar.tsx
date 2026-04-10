@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Bell, ChevronDown, LogOut, User, LayoutGrid, Package } from "lucide-react";
+import { Menu, X, Bell, ChevronDown, LogOut, User, LayoutGrid, Package, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -180,6 +180,14 @@ export default function Navbar() {
                       >
                         <Package className="w-4 h-4" />
                         My Listings
+                      </Link>
+                      <Link
+                        href="/settings/security"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                      >
+                        <ShieldCheck className="w-4 h-4" />
+                        Security & MFA
                       </Link>
                       <button
                         onClick={handleSignOut}

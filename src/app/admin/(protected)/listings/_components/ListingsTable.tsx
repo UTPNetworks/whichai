@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   MoreVertical, EyeOff, Eye, Trash2, RefreshCw, Check, ExternalLink,
 } from "lucide-react";
+import { useAdminFetch } from "../../_components/AdminSessionProvider";
 
 interface AdminListing {
   id: string;
@@ -26,6 +27,7 @@ export default function ListingsTable({ listings }: { listings: AdminListing[] }
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const router = useRouter();
+  const adminFetch = useAdminFetch();
 
   const act = async (
     url: string,
@@ -35,12 +37,12 @@ export default function ListingsTable({ listings }: { listings: AdminListing[] }
     setBusyId(body.listing_id as string);
     setOpenRow(null);
     try {
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Action failed");
       setToast({ msg: successMsg, ok: true });
       router.refresh();

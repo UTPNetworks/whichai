@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArchiveRestore, RefreshCw, Check, Clock } from "lucide-react";
+import { useAdminFetch } from "../../_components/AdminSessionProvider";
 
 interface TrashItem {
   id: string;
@@ -24,13 +25,14 @@ export default function TrashTable({ items }: { items: TrashItem[] }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const router = useRouter();
+  const adminFetch = useAdminFetch();
 
   const restore = async (item: TrashItem) => {
     if (!confirm(`Restore this ${item.resource_type}? It will reappear immediately.`)) return;
     setBusyId(item.id);
     try {
-      const res = await fetch(`/api/admin/trash/${item.id}/restore`, { method: 'POST' });
-      const data = await res.json();
+      const res = await adminFetch(`/api/admin/trash/${item.id}/restore`, { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Restore failed');
       setToast({ msg: `Restored ${item.resource_type}`, ok: true });
       router.refresh();

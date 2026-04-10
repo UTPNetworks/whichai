@@ -4,13 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Package, Radio, ScrollText, Trash2,
-  LogOut, ShieldAlert, Zap,
+  LogOut, ShieldAlert, Zap, UserCog,
 } from "lucide-react";
+import { StepUpChip } from "./AdminSessionProvider";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/listings", label: "Listings", icon: Package },
+  { href: "/admin/admins", label: "Admins", icon: UserCog },
   { href: "/admin/kill-switch", label: "Kill Switch", icon: Radio, danger: true },
   { href: "/admin/audit", label: "Audit Log", icon: ScrollText },
   { href: "/admin/trash", label: "Trash (30d)", icon: Trash2 },
@@ -72,8 +74,10 @@ export default function AdminSidebar({
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-white/5">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="px-4 py-4 border-t border-white/5 space-y-3">
+        {/* Step-up lock status / unlock button */}
+        <StepUpChip />
+        <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold">
             {adminEmail.slice(0, 1).toUpperCase()}
           </div>
@@ -83,7 +87,7 @@ export default function AdminSidebar({
           </div>
         </div>
         <Link
-          href="/admin/login?signout=1"
+          href="/api/admin/signout"
           className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />

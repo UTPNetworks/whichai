@@ -6,6 +6,7 @@ import {
   Power, Lock, UserX, ShoppingBag, MessageCircle, Cpu, Ban, Megaphone,
   Check, RefreshCw, ShieldAlert,
 } from "lucide-react";
+import { useAdminFetch } from "../../_components/AdminSessionProvider";
 
 interface Flags {
   id: number;
@@ -28,16 +29,17 @@ export default function KillSwitchClient({ flags: initial, role }: { flags: Flag
   const [busy, setBusy] = useState<string | null>(null);
   const [banner, setBanner] = useState(initial?.maintenance_banner || "");
   const router = useRouter();
+  const adminFetch = useAdminFetch();
 
   const setFlag = async (key: keyof Flags, value: boolean) => {
     setBusy(key);
     try {
-      const res = await fetch("/api/admin/flags", {
+      const res = await adminFetch("/api/admin/flags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, value }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Failed");
       setFlags((f) => ({ ...f, [key]: value }));
       setToast({ msg: `${key} → ${value ? "ON" : "OFF"}`, ok: true });
@@ -53,12 +55,12 @@ export default function KillSwitchClient({ flags: initial, role }: { flags: Flag
   const saveBanner = async () => {
     setBusy("maintenance_banner");
     try {
-      const res = await fetch("/api/admin/flags", {
+      const res = await adminFetch("/api/admin/flags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: "maintenance_banner", value: banner || null }),
       });
-      if (!res.ok) throw new Error((await res.json()).error || "Failed");
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Failed");
       setToast({ msg: "Banner saved", ok: true });
     } catch (err: any) {
       setToast({ msg: err?.message || "Failed", ok: false });
