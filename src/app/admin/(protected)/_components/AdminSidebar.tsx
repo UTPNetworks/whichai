@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Package, Radio, ScrollText, Trash2,
-  LogOut, ShieldAlert, Zap, UserCog,
+  LogOut, ShieldAlert, Zap, UserCog
 } from "lucide-react";
 
 const NAV = [
@@ -83,13 +83,16 @@ export default function AdminSidebar({
             <div className="text-[10px] text-slate-500 uppercase tracking-wider">{adminRole}</div>
           </div>
         </div>
-        <Link
+        {/* MUST use <a> — Next.js <Link> prefetches GET hrefs, which
+            would trigger the signout endpoint on every page load and
+            destroy the session immediately after login. */}
+        <a
           href="/api/admin/signout"
           className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
           Sign out of admin
-        </Link>
+        </a>
       </div>
     </aside>
   );
