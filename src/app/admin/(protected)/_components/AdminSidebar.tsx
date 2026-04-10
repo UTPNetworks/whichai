@@ -6,7 +6,6 @@ import {
   LayoutDashboard, Users, Package, Radio, ScrollText, Trash2,
   LogOut, ShieldAlert, Zap, UserCog,
 } from "lucide-react";
-import { StepUpChip } from "./AdminSessionProvider";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -75,8 +74,6 @@ export default function AdminSidebar({
 
       {/* Footer */}
       <div className="px-4 py-4 border-t border-white/5 space-y-3">
-        {/* Step-up lock status / unlock button */}
-        <StepUpChip />
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold">
             {adminEmail.slice(0, 1).toUpperCase()}

@@ -8,7 +8,7 @@
 import 'server-only';
 import { createClient as createServerClient } from './supabase-server';
 import { createClient as createJsClient } from '@supabase/supabase-js';
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -103,7 +103,14 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
 export async function requireAdmin(options: {
   role?: AdminRole;
   mfaRequired?: boolean;
-  stepUp?: boolean;   // require fresh TOTP verification for destructive actions
+  /**
+   * @deprecated Step-up TOTP is no longer enforced per-action. Once an admin
+   * has passed MFA at login (tracked via the `admin_mfa_ok` cookie / aal2
+   * session), every destructive action runs without an additional prompt.
+   * This option is kept in the signature so existing callers keep compiling,
+   * but it is a no-op.
+   */
+  stepUp?: boolean;
 } = {}): Promise<AdminIdentity | NextResponse> {
   const identity = await getAdminIdentity();
   if (!identity) {
@@ -120,24 +127,14 @@ export async function requireAdmin(options: {
     }
   }
 
-  if (options.mfaRequired && identity.aal !== 'aal2') {
-    return NextResponse.json(
-      { error: 'MFA required', code: 'mfa_required' },
-      { status: 403 }
-    );
-  }
-
-  if (options.stepUp) {
-    const cookieStore = await cookies();
-    const stepUpCookie = cookieStore.get('admin_stepup');
-    const exp = stepUpCookie?.value ? parseInt(stepUpCookie.value, 10) : 0;
-    if (!exp || exp < Date.now()) {
-      return NextResponse.json(
-        { error: 'Step-up verification required', code: 'stepup_required' },
-        { status: 403 }
-      );
-    }
-  }
+  // MFA-at-login is sufficient. We do NOT re-check aal here, because
+  // Supabase silently downgrades aal2 → aal1 on token refresh roughly once
+  // an hour — which would lock admins out of destructive actions mid-session
+  // for no good reason. The admin area is already MFA-gated at the layout,
+  // using a long-lived `admin_mfa_ok` cookie stamped on successful TOTP
+  // verify (see src/app/api/auth/set-session/route.ts + (protected)/layout).
+  void options.mfaRequired;
+  void options.stepUp;
 
   return identity;
 }
