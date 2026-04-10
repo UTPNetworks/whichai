@@ -4,6 +4,7 @@ import {
   directMfaVerify,
   directMfaListFactors,
   directMfaUnenroll,
+  directMfaEnroll,
 } from './supabase';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -159,13 +160,13 @@ export async function listMfaFactors() {
 
 /**
  * Enroll a new TOTP factor. Returns a QR code URI + secret for the user to scan.
+ *
+ * Uses a direct REST call to `/auth/v1/factors` to bypass the Supabase JS
+ * client's GoTrue lock, which can hang during auth-intensive flows — the
+ * same root cause the other direct helpers exist to work around.
  */
 export async function enrollTotp(friendlyName?: string) {
-  const { data, error } = await supabase.auth.mfa.enroll({
-    factorType: 'totp',
-    ...(friendlyName ? { friendlyName } : {}),
-  });
-  return { data, error };
+  return directMfaEnroll(friendlyName);
 }
 
 /**

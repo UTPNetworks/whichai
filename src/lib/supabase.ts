@@ -255,6 +255,63 @@ export async function directDelete(
 // ══════════════════════════════════════════════════════════════
 
 /**
+ * Enroll a new TOTP factor via direct REST. Bypasses the GoTrue lock
+ * that `supabase.auth.mfa.enroll()` can hang on during post-OAuth /
+ * auth-intensive flows (same root cause as the stuck onboarding button
+ * and listing writes).
+ *
+ * Returns the shape `{ id, totp: { uri, secret, qr_code } }` so callers
+ * don't need to change — it matches what `supabase.auth.mfa.enroll()`
+ * returns.
+ */
+export async function directMfaEnroll(
+  friendlyName?: string
+): Promise<{
+  data: { id: string; totp: { uri: string; secret: string; qr_code?: string } } | null;
+  error: Error | null;
+}> {
+  const token = await getAccessToken();
+  if (!token) return { data: null, error: new Error('Not authenticated. Please sign in and try again.') };
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/factors`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: supabaseAnonKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        factor_type: 'totp',
+        ...(friendlyName ? { friendly_name: friendlyName } : {}),
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { data: null, error: new Error(body?.msg || body?.message || `Server error ${res.status}`) };
+    }
+    return {
+      data: {
+        id: body.id,
+        totp: {
+          uri: body?.totp?.uri || '',
+          secret: body?.totp?.secret || '',
+          qr_code: body?.totp?.qr_code || '',
+        },
+      },
+      error: null,
+    };
+  } catch (err: any) {
+    clearTimeout(timer);
+    return { data: null, error: new Error(err?.message || 'Request failed') };
+  }
+}
+
+/**
  * Create a verification challenge for an existing MFA factor.
  * Returns { id } where id is the challenge_id to pass to directMfaVerify.
  */
