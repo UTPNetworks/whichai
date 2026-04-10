@@ -81,11 +81,17 @@ export async function middleware(request: NextRequest) {
   // ============================================================
   const isAdminHost = host.startsWith('admin.') || host === 'admin.localhost:3000';
   if (isAdminHost) {
-    // Skip rewrite for static asset requests
+    // Paths that should render as-is on the admin subdomain (NOT rewritten
+    // under /admin). The /auth/* routes are allowed through so admins can
+    // sign in on the admin subdomain directly — that way the Supabase
+    // session cookie is set on admin.whichai.cloud and is available to
+    // the admin area without needing to share cookies across subdomains.
     if (
       pathname.startsWith('/_next') ||
       pathname.startsWith('/favicon') ||
       pathname.startsWith('/api/admin') ||
+      pathname.startsWith('/api/auth') ||
+      pathname.startsWith('/auth') ||
       pathname.startsWith('/admin')
     ) {
       return NextResponse.next();
