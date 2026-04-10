@@ -3,13 +3,23 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, Calendar, Sparkles, Bell, ChevronRight, ChevronLeft,
-  Check, Pencil, Shield, Rocket,
+  Check, Pencil, Shield, Rocket, Camera, RefreshCw,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { directUpsert } from "@/lib/supabase";
+import { directUpsert, supabase } from "@/lib/supabase";
+
+// ── Fun rotating taglines for the avatar prompt ──
+const AVATAR_HYPE = [
+  "That Google pic is giving 2014 LinkedIn energy 😬 Let's fix that.",
+  "Drop your best shot — the one where you look unreasonably cool 😎",
+  "Show us the face behind the genius. No pressure. Okay, maybe a little. ✨",
+  "Upload something iconic. This is your villain origin story profile pic. 🔥",
+  "Your current pic was chosen by an algorithm. Let's go with vibes instead. 🎨",
+  "Legend has it, the users who upload their own photo get 43% more serotonin. 📸",
+];
 
 // ── AI preference categories (equivalent to genre selection) ──
 const AI_CATEGORIES = [
@@ -60,10 +70,20 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  // Step 1: Username
+  // Step 1: Username + Avatar upload
   const [username, setUsername] = useState("");
   const [usernameEditing, setUsernameEditing] = useState(false);
   const [usernameError, setUsernameError] = useState("");
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [avatarHype, setAvatarHype] = useState(AVATAR_HYPE[0]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Pick a random hype line on mount so each user gets a different vibe
+  useEffect(() => {
+    setAvatarHype(AVATAR_HYPE[Math.floor(Math.random() * AVATAR_HYPE.length)]);
+  }, []);
 
   // Step 2: DOB + Gender
   const [dob, setDob] = useState("");
@@ -87,10 +107,62 @@ export default function OnboardingPage() {
     }
   }, [user]);
 
-  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+  const googleAvatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
+  const avatarUrl = customAvatarUrl || googleAvatarUrl;
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name ||
     [user?.user_metadata?.first_name, user?.user_metadata?.last_name].filter(Boolean).join(" ") ||
     "there";
+
+  // ── Avatar upload handler ──
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Client-side sanity checks
+    if (!file.type.startsWith("image/")) {
+      setUploadError("That's not an image — try a PNG, JPG, or GIF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Whoa, big file! Keep it under 5MB please.");
+      return;
+    }
+
+    setUploadError("");
+    setUploading(true);
+
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, cacheControl: "3600" });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      // Add a cache-buster so the <img> refreshes instantly on re-upload
+      const freshUrl = `${data.publicUrl}?t=${Date.now()}`;
+      setCustomAvatarUrl(freshUrl);
+    } catch (err: any) {
+      console.error("Avatar upload failed:", err);
+      setUploadError(err?.message || "Upload failed. Try a different image?");
+    } finally {
+      setUploading(false);
+      // Reset input so the same file can be re-selected if needed
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const triggerFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const rerollHype = () => {
+    // Ensure we pick a different line than the current one
+    const pool = AVATAR_HYPE.filter((x) => x !== avatarHype);
+    setAvatarHype(pool[Math.floor(Math.random() * pool.length)]);
+  };
 
   // ── Validation ──
   const canProceed = useMemo(() => {
@@ -139,6 +211,9 @@ export default function OnboardingPage() {
         displayName.split(" ").slice(1).join(" ") ||
         null;
 
+      // Strip the ?t=... cache-buster before persisting — storage URL is stable
+      const persistedAvatarUrl = avatarUrl ? avatarUrl.split("?")[0] : null;
+
       const { error } = await directUpsert("profiles", {
         id: user.id,
         email: user.email,
@@ -149,7 +224,7 @@ export default function OnboardingPage() {
         notifications_enabled: notifications,
         terms_accepted: termsAccepted,
         onboarding_completed: true,
-        avatar_url: avatarUrl || null,
+        avatar_url: persistedAvatarUrl,
         first_name: firstName,
         last_name: lastName,
       });
@@ -274,27 +349,144 @@ export default function OnboardingPage() {
             >
               <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg">
                 <div className="text-center mb-6">
-                  {/* Avatar */}
-                  <div className="relative inline-block mb-4">
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Profile"
-                        className="w-20 h-20 rounded-2xl object-cover shadow-md border-2 border-white"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-400 to-cyan-400 flex items-center justify-center shadow-md">
-                        <User className="w-10 h-10 text-white" />
+                  {/* Hidden file input — triggered by clicking the avatar */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+
+                  {/* Clickable avatar w/ camera overlay + pulsing ring */}
+                  <div className="relative inline-block mb-4 group">
+                    {/* Animated glow ring — subtle hype */}
+                    <motion.div
+                      animate={{
+                        boxShadow: customAvatarUrl
+                          ? "0 0 0 0 rgba(16, 185, 129, 0)"
+                          : [
+                              "0 0 0 0 rgba(168, 85, 247, 0.4)",
+                              "0 0 0 12px rgba(168, 85, 247, 0)",
+                            ],
+                      }}
+                      transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                      className="absolute inset-0 rounded-2xl pointer-events-none"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={triggerFilePicker}
+                      disabled={uploading}
+                      className="relative block rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-200 transition-all"
+                      aria-label="Upload a profile photo"
+                    >
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt="Profile"
+                          className="w-24 h-24 rounded-2xl object-cover shadow-md border-2 border-white transition-all group-hover:brightness-75"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-400 via-pink-400 to-cyan-400 flex items-center justify-center shadow-md transition-all group-hover:brightness-90">
+                          <User className="w-12 h-12 text-white" />
+                        </div>
+                      )}
+
+                      {/* Hover overlay with camera icon */}
+                      <div className="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="bg-white/95 backdrop-blur-sm rounded-full p-2.5 shadow-lg">
+                          <Camera className="w-5 h-5 text-purple-600" />
+                        </div>
                       </div>
+
+                      {/* Uploading spinner overlay */}
+                      {uploading && (
+                        <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                          <svg className="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Camera badge in corner — signals this is clickable */}
+                    <button
+                      type="button"
+                      onClick={triggerFilePicker}
+                      disabled={uploading}
+                      className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 border-2 border-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-transform"
+                      aria-label="Upload a photo"
+                    >
+                      {customAvatarUrl ? (
+                        <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                      ) : (
+                        <Camera className="w-4 h-4 text-white" />
+                      )}
+                    </button>
+                  </div>
+
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    Hey, {displayName.split(" ")[0]}! 👋
+                  </h2>
+                  <p className="text-sm text-slate-400 mt-1">
+                    Let&apos;s get you a username and a pic that actually slaps.
+                  </p>
+                </div>
+
+                {/* Fun rotating avatar hype box */}
+                <motion.div
+                  key={avatarHype}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mb-5 p-3 rounded-xl border flex items-start gap-2.5 ${
+                    customAvatarUrl
+                      ? "bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-200"
+                      : "bg-gradient-to-r from-purple-50 via-pink-50 to-cyan-50 border-purple-100"
+                  }`}
+                >
+                  <span className="text-lg leading-none mt-0.5">
+                    {customAvatarUrl ? "🎉" : "📸"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    {customAvatarUrl ? (
+                      <p className="text-xs text-emerald-700 font-medium leading-relaxed">
+                        Looking iconic. This pic is officially part of your WhichAi lore.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-600 leading-relaxed">{avatarHype}</p>
                     )}
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center">
-                      <Check className="w-3 h-3 text-white" />
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <button
+                        type="button"
+                        onClick={triggerFilePicker}
+                        disabled={uploading}
+                        className="text-xs font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-50"
+                      >
+                        {customAvatarUrl ? "Swap it again" : "Tap to upload →"}
+                      </button>
+                      {!customAvatarUrl && (
+                        <button
+                          type="button"
+                          onClick={rerollHype}
+                          className="flex items-center gap-1 text-xs text-slate-400 hover:text-purple-500 transition-colors"
+                          title="New line, who dis?"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          reroll
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Hey, {displayName.split(" ")[0]}!</h2>
-                  <p className="text-sm text-slate-400 mt-1">Choose your public username on WhichAI</p>
-                </div>
+                </motion.div>
+
+                {uploadError && (
+                  <div className="mb-4 p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600">
+                    {uploadError}
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   <div>

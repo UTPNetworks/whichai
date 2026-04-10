@@ -1,22 +1,131 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that require authentication
+// Routes that require authentication on the main app
 const authRequired = ['/dashboard', '/my-listings', '/settings', '/hub', '/profile'];
 
-// Routes that require MFA (aal2) in addition to authentication
-// These are sensitive routes involving money or account changes
-const mfaRequired = ['/dashboard', '/settings/security'];
+// Methods considered "writes" for read-only mode enforcement
+const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-export function middleware(request: NextRequest) {
+// Paths that are always allowed through, even during maintenance
+// (so admins can still log in and flip the switch back off)
+const ALWAYS_ALLOWED_PREFIXES = [
+  '/admin',
+  '/auth',
+  '/api/admin',
+  '/api/auth',
+  '/_next',
+  '/favicon',
+  '/public',
+  '/maintenance',
+];
+
+// Lightweight in-memory cache for system_flags — avoids hammering the DB
+// on every request. 30s TTL is enough for ops emergencies.
+type Flags = {
+  site_kill_switch: boolean;
+  read_only_mode: boolean;
+  signups_disabled: boolean;
+  maintenance_banner: string | null;
+};
+let flagsCache: { data: Flags | null; expiresAt: number } = {
+  data: null,
+  expiresAt: 0,
+};
+
+async function fetchFlags(request: NextRequest): Promise<Flags | null> {
+  const now = Date.now();
+  if (flagsCache.data && flagsCache.expiresAt > now) return flagsCache.data;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/system_flags?select=site_kill_switch,read_only_mode,signups_disabled,maintenance_banner&id=eq.1`,
+      {
+        headers: {
+          apikey: supabaseAnonKey,
+          Accept: 'application/json',
+        },
+        signal: controller.signal,
+      }
+    );
+    clearTimeout(timer);
+    if (!res.ok) return flagsCache.data;
+    const rows = await res.json();
+    const row = Array.isArray(rows) && rows[0] ? rows[0] : null;
+    const data: Flags = {
+      site_kill_switch: !!row?.site_kill_switch,
+      read_only_mode: !!row?.read_only_mode,
+      signups_disabled: !!row?.signups_disabled,
+      maintenance_banner: row?.maintenance_banner || null,
+    };
+    flagsCache = { data, expiresAt: now + 30_000 };
+    return data;
+  } catch {
+    return flagsCache.data;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = (request.headers.get('host') || '').toLowerCase();
 
-  // Check if route requires authentication
+  // ============================================================
+  // ADMIN SUBDOMAIN ROUTING
+  // `admin.whichai.cloud` rewrites to `/admin/*` internally.
+  // ============================================================
+  const isAdminHost = host.startsWith('admin.') || host === 'admin.localhost:3000';
+  if (isAdminHost) {
+    // Skip rewrite for static asset requests
+    if (
+      pathname.startsWith('/_next') ||
+      pathname.startsWith('/favicon') ||
+      pathname.startsWith('/api/admin') ||
+      pathname.startsWith('/admin')
+    ) {
+      return NextResponse.next();
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = `/admin${pathname === '/' ? '' : pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // ============================================================
+  // KILL SWITCH + READ-ONLY MODE (main site only)
+  // ============================================================
+  const isAlwaysAllowed = ALWAYS_ALLOWED_PREFIXES.some((p) => pathname.startsWith(p));
+  if (!isAlwaysAllowed) {
+    const flags = await fetchFlags(request);
+    if (flags?.site_kill_switch) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/maintenance';
+      return NextResponse.rewrite(url);
+    }
+    if (flags?.read_only_mode && WRITE_METHODS.has(request.method)) {
+      return NextResponse.json(
+        { error: 'Site is in read-only mode. Please try again later.' },
+        { status: 503 }
+      );
+    }
+    if (flags?.signups_disabled && pathname.startsWith('/auth/register')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/maintenance';
+      url.searchParams.set('reason', 'signups_disabled');
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // ============================================================
+  // AUTH-REQUIRED ROUTES
+  // ============================================================
   const needsAuth = authRequired.some((route) => pathname.startsWith(route));
   if (!needsAuth) return NextResponse.next();
 
-  // Check for Supabase auth tokens in cookies
-  // Supabase stores session as sb-<project-ref>-auth-token
   const hasAuthCookie = request.cookies.getAll().some(
     (cookie) => cookie.name.includes('auth-token') && cookie.value
   );
@@ -27,16 +136,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // For MFA-required routes, we can't verify aal2 in edge middleware
-  // (Supabase MFA state lives in the client-side session, not in cookies).
-  // The MFA enforcement is handled client-side by the AuthProvider + page components:
-  // - After login, login page checks assurance level and redirects to /auth/mfa-verify
-  // - The security settings page checks MFA enrollment status
-  // - Individual pages can use `useAuth().mfaLevel` to gate sensitive actions
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/my-listings/:path*', '/settings/:path*', '/hub/:path*', '/profile/:path*'],
+  matcher: [
+    // Match everything except static files so admin subdomain rewriting works
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 };
