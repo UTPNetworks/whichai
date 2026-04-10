@@ -121,12 +121,18 @@ export async function middleware(request: NextRequest) {
   // ============================================================
   const isAdminHost = host.startsWith('admin.') || host === 'admin.localhost:3000';
   if (isAdminHost) {
+    // Static assets (SVGs, images, fonts, etc.) must NOT be rewritten
+    // under /admin — they live in /public at the root. Without this
+    // check, /whichai_icon_nav.svg becomes /admin/whichai_icon_nav.svg → 404.
+    const hasFileExtension = /\.\w{2,5}$/.test(pathname);
+
     // Paths that should render as-is on the admin subdomain (NOT rewritten
     // under /admin). The /auth/* routes are allowed through so admins can
     // sign in on the admin subdomain directly — that way the Supabase
     // session cookie is set on admin.whichai.cloud and is available to
     // the admin area without needing to share cookies across subdomains.
     if (
+      hasFileExtension ||
       pathname.startsWith('/_next') ||
       pathname.startsWith('/favicon') ||
       pathname.startsWith('/api/admin') ||
@@ -136,11 +142,16 @@ export async function middleware(request: NextRequest) {
     ) {
       // Refresh session on every admin request to prevent token expiry
       const response = NextResponse.next();
+      // Pass the original pathname so server components can read it
+      response.headers.set('x-admin-pathname', pathname);
       return refreshSupabaseSession(request, response);
     }
     const url = request.nextUrl.clone();
-    url.pathname = `/admin${pathname === '/' ? '' : pathname}`;
+    const rewrittenPath = `/admin${pathname === '/' ? '' : pathname}`;
+    url.pathname = rewrittenPath;
     const response = NextResponse.rewrite(url);
+    // Pass the rewritten pathname so the layout knows which page was requested
+    response.headers.set('x-admin-pathname', rewrittenPath);
     return refreshSupabaseSession(request, response);
   }
 

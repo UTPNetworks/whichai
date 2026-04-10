@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { getAdminIdentity } from '@/lib/admin';
 import AdminSidebar from './_components/AdminSidebar';
 import AdminSessionProvider from './_components/AdminSessionProvider';
@@ -17,11 +17,10 @@ export default async function AdminProtectedLayout({
     redirect('/admin/login');
   }
 
-  // Read cookies once — we use two: admin_stepup for per-action step-up
-  // verification, and admin_mfa_ok as a medium-lived "this session passed
-  // MFA" marker that survives Supabase access-token refreshes (which
-  // silently downgrade aal2 → aal1 and would otherwise bounce the admin
-  // back to the MFA gate every ~hour).
+  // Read cookies once — we use admin_mfa_ok as a medium-lived "this
+  // session passed MFA" marker that survives Supabase access-token
+  // refreshes (which silently downgrade aal2 → aal1 and would otherwise
+  // bounce the admin back to the MFA gate every ~hour).
   const cookieStore = await cookies();
   const stepUpRaw = cookieStore.get('admin_stepup')?.value;
   const stepUpExpiresAt = stepUpRaw ? parseInt(stepUpRaw, 10) || 0 : 0;
@@ -37,11 +36,12 @@ export default async function AdminProtectedLayout({
   // Supabase aal2→aal1 downgrade that happens on every token refresh,
   // and it's stamped reliably by /api/admin/set-mfa-ok after TOTP verify.
   if (admin.aal !== 'aal2' && !mfaOkValid) {
-    // If hasMfaFactor is false, it MIGHT mean no factor exists, OR it
-    // might mean the listFactors() call timed out. To be safe, always
-    // send to MFA verify — that page will detect "no factors" and
-    // redirect to setup-mfa on its own.
-    redirect('/auth/mfa-verify?next=/admin');
+    // Preserve the actual page the admin was trying to reach (e.g.
+    // /admin/admins) so they land there after MFA — not always /admin.
+    const hdrs = await headers();
+    let nextPath = hdrs.get('x-admin-pathname') || '/admin';
+    if (!nextPath.startsWith('/admin')) nextPath = '/admin';
+    redirect(`/auth/mfa-verify?next=${encodeURIComponent(nextPath)}`);
   }
 
   return (

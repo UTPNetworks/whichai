@@ -66,7 +66,9 @@ export default function AdminSessionProvider({
 }) {
   const adminFetch = useCallback(
     (url: string, init: RequestInit = {}): Promise<Response> => {
-      return fetch(url, init);
+      // Always include credentials so cookies (auth tokens, admin_mfa_ok)
+      // are sent with every API call on the admin subdomain.
+      return fetch(url, { ...init, credentials: 'include' });
     },
     []
   );

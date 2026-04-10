@@ -58,12 +58,19 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
   // but wrap in try-catch for safety.
   let user;
   try {
-    const { data } = await supabase.auth.getUser();
+    const { data, error: userError } = await supabase.auth.getUser();
+    if (userError) {
+      console.error('[getAdminIdentity] getUser() error:', userError.message);
+    }
     user = data.user;
-  } catch {
+  } catch (err) {
+    console.error('[getAdminIdentity] getUser() threw:', err);
     return null;
   }
-  if (!user) return null;
+  if (!user) {
+    console.error('[getAdminIdentity] getUser() returned null user (no session in cookies)');
+    return null;
+  }
 
   // MFA checks are best-effort — if they fail or hang, we still want to
   // return the identity. The layout + admin_mfa_ok cookie handle MFA
@@ -104,7 +111,14 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (error || !adminRow) return null;
+  if (error) {
+    console.error('[getAdminIdentity] admins table query error:', error.message);
+    return null;
+  }
+  if (!adminRow) {
+    console.error('[getAdminIdentity] user', user.id, user.email, 'has no row in admins table');
+    return null;
+  }
 
   return {
     userId: user.id,
@@ -136,6 +150,7 @@ export async function requireAdmin(options: {
 } = {}): Promise<AdminIdentity | NextResponse> {
   const identity = await getAdminIdentity();
   if (!identity) {
+    console.error('[requireAdmin] identity is null — returning 403. Options:', JSON.stringify(options));
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
