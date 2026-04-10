@@ -3,13 +3,30 @@ import ListingsTable from './_components/ListingsTable';
 
 export const dynamic = 'force-dynamic';
 
+type ListingRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  category: string | null;
+  price: number;
+  status: string;
+  hidden: boolean | null;
+  hidden_reason: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  photo_urls: string[] | null;
+};
+
 async function fetchListings(query: string, filter: string) {
   const client = createAdminClient();
+
+  // Step 1 — fetch listings directly (no profiles embed; the FK resolution
+  // for `profiles!user_listings_user_id_fkey` fails because that constraint
+  // actually references auth.users, not public.profiles).
   let q = client
     .from('user_listings')
     .select(
-      'id, user_id, title, category, price, status, hidden, hidden_reason, deleted_at, created_at, photo_urls, profiles:profiles!user_listings_user_id_fkey(email, username)',
-      { count: 'exact' }
+      'id, user_id, title, category, price, status, hidden, hidden_reason, deleted_at, created_at, photo_urls'
     )
     .order('created_at', { ascending: false })
     .limit(200);
@@ -26,7 +43,33 @@ async function fetchListings(query: string, filter: string) {
     console.error('[admin/listings] fetch error:', error);
     return [];
   }
-  return data || [];
+
+  const listings = (data || []) as ListingRow[];
+  if (listings.length === 0) return [];
+
+  // Step 2 — enrich with owner email / username from profiles in one batch.
+  const userIds = Array.from(new Set(listings.map((l) => l.user_id)));
+  const profileMap = new Map<string, { email: string | null; username: string | null }>();
+  try {
+    const { data: profiles, error: profErr } = await client
+      .from('profiles')
+      .select('id, email, username')
+      .in('id', userIds);
+    if (profErr) {
+      console.error('[admin/listings] profiles fetch error:', profErr);
+    } else {
+      for (const p of (profiles || []) as Array<{ id: string; email: string | null; username: string | null }>) {
+        profileMap.set(p.id, { email: p.email, username: p.username });
+      }
+    }
+  } catch (err) {
+    console.error('[admin/listings] profiles enrich failed (non-fatal):', err);
+  }
+
+  return listings.map((l) => ({
+    ...l,
+    profiles: profileMap.get(l.user_id) || { email: null, username: null },
+  }));
 }
 
 export default async function ListingsPage({

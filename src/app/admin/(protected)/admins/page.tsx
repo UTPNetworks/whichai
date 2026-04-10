@@ -10,36 +10,54 @@ export default async function AdminsPage() {
 
   const client = createAdminClient();
 
-  // Pull every admin row, then enrich with email + created_at from auth.users
-  const { data: adminsRaw } = await client
+  // Pull admin rows — service role bypasses the recursive `admins` RLS.
+  const { data: adminsRaw, error: adminsErr } = await client
     .from('admins')
     .select('user_id, role, created_at')
     .order('created_at', { ascending: true });
 
-  const rows: AdminRow[] = [];
-  for (const a of adminsRaw || []) {
-    let email = '(unknown)';
-    let hasMfa = false;
-    try {
-      const { data: userRes } = await client.auth.admin.getUserById(a.user_id);
-      email = userRes?.user?.email || '(no email)';
-      // factors live on the user object via admin API
-      const factors = (userRes?.user as unknown as {
-        factors?: Array<{ factor_type: string; status: string }>;
-      })?.factors;
-      hasMfa = !!factors?.some((f) => f.factor_type === 'totp' && f.status === 'verified');
-    } catch {
-      /* keep defaults */
+  if (adminsErr) {
+    console.error('[admin/admins] admins fetch error:', adminsErr);
+  }
+
+  // Batch-fetch every auth user in one shot instead of per-admin getUserById
+  // (the N+1 loop is slow and can hang the whole page render).
+  type AuthUserLite = {
+    id: string;
+    email?: string | null;
+    factors?: Array<{ factor_type: string; status: string }> | null;
+  };
+  const userIndex = new Map<string, AuthUserLite>();
+  try {
+    const { data: list, error: listErr } = await client.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    if (listErr) {
+      console.error('[admin/admins] listUsers error:', listErr);
     }
-    rows.push({
+    for (const u of (list?.users || []) as unknown as AuthUserLite[]) {
+      userIndex.set(u.id, u);
+    }
+  } catch (err) {
+    console.error('[admin/admins] listUsers threw (non-fatal):', err);
+  }
+
+  const rows: AdminRow[] = (adminsRaw || []).map((a) => {
+    const u = userIndex.get(a.user_id);
+    const factors = u?.factors || [];
+    const hasMfa = factors.some(
+      (f) => f.factor_type === 'totp' && f.status === 'verified'
+    );
+    return {
       user_id: a.user_id,
-      email,
+      email: u?.email || '(unknown)',
       role: a.role as AdminRow['role'],
       created_at: a.created_at,
       has_mfa: hasMfa,
       is_self: a.user_id === me.userId,
-    });
-  }
+    };
+  });
 
   return (
     <>

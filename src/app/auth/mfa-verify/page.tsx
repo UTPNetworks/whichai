@@ -5,7 +5,37 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, FormEvent } from "react";
-import { listMfaFactors, verifyTotp, getMfaAssuranceLevel } from "@/lib/auth";
+import { listMfaFactors, verifyTotp } from "@/lib/auth";
+
+/**
+ * Fetch the current session's MFA assurance level via a server route.
+ *
+ * This intentionally does NOT call `supabase.auth.mfa.getAuthenticator
+ * AssuranceLevel()` on the client — that SDK method hangs on the browser
+ * GoTrue lock during auth-intensive flows, which is exactly why this page
+ * used to show an infinite spinner. The server route hits the same API
+ * through a fresh per-request SSR client with no shared lock.
+ *
+ * Hard timeout prevents the page from ever getting stuck on a slow response.
+ */
+async function fetchAalSafe(timeoutMs = 4000): Promise<'aal1' | 'aal2' | null> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch('/api/auth/aal', {
+      method: 'GET',
+      credentials: 'include',
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const body = await res.json();
+    return (body?.currentLevel as 'aal1' | 'aal2' | null) || null;
+  } catch {
+    return null;
+  }
+}
 
 // Honor the `next` query param so /auth/login?next=/admin → MFA → /admin
 function getSafeNext(fallback = "/hub"): string {
@@ -32,8 +62,10 @@ export default function MfaVerifyPage() {
       try {
         // If the session is already aal2 (e.g. we just enrolled and the
         // verify call elevated the session), skip the challenge entirely.
-        const { data: aalData } = await getMfaAssuranceLevel();
-        if (aalData?.currentLevel === 'aal2') {
+        // Uses a server route with a hard timeout so the page never gets
+        // stuck on a slow or deadlocked auth call.
+        const currentLevel = await fetchAalSafe();
+        if (currentLevel === 'aal2') {
           window.location.replace(getSafeNext());
           return;
         }
