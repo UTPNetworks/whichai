@@ -385,15 +385,31 @@ export async function directMfaVerify(
 
     // Persist the freshly issued session so subsequent server requests
     // see the elevated AAL via the sb-*-auth-token cookie.
+    //
+    // NOTE: we intentionally do NOT call `supabase.auth.setSession()` on
+    // the client here — that acquires the GoTrue internal lock which the
+    // whole `directMfa*` family of helpers was written to bypass, and
+    // calling it would deadlock the very verify flow we're in. Instead
+    // we POST the new tokens to a server route that writes the SSR
+    // session cookie via a fresh per-request client.
     if (body?.access_token && body?.refresh_token) {
+      const persistController = new AbortController();
+      const persistTimer = setTimeout(() => persistController.abort(), 6000);
       try {
-        await supabase.auth.setSession({
-          access_token: body.access_token,
-          refresh_token: body.refresh_token,
+        await fetch('/api/auth/set-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: body.access_token,
+            refresh_token: body.refresh_token,
+          }),
+          signal: persistController.signal,
+          credentials: 'include',
         });
       } catch (err) {
-        // Non-fatal — but log it. The user might need to refresh manually.
         console.error('[directMfaVerify] failed to persist new session:', err);
+      } finally {
+        clearTimeout(persistTimer);
       }
     }
 
