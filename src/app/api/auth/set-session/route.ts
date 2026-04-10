@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       const expiresAt = Date.now() + ADMIN_MFA_OK_TTL_SECONDS * 1000;
       response.cookies.set('admin_mfa_ok', String(expiresAt), {
         httpOnly: true,
-        secure: true,
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
         maxAge: ADMIN_MFA_OK_TTL_SECONDS,

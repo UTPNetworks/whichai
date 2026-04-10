@@ -31,13 +31,17 @@ export default async function AdminProtectedLayout({
 
   // Enforce MFA for every admin page. Either the live session claim is
   // already aal2, OR we have a valid admin_mfa_ok cookie stamped from a
-  // recent successful TOTP verify. If neither, bounce through the MFA
-  // gate (if a factor exists) or force enrollment.
+  // recent successful TOTP verify. If EITHER holds, the admin is cleared.
+  //
+  // The admin_mfa_ok cookie is the primary mechanism — it survives the
+  // Supabase aal2→aal1 downgrade that happens on every token refresh,
+  // and it's stamped reliably by /api/admin/set-mfa-ok after TOTP verify.
   if (admin.aal !== 'aal2' && !mfaOkValid) {
-    if (admin.hasMfaFactor) {
-      redirect('/auth/mfa-verify?next=/admin');
-    }
-    redirect('/admin/setup-mfa');
+    // If hasMfaFactor is false, it MIGHT mean no factor exists, OR it
+    // might mean the listFactors() call timed out. To be safe, always
+    // send to MFA verify — that page will detect "no factors" and
+    // redirect to setup-mfa on its own.
+    redirect('/auth/mfa-verify?next=/admin');
   }
 
   return (

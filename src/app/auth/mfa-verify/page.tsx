@@ -128,8 +128,25 @@ export default function MfaVerifyPage() {
         setSubmitting(false);
         return;
       }
+
+      // If the user is heading to the admin console, stamp the
+      // admin_mfa_ok cookie via a dedicated server route. This is
+      // more reliable than the AAL check inside /api/auth/set-session
+      // which can fail silently.
+      const nextUrl = getSafeNext();
+      if (nextUrl.startsWith('/admin')) {
+        try {
+          await fetch('/api/admin/set-mfa-ok', {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch {
+          // Non-fatal — layout will fall back to checking aal2 claim
+        }
+      }
+
       // MFA verified — honor ?next= (e.g. /admin) with safe fallback to /hub
-      window.location.replace(getSafeNext());
+      window.location.replace(nextUrl);
     } catch {
       setError("Verification failed. Please try again.");
       setSubmitting(false);

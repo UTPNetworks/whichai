@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 
 // Routes that require authentication on the main app
 const authRequired = ['/dashboard', '/my-listings', '/settings', '/hub', '/profile'];
@@ -71,6 +72,45 @@ async function fetchFlags(request: NextRequest): Promise<Flags | null> {
   }
 }
 
+/**
+ * Refresh the Supabase session in middleware so that every downstream
+ * server component and route handler gets a fresh access token in the
+ * cookie. Without this, the access token expires after ~1 hour and
+ * `getUser()` returns null — which breaks admin identity checks.
+ */
+async function refreshSupabaseSession(request: NextRequest, response: NextResponse): Promise<NextResponse> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) return response;
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          // Write refreshed tokens back to both the request (so downstream
+          // server components see them) and the response (so the browser
+          // stores them).
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    });
+
+    // getUser() triggers a token refresh if the access token is expired.
+    // This is the standard Supabase SSR middleware pattern.
+    await supabase.auth.getUser();
+  } catch {
+    // Non-fatal — if refresh fails, the user will just see a login page.
+  }
+
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = (request.headers.get('host') || '').toLowerCase();
@@ -94,11 +134,14 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/auth') ||
       pathname.startsWith('/admin')
     ) {
-      return NextResponse.next();
+      // Refresh session on every admin request to prevent token expiry
+      const response = NextResponse.next();
+      return refreshSupabaseSession(request, response);
     }
     const url = request.nextUrl.clone();
     url.pathname = `/admin${pathname === '/' ? '' : pathname}`;
-    return NextResponse.rewrite(url);
+    const response = NextResponse.rewrite(url);
+    return refreshSupabaseSession(request, response);
   }
 
   // ============================================================
@@ -127,10 +170,16 @@ export async function middleware(request: NextRequest) {
   }
 
   // ============================================================
+  // SESSION REFRESH (all routes)
+  // ============================================================
+  let response = NextResponse.next();
+  response = await refreshSupabaseSession(request, response);
+
+  // ============================================================
   // AUTH-REQUIRED ROUTES
   // ============================================================
   const needsAuth = authRequired.some((route) => pathname.startsWith(route));
-  if (!needsAuth) return NextResponse.next();
+  if (!needsAuth) return response;
 
   const hasAuthCookie = request.cookies.getAll().some(
     (cookie) => cookie.name.includes('auth-token') && cookie.value
@@ -142,7 +191,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {

@@ -52,29 +52,51 @@ export interface AdminIdentity {
  */
 export async function getAdminIdentity(): Promise<AdminIdentity | null> {
   const supabase = await createServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  // getUser() is the only critical call — if it fails, we can't identify
+  // the caller. The middleware session refresh should keep the token fresh,
+  // but wrap in try-catch for safety.
+  let user;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    return null;
+  }
   if (!user) return null;
 
-  // Determine the user's current assurance level. Supabase exposes this
-  // via mfa.getAuthenticatorAssuranceLevel() — currentLevel reflects the
-  // level of the live session.
+  // MFA checks are best-effort — if they fail or hang, we still want to
+  // return the identity. The layout + admin_mfa_ok cookie handle MFA
+  // gating independently of these fields.
   let aal: 'aal1' | 'aal2' | null = null;
-  try {
-    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    aal = (aalData?.currentLevel as 'aal1' | 'aal2' | undefined) || null;
-  } catch {
-    aal = null;
-  }
-
-  // Does the user have any verified TOTP factor?
   let hasMfaFactor = false;
+
+  // Run both MFA checks in parallel with a hard 3s timeout so a hung
+  // GoTrue call never blocks the page render.
   try {
-    const { data: factors } = await supabase.auth.mfa.listFactors();
-    hasMfaFactor = !!factors?.totp?.some((f) => f.status === 'verified');
+    const timeout = <T>(p: Promise<T>, ms: number): Promise<T | null> =>
+      Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
+
+    const [aalResult, factorsResult] = await Promise.all([
+      timeout(supabase.auth.mfa.getAuthenticatorAssuranceLevel(), 3000),
+      timeout(supabase.auth.mfa.listFactors(), 3000),
+    ]);
+
+    if (aalResult && 'data' in aalResult) {
+      const aalData = (aalResult as { data?: { currentLevel?: string } }).data;
+      aal = (aalData?.currentLevel as 'aal1' | 'aal2' | undefined) || null;
+    }
+
+    if (factorsResult && 'data' in factorsResult) {
+      const factors = (factorsResult as { data?: { totp?: Array<{ status: string }> } }).data;
+      hasMfaFactor = !!factors?.totp?.some((f) => f.status === 'verified');
+    }
   } catch {
-    hasMfaFactor = false;
+    // Both fields keep their defaults (null / false). The layout
+    // will fall back to the admin_mfa_ok cookie for MFA gating.
   }
 
+  // Check the admins table using the service-role client.
   const admin = createAdminClient();
   const { data: adminRow, error } = await admin
     .from('admins')
