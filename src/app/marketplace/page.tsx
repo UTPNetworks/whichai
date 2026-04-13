@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Store, Upload, Code2, Eye, Zap, BadgeCheck, ChevronRight,
   X, Sparkles, Loader2, Tag, ShoppingBag, Search as SearchIcon,
-  Shield, Clock, Package,
+  Shield, Clock, Package, Lock,
   Plus, MapPin, Filter, Cpu, Monitor,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -374,7 +375,52 @@ function supabaseRowToListing(row: any): MarketListingV3 {
 }
 
 export default function MarketplacePage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/auth/login');
+    }
+  }, [user, authLoading, router]);
+
+  // Show auth guard while loading or if not authenticated
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+          <Navbar />
+        </div>
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-purple-500" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">Sign in to access the Marketplace</h2>
+            <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
+              Create a free account to browse listings, compare prices, and connect with verified sellers.
+            </p>
+            <div className="flex flex-col gap-2 items-center">
+              <Link
+                href="/auth/signup"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-lg transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                Create Free Account
+              </Link>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-slate-600 hover:text-purple-600 transition-all"
+              >
+                Already have an account? Sign In
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [showSellModal, setShowSellModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bigTab, setBigTab] = useState<BigTab>('all');

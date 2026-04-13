@@ -1,11 +1,12 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ArrowLeft, MapPin, Filter, ChevronRight, Package, Star, BadgeCheck, Brain, Cpu, Monitor, Globe } from "lucide-react";
+import { Search, ArrowLeft, MapPin, Filter, ChevronRight, Package, Star, BadgeCheck, Brain, Cpu, Monitor, Globe, Lock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useCallback, Suspense } from "react";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/components/AuthProvider";
 import { allListingsV3, type MarketListingV3 } from "@/lib/data";
 
 // ââ Region classification âââââââââââââââââââââââââââââââââââ
@@ -203,13 +204,51 @@ function RegionGroup({ region, listings, defaultOpen = true }: { region: string;
 function SearchInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, loading } = useAuth();
   const initialQuery = searchParams.get("q") || "";
 
   const [query, setQuery] = useState(initialQuery);
   const [inputValue, setInputValue] = useState(initialQuery);
   const [activeFilter, setActiveFilter] = useState<string>("All");
 
+  // Redirect unauthenticated users away from search results
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth/login");
+    }
+  }, [user, loading, router]);
+
   const allListings = allListingsV3;
+
+  // Show nothing while checking auth or if not authenticated
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8 text-purple-500" />
+          </div>
+          <h2 className="text-lg font-bold text-slate-900 mb-2">Sign in required</h2>
+          <p className="text-slate-500 text-sm mb-6">You need an account to view search results.</p>
+          <div className="flex flex-col gap-2 items-center">
+            <Link
+              href="/auth/signup"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 hover:shadow-lg transition-all"
+            >
+              <Sparkles className="w-4 h-4" />
+              Create Free Account
+            </Link>
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-slate-600 hover:text-purple-600 transition-all"
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const results = useCallback((): MarketListingV3[] => {
     if (!query.trim()) return allListings;
