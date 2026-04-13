@@ -79,13 +79,13 @@ function AuthGateModal({ isOpen, onClose, context }: { isOpen: boolean; onClose:
             </div>
 
             {/* Content */}
-            <div className="px-8 pb-8 -mt-6">
+            <div className="relative z-10 px-8 pb-8 pt-6">
               {/* Stats preview card */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="bg-gradient-to-br from-slate-50 to-purple-50/50 rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm"
+                className="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm"
               >
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
